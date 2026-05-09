@@ -52,10 +52,7 @@ alias localip="ipconfig getifaddr en0"
 alias cleanup="fd -H -I -t f '.DS_Store' / --exclude '*BACKUP*' --exclude '*timemachine*' --exclude '*TimeMachine*' --exclude '/System/Volumes/Data' -x rm {} 2>/dev/null"
 
 # --- Upgrade all (delegates to bin/bench-update) ---
-alias upgrade-all=bench-update
 alias ua=bench-update
-alias upgrade-all-git='git all pu && bench-update'
-alias uag=upgrade-all-git
 
 # --- npm ---
 alias npm-check-update='npm-check --skip-unused --update --save-exact'
