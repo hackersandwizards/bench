@@ -5,7 +5,11 @@
 
 set -u
 
-echo "Closing System Settings to avoid override conflicts..."
+# shellcheck source-path=SCRIPTDIR/bin
+# shellcheck source=bin/_lib.sh
+. "$(dirname "$0")/bin/_lib.sh"
+
+step "Closing System Settings to avoid override conflicts"
 osascript -e 'tell application "System Settings" to quit' 2>/dev/null || true
 
 # ============================================================================
@@ -104,7 +108,7 @@ defaults write com.apple.ImageCapture disableHotPlug -bool true
 # ============================================================================
 # Restart affected processes
 # ============================================================================
-echo "Restarting Finder, Dock, SystemUIServer..."
+step "Restarting Finder, Dock, SystemUIServer"
 killall Finder Dock SystemUIServer 2>/dev/null || true
 
-echo "Done. Some changes require logout/restart to fully take effect."
+ok "Done — some changes require logout/restart to fully take effect"

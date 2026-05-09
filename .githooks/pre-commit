@@ -4,6 +4,10 @@
 # metacharacters can't trip the linter calls (no xargs needed).
 set -e
 
+# shellcheck source-path=SCRIPTDIR/../bin
+# shellcheck source=../bin/_lib.sh
+. "$(dirname "${BASH_SOURCE[0]}")/../bin/_lib.sh"
+
 mapfile -d '' staged < <(git diff --cached --name-only --diff-filter=ACMR -z)
 sh_files=()  zsh_files=()
 for f in "${staged[@]}"; do
@@ -13,20 +17,20 @@ for f in "${staged[@]}"; do
   esac
 done
 
-if command -v gitleaks >/dev/null 2>&1; then
+if have gitleaks; then
   gitleaks git --staged --redact --no-banner
 else
   echo "pre-commit: gitleaks not installed — skipping secret scan" >&2
   echo "  install: brew install gitleaks" >&2
 fi
 
-if command -v shellcheck >/dev/null 2>&1; then
+if have shellcheck; then
   # -x lets shellcheck follow `# shellcheck source=...` annotations.
   ((${#sh_files[@]})) && shellcheck -x "${sh_files[@]}"
 else
   echo "pre-commit: shellcheck not installed — skipping shell lint" >&2
 fi
 
-if command -v zsh >/dev/null 2>&1; then
+if have zsh; then
   for f in "${zsh_files[@]}"; do zsh -n "$f"; done
 fi

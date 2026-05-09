@@ -101,10 +101,9 @@ zstyle ':fzf-tab:complete:kill:*' fzf-preview 'ps -p $word -o pid,user,%cpu,%mem
 
 # --- SDKMAN (candidates on PATH, sdk command lazy-loaded) ---
 export SDKMAN_DIR="$HOME/.sdkman"
-for _dir in "$SDKMAN_DIR/candidates/"*/current/bin(N); do
-  export PATH="$_dir:$PATH"
-done
-unset _dir
+_sdk_bins=( "$SDKMAN_DIR/candidates/"*/current/bin(N) )
+(( $#_sdk_bins )) && export PATH="${(j.:.)_sdk_bins}:$PATH"
+unset _sdk_bins
 function sdk() {
   unfunction sdk
   source "$SDKMAN_DIR/bin/sdkman-init.sh"
