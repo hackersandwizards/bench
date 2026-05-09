@@ -71,8 +71,7 @@ fi
 
 # ---------- 4. Repo-local git hooks ----------
 step "Step 4/7: Activate repo-local git hooks (gitleaks + shellcheck)"
-current_hooks=$(git -C "$REPO_ROOT" config core.hooksPath 2>/dev/null || echo "")
-if [[ "$current_hooks" == ".githooks" ]]; then
+if [[ "$(hooks_path)" == ".githooks" ]]; then
   ok "core.hooksPath already set to .githooks"
 elif ask "Set core.hooksPath = .githooks for this repo?"; then
   git -C "$REPO_ROOT" config core.hooksPath .githooks
@@ -121,12 +120,20 @@ else
   skip "Skipped — run 'atuin import auto' manually later"
 fi
 
+# ---------- 8. Secure secrets.zsh ----------
+# Idempotent. Runs whether or not the user has secrets yet — if the file exists,
+# pin it to user-only read so an unprivileged process can't slurp live API keys.
+if [[ -f "$REPO_ROOT/secrets.zsh" ]]; then
+  chmod 600 "$REPO_ROOT/secrets.zsh"
+  ok "secrets.zsh chmod 600"
+fi
+
 # ---------- Final hints ----------
 step "Optional next steps"
 echo "  • Run './macos.sh' to apply ~45 macOS system defaults (keyboard, finder, dock, etc.)"
 echo "  • Run 'bench-doctor' to verify the install"
 echo "  • Run 'bench-export' to refresh Brewfile/docs/ snapshots"
-echo "  • Create '$REPO_ROOT/secrets.zsh' for API keys (gitignored)"
+echo "  • Create '$REPO_ROOT/secrets.zsh' for API keys (auto-chmod 600 on next install run)"
 
 step "Done"
 echo "Open a new terminal or run 'exec zsh' to load the new config."

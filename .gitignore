@@ -2,6 +2,13 @@
 plugins.zsh
 plugins-post.zsh
 secrets.zsh
+secrets.*.zsh
+*.env
+.env.*
+*credentials*
+*.pem
+*.key
+*.kubeconfig
 home/.gitconfig.local
 home/.ssh/id_*
 home/.ssh/known_hosts*
