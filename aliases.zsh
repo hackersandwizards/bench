@@ -8,7 +8,6 @@ alias cat="bat --paging=never"
 alias less="bat --paging=always"
 alias htop="btop"
 alias lg="lazygit"
-diff() { if [ -t 1 ]; then delta "$@"; else command diff "$@"; fi }
 alias http="xh"
 alias https="xh --https"
 
@@ -52,10 +51,10 @@ alias ports="lsof -iTCP -sTCP:LISTEN -P -n"
 alias localip="ipconfig getifaddr en0"
 alias cleanup="fd -H -I -t f '.DS_Store' / --exclude '*BACKUP*' --exclude '*timemachine*' --exclude '*TimeMachine*' --exclude '/System/Volumes/Data' -x rm {} 2>/dev/null"
 
-# --- Upgrade all ---
-alias upgrade-all='brew update ; brew upgrade ; brew cleanup -s ; antidote update ; rustup update ; gem update --system ; gem update ; gem cleanup ; pip freeze | grep -v @ | xargs pip install --upgrade ; sdk selfupdate ; sdk update ; sdk upgrade ; bun upgrade ; bun -g update --latest ; NPM_CHECK_INSTALLER=npm npm-check-update --global'
-alias ua=upgrade-all
-alias upgrade-all-git='git all pu ; upgrade-all'
+# --- Upgrade all (delegates to bin/bench-update) ---
+alias upgrade-all=bench-update
+alias ua=bench-update
+alias upgrade-all-git='git all pu && bench-update'
 alias uag=upgrade-all-git
 
 # --- npm ---

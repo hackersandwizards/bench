@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# Update brew, antidote plugins, language toolchains and global packages.
+set -u
+
+step() { printf '\n\033[1;36m▸ %s\033[0m\n' "$1"; }
+ok()   { printf '\033[32m✓\033[0m %s\n' "$1"; }
+warn() { printf '\033[33m⚠\033[0m %s\n' "$1"; }
+have() { command -v "$1" >/dev/null 2>&1; }
+
+run() {
+  local label="$1"; shift
+  step "$label"
+  if "$@"; then ok "$label"; else warn "$label failed (continuing)"; fi
+}
+
+run "Homebrew update"     brew update
+run "Homebrew upgrade"    brew upgrade
+run "Homebrew cleanup"    brew cleanup -s
+
+have antidote && run "Antidote plugins" antidote update
+have rustup   && run "Rust toolchain"   rustup update
+
+if have gem; then
+  run "RubyGems system"   gem update --system
+  run "RubyGems all"      gem update
+  run "RubyGems cleanup"  gem cleanup
+fi
+
+if have pip; then
+  step "Python pip globals"
+  if pip freeze | grep -v @ | cut -d= -f1 | xargs -r pip install --upgrade; then
+    ok "pip"
+  else
+    warn "pip failed"
+  fi
+fi
+
+if have sdk; then
+  run "SDKMAN selfupdate" sdk selfupdate
+  run "SDKMAN update"     sdk update
+fi
+
+if have bun; then
+  run "Bun runtime"       bun upgrade
+  run "Bun globals"       bun -g update --latest
+fi
+
+if have npm-check; then
+  step "npm globals"
+  if NPM_CHECK_INSTALLER=npm npm-check --global --update --save-exact; then
+    ok "npm globals"
+  else
+    warn "npm globals failed"
+  fi
+fi
+
+step "Done"

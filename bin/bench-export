@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# Refresh package inventories (Brewfile + docs/) and sync home/ from $HOME.
+set -u
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+DOCS="$REPO_ROOT/docs"
+HOME_DIR="$REPO_ROOT/home"
+
+step() { printf '\n\033[1;36m▸ %s\033[0m\n' "$1"; }
+ok()   { printf '\033[32m✓\033[0m %s\n' "$1"; }
+warn() { printf '\033[33m⚠\033[0m %s\n' "$1"; }
+have() { command -v "$1" >/dev/null 2>&1; }
+
+mkdir -p "$DOCS"
+
+# --- Brewfile (executable source of truth) ---
+if have brew; then
+  step "Brewfile"
+  if brew bundle dump --describe --force --file="$REPO_ROOT/Brewfile"; then
+    ok "Brewfile"
+  else
+    warn "Brewfile failed"
+  fi
+fi
+
+# --- docs/ snapshots (portable, offline-readable) ---
+step "docs/ snapshots"
+have brew  && brew tap    > "$DOCS/brew-taps.txt"   2>/dev/null && ok "brew-taps.txt"
+have brew  && brew leaves > "$DOCS/brew-leaves.txt" 2>/dev/null && ok "brew-leaves.txt"
+have brew  && brew list   > "$DOCS/brews.txt"       2>/dev/null && ok "brews.txt"
+have bun   && bun pm -g list      > "$DOCS/buns.txt"  2>/dev/null && ok "buns.txt"
+have gem   && gem list            > "$DOCS/gems.txt"  2>/dev/null && ok "gems.txt"
+have pip   && pip freeze          > "$DOCS/pip.txt"   2>/dev/null && ok "pip.txt"
+have npm   && npm list -g --depth=0 > "$DOCS/npms.txt" 2>/dev/null && ok "npms.txt"
+have cargo && cargo install --list  > "$DOCS/cargo.txt" 2>/dev/null && ok "cargo.txt"
+have sdk   && sdk current         > "$DOCS/sdks.txt"  2>/dev/null && ok "sdks.txt"
+have mix   && mix archive         > "$DOCS/mix.txt"   2>/dev/null && ok "mix.txt"
+[[ -f "$HOME/.gradle/gradle.properties" ]] \
+  && cp "$HOME/.gradle/gradle.properties" "$DOCS/gradle.properties" \
+  && ok "gradle.properties"
+
+# --- home/ sync: copy real $HOME files back into repo, skip Stow symlinks ---
+step "home/ sync (Symlinks → skip, real files → copy back)"
+SYNC_FILES=(
+  ".gitconfig"
+  ".vimrc"
+  ".mongorc.js"
+  ".tmux.conf"
+  ".gitignore_global"
+  ".ssh/config"
+)
+for rel in "${SYNC_FILES[@]}"; do
+  src="$HOME/$rel"
+  dst="$HOME_DIR/$rel"
+  if [[ ! -e "$src" ]]; then
+    warn "$rel: not in \$HOME, skipping"
+    continue
+  fi
+  if [[ -L "$src" ]]; then
+    continue
+  fi
+  mkdir -p "$(dirname "$dst")"
+  if [[ -f "$dst" ]] && cmp -s "$src" "$dst"; then
+    ok "$rel: identical"
+  else
+    cp "$src" "$dst" && ok "$rel: copied"
+  fi
+done
+
+step "Done"
