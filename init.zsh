@@ -1,8 +1,15 @@
 # --- Profiling toggle (set ZSH_PROFILE=1 before sourcing to enable) ---
 [[ -n "$ZSH_PROFILE" ]] && zmodload zsh/zprof
 
-# --- Glob qualifiers (#q...) need EXTENDED_GLOB ---
-setopt EXTENDED_GLOB
+# --- zsh options ---
+# EXTENDED_GLOB: required for (#q...) glob qualifiers used below.
+# AUTO_CD / AUTO_PUSHD / PUSHD_IGNORE_DUPS: bare directory cd's, with a dedup'd dir stack.
+# HIST_*: keep raw ~/.zsh_history clean even though atuin handles search.
+setopt EXTENDED_GLOB AUTO_CD AUTO_PUSHD PUSHD_IGNORE_DUPS \
+       HIST_IGNORE_DUPS HIST_REDUCE_BLANKS HIST_VERIFY
+HISTSIZE=100000
+SAVEHIST=100000
+HISTFILE="$HOME/.zsh_history"
 
 # --- Self-discovery: resolve repo dir from this file's location ---
 export ZSH_SETTINGS_DIR="${${(%):-%N}:A:h}"
@@ -69,15 +76,25 @@ else
   compinit
 fi
 
-# --- fzf-tab (must load after compinit) ---
+# --- fzf-tab + history-substring-search (must load after compinit) ---
 _antidote_bundle plugins-post
+# Up/Down walk history filtered by the prefix already typed on the command line.
+# Atuin owns Ctrl-R for fuzzy search; this covers the "I just want the previous
+# command starting with `git p`" reflex.
+bindkey '^[[A' history-substring-search-up
+bindkey '^[[B' history-substring-search-down
 zstyle ':fzf-tab:*' fzf-flags --height 40% --layout=reverse --border
-zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza --tree --icons --level=2 $realpath'
-zstyle ':fzf-tab:complete:ls:*' fzf-preview 'eza --tree --icons --level=2 $realpath'
-zstyle ':fzf-tab:complete:eza:*' fzf-preview 'eza --tree --icons --level=2 $realpath'
-zstyle ':fzf-tab:complete:cat:*' fzf-preview 'bat --style=numbers --color=always --line-range :300 $realpath'
-zstyle ':fzf-tab:complete:bat:*' fzf-preview 'bat --style=numbers --color=always --line-range :300 $realpath'
-zstyle ':fzf-tab:complete:vim:*' fzf-preview 'bat --style=numbers --color=always --line-range :300 $realpath'
+# Reuse the FZF_*_PREVIEW commands from fzf.zsh, swapping the `{}` placeholder
+# for fzf-tab's `$realpath` (single source of truth for preview formatting).
+_eza_pv="${FZF_EZA_PREVIEW//\{\}/\$realpath}"
+_bat_pv="${FZF_BAT_PREVIEW//\{\}/\$realpath}"
+for _ctx in cd ls eza; do
+  zstyle ":fzf-tab:complete:$_ctx:*" fzf-preview "$_eza_pv"
+done
+for _ctx in cat bat vim; do
+  zstyle ":fzf-tab:complete:$_ctx:*" fzf-preview "$_bat_pv"
+done
+unset _eza_pv _bat_pv _ctx
 zstyle ':fzf-tab:complete:git-checkout:*' fzf-preview 'git log --color=always --oneline -20 $word'
 zstyle ':fzf-tab:complete:git-log:*' fzf-preview 'git log --color=always --oneline -20 $word'
 zstyle ':fzf-tab:complete:kill:*' fzf-preview 'ps -p $word -o pid,user,%cpu,%mem,command'
@@ -95,19 +112,31 @@ function sdk() {
 }
 
 # --- Bun ---
-[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
-# --- Deferred completions (lazy-loaded after compinit) ---
+# --- Deferred completions (lazy-loaded on first invocation, ~10ms saved at startup) ---
+# Trade-off: tab-complete on `gcloud`/`entire`/`bun <TAB>` is silent until the
+# command has been run once per session — then completions register and behave
+# normally. Direct invocations (`bun --version`) always work — they hit the
+# function stub which sources, unsets itself, and execs the binary.
 function gcloud() {
   unfunction gcloud
   source "/opt/homebrew/share/google-cloud-sdk/completion.zsh.inc"
   gcloud "$@"
 }
+function entire() {
+  unfunction entire
+  _init_cache entire entire completion zsh
+  entire "$@"
+}
+function bun() {
+  unfunction bun
+  [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
+  bun "$@"
+}
 
-# entire CLI completion + direnv hook (cached, auto-invalidate on binary upgrade)
-_init_cache entire entire completion zsh
+# direnv adds a chpwd hook — must be registered eagerly to fire on every cd.
 _init_cache direnv direnv hook zsh
 
 # --- Profiling report (only emitted if ZSH_PROFILE=1) ---
