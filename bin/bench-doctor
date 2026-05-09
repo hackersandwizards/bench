@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+# Health check for the dotfiles setup.
+set -u
+
+ok()   { printf '\033[32m✓\033[0m %s\n' "$1"; }
+fail() { printf '\033[31m✗\033[0m %s\n' "$1"; }
+warn() { printf '\033[33m⚠\033[0m %s\n' "$1"; }
+check() {
+  local label="$1"; shift
+  if "$@" >/dev/null 2>&1; then ok "$label"; else fail "$label"; fi
+}
+
+REPO="$(cd "$(dirname "$0")/.." && pwd)"
+
+echo "=== Environment ==="
+if [[ -n "${ZSH_SETTINGS_DIR:-}" ]]; then
+  ok "ZSH_SETTINGS_DIR=$ZSH_SETTINGS_DIR"
+else
+  warn "ZSH_SETTINGS_DIR not set in current shell (only set by init.zsh)"
+fi
+
+echo
+echo "=== Required tools ==="
+for cmd in starship antidote zoxide fzf eza bat fd rg gh git delta lazygit jaq xh; do
+  check "$cmd" command -v "$cmd"
+done
+
+echo
+echo "=== Optional tools ==="
+for cmd in atuin direnv stow gitleaks shellcheck claude; do
+  check "$cmd" command -v "$cmd"
+done
+
+echo
+echo "=== Stow symlinks ==="
+for rel in .gitconfig .vimrc .tmux.conf .gitignore_global .ssh/config; do
+  if [[ -L "$HOME/$rel" ]]; then
+    ok "$rel -> $(readlink "$HOME/$rel")"
+  elif [[ -e "$HOME/$rel" ]]; then
+    warn "$rel: real file (not Stow-managed)"
+  else
+    warn "$rel: missing"
+  fi
+done
+
+echo
+echo "=== Repo state ==="
+HOOKS_PATH=$(git -C "$REPO" config core.hooksPath 2>/dev/null || echo "<unset>")
+if [[ "$HOOKS_PATH" == ".githooks" ]]; then
+  ok "core.hooksPath = .githooks"
+else
+  warn "core.hooksPath = $HOOKS_PATH (run install.sh to fix)"
+fi
+if [[ -f "$REPO/secrets.zsh" ]]; then
+  ok "secrets.zsh present"
+else
+  warn "secrets.zsh missing (optional)"
+fi
+
+echo
+echo "=== Git auth ==="
+if gh auth status >/dev/null 2>&1; then
+  ok "gh auth ok"
+else
+  warn "gh auth not configured"
+fi
+
+echo
+echo "=== Startup time ==="
+START=$(python3 -c 'import time; print(int(time.time()*1000))')
+zsh -i -c exit >/dev/null 2>&1
+END=$(python3 -c 'import time; print(int(time.time()*1000))')
+echo "  zsh -i -c exit took $((END - START))ms"

@@ -1,5 +1,6 @@
 # --- PATH ---
 export PATH="\
+$ZSH_SETTINGS_DIR/bin:\
 $HOME/.local/bin:\
 $HOME/.cargo/bin:\
 $HOME/go/bin:\
