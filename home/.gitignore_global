@@ -21,3 +21,11 @@ desktop.ini
 # OS junk
 $RECYCLE.BIN/
 *.lnk
+
+# Claude Code local settings (per-machine, never committed)
+.claude/settings.local.json
+
+# Secrets — keep .env.example / .env.production trackable as templates
+.env
+.env.local
+.env.*.local
