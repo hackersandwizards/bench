@@ -23,6 +23,7 @@ macos.sh              # Opt-in macOS system defaults
 Brewfile              # Executable source of truth for brew packages
 bin/                  # Maintenance commands (bench-doctor/update/export, _lib.sh)
 .githooks/pre-commit  # gitleaks + shellcheck + zsh -n on staged files
+.claude/              # Statusline command + Claude Code rules/settings
 ghostty/              # Ghostty terminal config
 home/                 # Dotfile templates symlinked via Stow
 docs/                 # Package manifest snapshots (offline-readable)

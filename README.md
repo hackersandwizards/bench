@@ -25,7 +25,7 @@ The wizard handles each step opt-in: `brew bundle`, Stow symlinks, `~/.gitconfig
 init.zsh              Main entrypoint (sourced from ~/.zshrc)
 exports.zsh           PATH + env vars (sources secrets.zsh if present)
 aliases.zsh           Aliases
-functions.zsh         Shell functions (fkill, cdf, gs, gshow, …)
+functions.zsh         Shell functions (fkill, fview, cdf, gs, gshow, v, diff)
 fzf.zsh               fzf config + ANSI color mapping
 plugins.txt           Antidote plugin list (core)
 plugins-post.txt      Antidote plugin list (post-compinit)
@@ -35,16 +35,20 @@ install.sh            Interactive wizard
 macos.sh              Opt-in macOS system defaults
 secrets.zsh           Untracked, gitignored. API keys go here
 bin/
+  _lib.sh               Shared helpers (step/ok/warn/skip/have, STOW_FILES, ANTIDOTE_SH, REPO_ROOT)
   bench-update          Update brew, antidote, language tools, globals
   bench-export          Refresh Brewfile + docs/ snapshots + sync home/ from $HOME
   bench-doctor          Health check
 home/                 Stow package — symlinked into $HOME
   .gitconfig            Aliases, delta, includes ~/.gitconfig.local
   .gitignore_global     .DS_Store, IDE noise, etc.
+  .commitTemplate.txt   Conventional commit message template
   .vimrc, .mongorc.js, .tmux.conf
   .ssh/config           Hardened (Keychain, ControlMaster, no ForwardAgent)
 ghostty/              Ghostty terminal config (single source of truth for theme)
 docs/                 Package inventory snapshots (committed; portable)
+.claude/              Claude Code statusline + rules + settings
+.rtk/                 Token-saving CLI proxy filters
 .githooks/pre-commit  gitleaks + shellcheck + zsh -n (repo-local)
 ```
 
