@@ -1,6 +1,8 @@
-# --- Completion & key bindings ---
-[[ $- == *i* ]] && source "/opt/homebrew/opt/fzf/shell/completion.zsh" 2> /dev/null
-source "/opt/homebrew/opt/fzf/shell/key-bindings.zsh"
+# --- Completion & key bindings (interactive shells only — key-bindings touches zle) ---
+if [[ $- == *i* ]]; then
+  source "/opt/homebrew/opt/fzf/shell/completion.zsh" 2> /dev/null
+  source "/opt/homebrew/opt/fzf/shell/key-bindings.zsh"
+fi
 
 # --- Preview commands (reused by fzf-tab styles in init.zsh and functions.zsh) ---
 export FZF_BAT_PREVIEW='bat --style=numbers --color=always --line-range :300 {}'

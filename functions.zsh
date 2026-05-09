@@ -18,8 +18,11 @@ cdf() {
   file=$(fzf +m -q "$1") && cd "${file:h}"
 }
 
+_git_log_graph() {
+  git log --graph --format='%C(auto)%h%d %s %C(white)%C(bold)%cr' --color=always "$@"
+}
+
 gs() {
-  local g=(git log --graph --format='%C(auto)%h%d %s %C(white)%C(bold)%cr' --color=always --all "$@")
   local fzf=(fzf --ansi --reverse --tiebreak=index --no-sort
     --preview 'f() { set -- $(echo -- "$@" | grep -o "[a-f0-9]\{7\}"); [ $# -eq 0 ] || git show --name-only $1; }; f {}'
     --bind "ctrl-m:execute:
@@ -27,14 +30,13 @@ gs() {
               xargs -I % sh -c 'git show --color=always % | less -R') << 'FZF-EOF'
               {}
   FZF-EOF")
-  $g | $fzf
+  _git_log_graph --all "$@" | $fzf
 }
 
 gshow() {
-  local g=(git log --graph --format='%C(auto)%h%d %s %C(white)%C(bold)%cr' --color=always "$@")
   local fzf=(fzf --ansi --reverse --tiebreak=index --no-sort --bind=ctrl-s:toggle-sort
     --preview 'f() { set -- $(echo -- "$@" | grep -o "[a-f0-9]\{7\}"); [ $# -eq 0 ] || git show --color=always $1; }; f {}')
-  $g | $fzf | grep -o "[a-f0-9]\{7\}"
+  _git_log_graph "$@" | $fzf | grep -o "[a-f0-9]\{7\}"
 }
 
 v() {
