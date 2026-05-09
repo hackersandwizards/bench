@@ -9,7 +9,8 @@ fkill() {
 }
 
 fview() {
-  $EDITOR $(fzf --preview 'bat --style=numbers --color=always --line-range :500 {}')
+  local f
+  f=$(fzf --preview "$FZF_BAT_PREVIEW") && "$EDITOR" "$f"
 }
 
 cdf() {

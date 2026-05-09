@@ -11,6 +11,20 @@ HOME_DIR="$REPO_ROOT/home"
 
 mkdir -p "$DOCS"
 
+# Run "$@" capturing stdout to $1; only overwrite the destination on success
+# so a failed command leaves the previous snapshot intact (no empty files).
+dump_to() {
+  local out="$1"; shift
+  local tmp="$out.tmp"
+  if "$@" > "$tmp" 2>/dev/null; then
+    mv "$tmp" "$out"
+    ok "${out##*/}"
+  else
+    rm -f "$tmp"
+    warn "${out##*/} failed"
+  fi
+}
+
 # --- Brewfile (executable source of truth) ---
 if have brew; then
   step "Brewfile"
@@ -24,19 +38,18 @@ fi
 # --- docs/ snapshots (portable, offline-readable) ---
 step "docs/ snapshots"
 if have brew; then
-  brew tap    > "$DOCS/brew-taps.txt"   2>/dev/null &
-  brew leaves > "$DOCS/brew-leaves.txt" 2>/dev/null &
-  brew list   > "$DOCS/brews.txt"       2>/dev/null &
+  dump_to "$DOCS/brew-taps.txt"   brew tap    &
+  dump_to "$DOCS/brew-leaves.txt" brew leaves &
+  dump_to "$DOCS/brews.txt"       brew list   &
   wait
-  ok "brew-taps.txt brew-leaves.txt brews.txt"
 fi
-have bun   && bun pm -g list      > "$DOCS/buns.txt"  2>/dev/null && ok "buns.txt"
-have gem   && gem list            > "$DOCS/gems.txt"  2>/dev/null && ok "gems.txt"
-have pip   && pip freeze          > "$DOCS/pip.txt"   2>/dev/null && ok "pip.txt"
-have npm   && npm list -g --depth=0 > "$DOCS/npms.txt" 2>/dev/null && ok "npms.txt"
-have cargo && cargo install --list  > "$DOCS/cargo.txt" 2>/dev/null && ok "cargo.txt"
-have sdk   && sdk current         > "$DOCS/sdks.txt"  2>/dev/null && ok "sdks.txt"
-have mix   && mix archive         > "$DOCS/mix.txt"   2>/dev/null && ok "mix.txt"
+have bun   && dump_to "$DOCS/buns.txt"  bun pm -g list
+have gem   && dump_to "$DOCS/gems.txt"  gem list
+have pip   && dump_to "$DOCS/pip.txt"   pip freeze
+have npm   && dump_to "$DOCS/npms.txt"  npm list -g --depth=0
+have cargo && dump_to "$DOCS/cargo.txt" cargo install --list
+have sdk   && dump_to "$DOCS/sdks.txt"  sdk current
+have mix   && dump_to "$DOCS/mix.txt"   mix archive
 [[ -f "$HOME/.gradle/gradle.properties" ]] \
   && cp "$HOME/.gradle/gradle.properties" "$DOCS/gradle.properties" \
   && ok "gradle.properties"
