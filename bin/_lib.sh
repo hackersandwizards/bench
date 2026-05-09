@@ -25,6 +25,11 @@ run() {
 # shellcheck disable=SC2034  # consumed by bench-* and install.sh
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+# Current core.hooksPath setting; "<unset>" when unconfigured.
+hooks_path() {
+  git -C "$REPO_ROOT" config core.hooksPath 2>/dev/null || echo "<unset>"
+}
+
 # shellcheck disable=SC2034  # consumed by bench-update / bench-doctor
 ANTIDOTE_SH="/opt/homebrew/opt/antidote/share/antidote/antidote.zsh"
 

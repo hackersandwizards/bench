@@ -26,30 +26,24 @@ dump_to() {
 }
 
 # --- Brewfile (executable source of truth) ---
-if have brew; then
-  step "Brewfile"
-  if brew bundle dump --describe --force --file="$REPO_ROOT/Brewfile"; then
-    ok "Brewfile"
-  else
-    warn "Brewfile failed"
-  fi
-fi
+have brew && run "Brewfile" brew bundle dump --describe --force --file="$REPO_ROOT/Brewfile"
 
 # --- docs/ snapshots (portable, offline-readable) ---
+# Each tool is its own subprocess and stat-bound — fan out, then `wait`.
 step "docs/ snapshots"
 if have brew; then
   dump_to "$DOCS/brew-taps.txt"   brew tap    &
   dump_to "$DOCS/brew-leaves.txt" brew leaves &
   dump_to "$DOCS/brews.txt"       brew list   &
-  wait
 fi
-have bun   && dump_to "$DOCS/buns.txt"  bun pm -g list
-have gem   && dump_to "$DOCS/gems.txt"  gem list
-have pip   && dump_to "$DOCS/pip.txt"   pip freeze
-have npm   && dump_to "$DOCS/npms.txt"  npm list -g --depth=0
-have cargo && dump_to "$DOCS/cargo.txt" cargo install --list
-have sdk   && dump_to "$DOCS/sdks.txt"  sdk current
-have mix   && dump_to "$DOCS/mix.txt"   mix archive
+have bun   && dump_to "$DOCS/buns.txt"  bun pm -g list             &
+have gem   && dump_to "$DOCS/gems.txt"  gem list                   &
+have pip   && dump_to "$DOCS/pip.txt"   pip freeze                 &
+have npm   && dump_to "$DOCS/npms.txt"  npm list -g --depth=0      &
+have cargo && dump_to "$DOCS/cargo.txt" cargo install --list       &
+have sdk   && dump_to "$DOCS/sdks.txt"  sdk current                &
+have mix   && dump_to "$DOCS/mix.txt"   mix archive                &
+wait
 [[ -f "$HOME/.gradle/gradle.properties" ]] \
   && cp "$HOME/.gradle/gradle.properties" "$DOCS/gradle.properties" \
   && ok "gradle.properties"
