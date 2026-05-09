@@ -21,12 +21,19 @@
 [core]
 	autocrlf = input
 	pager = delta
+	excludesfile = ~/.gitignore_global
 [interactive]
 	diffFilter = delta --color-only
 [delta]
 	navigate = true
 	side-by-side = true
 	light = true
+	line-numbers = true
+	syntax-theme = GitHub
+	minus-style = syntax
+	minus-emph-style = syntax bold
+	plus-style = syntax
+	plus-emph-style = syntax bold
 [push]
 	default = simple
 	autoSetupRemote = true

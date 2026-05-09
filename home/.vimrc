@@ -1,4 +1,7 @@
 syntax on
+set background=light
+set t_Co=256
+colorscheme default
 
 function! ClearRegisters()
     let regs='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/-="*+'

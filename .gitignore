@@ -2,3 +2,7 @@
 plugins.zsh
 plugins-post.zsh
 secrets.zsh
+home/.gitconfig.local
+home/.ssh/id_*
+home/.ssh/known_hosts*
+home/.ssh/control/
