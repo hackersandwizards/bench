@@ -46,8 +46,7 @@ defaults write com.apple.finder ShowMountedServersOnDesktop -bool true
 
 # ============================================================================
 # .DS_Store on network shares and USB drives
-# (lokal: cleanup-Alias räumt nachträglich; Apple bietet kein offizielles
-#  Flag für lokale Disks)
+# (local disks have no official flag — the cleanup alias sweeps them after.)
 # ============================================================================
 defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true
 defaults write com.apple.desktopservices DSDontWriteUSBStores -bool true
@@ -68,7 +67,7 @@ defaults write com.apple.screensaver askForPasswordDelay -int 0
 defaults write com.apple.LaunchServices LSQuarantine -bool false
 
 # ============================================================================
-# Software Updates — alles auto
+# Software Updates — fully automatic
 # ============================================================================
 defaults write com.apple.SoftwareUpdate AutomaticCheckEnabled -bool true
 defaults write com.apple.SoftwareUpdate AutomaticDownload -bool true
@@ -91,7 +90,7 @@ defaults write com.apple.dock show-process-indicators -bool true
 defaults write com.apple.dock tilesize -int 36
 
 # ============================================================================
-# Activity Monitor — Dock-Icon zeigt CPU-History-Bars pro Core
+# Activity Monitor — Dock icon shows per-core CPU history bars
 # ============================================================================
 defaults write com.apple.ActivityMonitor OpenMainWindow -bool true
 defaults write com.apple.ActivityMonitor IconType -int 6
