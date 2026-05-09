@@ -54,19 +54,6 @@ defaults write NSGlobalDomain PMPrintingExpandedStateForPrint2 -bool true
 defaults write com.apple.CrashReporter DialogType none
 
 # ============================================================================
-# Default browser — Safari
-# Idempotent: re-runs reset Safari as default if anything else changed it.
-# Requires the `defaultbrowser` cask (see Brewfile); first invocation may
-# trigger a one-time macOS approval prompt.
-# ============================================================================
-if have defaultbrowser; then
-  defaultbrowser safari >/dev/null
-  ok "Default browser set to Safari"
-else
-  warn "defaultbrowser CLI missing — run install.sh step 1 to install it"
-fi
-
-# ============================================================================
 # Finder
 # ============================================================================
 defaults write com.apple.finder AppleShowAllFiles -bool true
