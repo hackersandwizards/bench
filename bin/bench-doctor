@@ -41,11 +41,11 @@ done
 
 echo
 echo "=== Repo state ==="
-HOOKS_PATH=$(git -C "$REPO_ROOT" config core.hooksPath 2>/dev/null || echo "<unset>")
-if [[ "$HOOKS_PATH" == ".githooks" ]]; then
+hp=$(hooks_path)
+if [[ "$hp" == ".githooks" ]]; then
   ok "core.hooksPath = .githooks"
 else
-  warn "core.hooksPath = $HOOKS_PATH (run install.sh to fix)"
+  warn "core.hooksPath = $hp (run install.sh to fix)"
 fi
 if [[ -f "$REPO_ROOT/secrets.zsh" ]]; then
   ok "secrets.zsh present"
@@ -65,7 +65,9 @@ done
 
 echo
 echo "=== Startup time ==="
-START=$(python3 -c 'import time; print(int(time.time()*1000))')
+# bash 5.3+ exposes $EPOCHREALTIME (microsecond float, no fork). Strip the dot to
+# get an integer microseconds count, then divide.
+start=${EPOCHREALTIME/./}
 zsh -i -c exit >/dev/null 2>&1
-END=$(python3 -c 'import time; print(int(time.time()*1000))')
-echo "  zsh -i -c exit took $((END - START))ms"
+end=${EPOCHREALTIME/./}
+echo "  zsh -i -c exit took $(( (end - start) / 1000 ))ms"
