@@ -44,7 +44,7 @@
 [init]
 	defaultBranch = main
 [commit]
-	template = ~/opt/zsh-settings/home/commitTemplate.txt
+	template = ~/.commitTemplate.txt
 [filter "lfs"]
 	smudge = git-lfs smudge -- %f
 	process = git-lfs filter-process
