@@ -2,22 +2,21 @@
 # Update brew, antidote plugins, language toolchains and global packages.
 set -u
 
-step() { printf '\n\033[1;36m▸ %s\033[0m\n' "$1"; }
-ok()   { printf '\033[32m✓\033[0m %s\n' "$1"; }
-warn() { printf '\033[33m⚠\033[0m %s\n' "$1"; }
-have() { command -v "$1" >/dev/null 2>&1; }
-
-run() {
-  local label="$1"; shift
-  step "$label"
-  if "$@"; then ok "$label"; else warn "$label failed (continuing)"; fi
-}
+# shellcheck source-path=SCRIPTDIR
+# shellcheck source=_lib.sh
+. "$(dirname "$0")/_lib.sh"
 
 run "Homebrew update"     brew update
 run "Homebrew upgrade"    brew upgrade
 run "Homebrew cleanup"    brew cleanup -s
 
-have antidote && run "Antidote plugins" antidote update
+if [[ -f /opt/homebrew/opt/antidote/share/antidote/antidote.zsh ]]; then
+  run "Antidote plugins" zsh -c '
+    source /opt/homebrew/opt/antidote/share/antidote/antidote.zsh
+    antidote update'
+  rm -f "$REPO_ROOT/plugins.zsh" "$REPO_ROOT/plugins-post.zsh"
+  ok "Antidote static bundles invalidated (regenerate on next shell)"
+fi
 have rustup   && run "Rust toolchain"   rustup update
 
 if have gem; then

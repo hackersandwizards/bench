@@ -3,14 +3,12 @@
 # Each step is opt-in via a Y/n prompt.
 set -u
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-cd "$SCRIPT_DIR" || exit 1
+# shellcheck source-path=SCRIPTDIR/bin
+# shellcheck source=bin/_lib.sh
+. "$(dirname "$0")/bin/_lib.sh"
+cd "$REPO_ROOT" || exit 1
 
-# ---------- UI helpers ----------
-step()  { printf '\n\033[1;36m▸ %s\033[0m\n' "$1"; }
-ok()    { printf '\033[32m✓\033[0m %s\n' "$1"; }
-skip()  { printf '\033[2m·\033[0m %s\n' "$1"; }
-warn()  { printf '\033[33m⚠\033[0m %s\n' "$1"; }
+skip() { printf '\033[2m·\033[0m %s\n' "$1"; }
 
 ask() {
   local prompt="$1" default="${2:-Y}" reply hint
@@ -31,10 +29,10 @@ backup() {
 
 # ---------- 1. Brewfile ----------
 step "Step 1/7: Install Homebrew packages from Brewfile"
-if ! command -v brew >/dev/null 2>&1; then
+if ! have brew; then
   warn "Homebrew not installed — install from https://brew.sh first"
 elif ask "Run 'brew bundle' now?"; then
-  brew bundle --file="$SCRIPT_DIR/Brewfile"
+  brew bundle --file="$REPO_ROOT/Brewfile"
   ok "Brewfile installed"
 else
   skip "Skipped Brewfile install"
@@ -42,15 +40,15 @@ fi
 
 # ---------- 2. Stow symlinks ----------
 step "Step 2/7: Symlink home/ via Stow"
-if ! command -v stow >/dev/null 2>&1; then
+if ! have stow; then
   warn "stow not installed — run step 1 first or 'brew install stow'"
 elif ask "Symlink dotfiles in home/ to \$HOME via stow?"; then
-  for rel in .gitconfig .vimrc .mongorc.js .tmux.conf .gitignore_global .ssh/config; do
+  for rel in "${STOW_FILES[@]}"; do
     backup "$HOME/$rel"
   done
   mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
   mkdir -p "$HOME/.ssh/control" && chmod 700 "$HOME/.ssh/control"
-  stow --dir="$SCRIPT_DIR" --target="$HOME" --restow home
+  stow --dir="$REPO_ROOT" --target="$HOME" --restow home
   ok "Stow symlinks applied"
 else
   skip "Skipped stow"
@@ -75,11 +73,11 @@ fi
 
 # ---------- 4. Repo-local git hooks ----------
 step "Step 4/7: Activate repo-local git hooks (gitleaks + shellcheck)"
-current_hooks=$(git -C "$SCRIPT_DIR" config core.hooksPath 2>/dev/null || echo "")
+current_hooks=$(git -C "$REPO_ROOT" config core.hooksPath 2>/dev/null || echo "")
 if [[ "$current_hooks" == ".githooks" ]]; then
   ok "core.hooksPath already set to .githooks"
 elif ask "Set core.hooksPath = .githooks for this repo?"; then
-  git -C "$SCRIPT_DIR" config core.hooksPath .githooks
+  git -C "$REPO_ROOT" config core.hooksPath .githooks
   ok "core.hooksPath set"
 else
   skip "Skipped hook activation"
@@ -87,10 +85,10 @@ fi
 
 # ---------- 5. Source init.zsh from ~/.zshrc ----------
 step "Step 5/7: Source init.zsh from ~/.zshrc"
-if grep -qF "$SCRIPT_DIR/init.zsh" "$HOME/.zshrc" 2>/dev/null; then
+if grep -qF "$REPO_ROOT/init.zsh" "$HOME/.zshrc" 2>/dev/null; then
   ok "init.zsh already sourced in ~/.zshrc"
 elif ask "Append source line to ~/.zshrc?"; then
-  echo "[ -f \"$SCRIPT_DIR/init.zsh\" ] && source \"$SCRIPT_DIR/init.zsh\"" >> "$HOME/.zshrc"
+  echo "[ -f \"$REPO_ROOT/init.zsh\" ] && source \"$REPO_ROOT/init.zsh\"" >> "$HOME/.zshrc"
   ok "Appended to ~/.zshrc"
 else
   skip "Skipped ~/.zshrc append"
@@ -106,7 +104,7 @@ elif [[ ! -d "/Applications/Ghostty.app" ]]; then
   warn "Ghostty.app not found in /Applications — install it first (https://ghostty.org), then re-run"
 elif ask "Symlink Ghostty config?"; then
   backup "$ghostty_target"
-  ln -sf "$SCRIPT_DIR/ghostty/config.ghostty" "$ghostty_target"
+  ln -sf "$REPO_ROOT/ghostty/config.ghostty" "$ghostty_target"
   ok "Ghostty config symlinked"
 else
   skip "Skipped Ghostty"
@@ -114,7 +112,7 @@ fi
 
 # ---------- 7. atuin history migration ----------
 step "Step 7/7: atuin history import"
-if ! command -v atuin >/dev/null 2>&1; then
+if ! have atuin; then
   warn "atuin not installed — run step 1 (Brewfile) first"
 elif [[ -f "$HOME/.local/share/atuin/history.db" ]]; then
   ok "atuin database already exists — skipping import"
@@ -130,7 +128,7 @@ step "Optional next steps"
 echo "  • Run './macos.sh' to apply ~45 macOS system defaults (keyboard, finder, dock, etc.)"
 echo "  • Run 'bench-doctor' to verify the install"
 echo "  • Run 'bench-export' to refresh Brewfile/docs/ snapshots"
-echo "  • Create '$SCRIPT_DIR/secrets.zsh' for API keys (gitignored)"
+echo "  • Create '$REPO_ROOT/secrets.zsh' for API keys (gitignored)"
 
 step "Done"
 echo "Open a new terminal or run 'exec zsh' to load the new config."

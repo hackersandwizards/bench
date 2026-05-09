@@ -2,15 +2,9 @@
 # Health check for the dotfiles setup.
 set -u
 
-ok()   { printf '\033[32m✓\033[0m %s\n' "$1"; }
-fail() { printf '\033[31m✗\033[0m %s\n' "$1"; }
-warn() { printf '\033[33m⚠\033[0m %s\n' "$1"; }
-check() {
-  local label="$1"; shift
-  if "$@" >/dev/null 2>&1; then ok "$label"; else fail "$label"; fi
-}
-
-REPO="$(cd "$(dirname "$0")/.." && pwd)"
+# shellcheck source-path=SCRIPTDIR
+# shellcheck source=_lib.sh
+. "$(dirname "$0")/_lib.sh"
 
 echo "=== Environment ==="
 if [[ -n "${ZSH_SETTINGS_DIR:-}" ]]; then
@@ -22,11 +16,7 @@ fi
 echo
 echo "=== Required tools ==="
 # antidote is a zsh function (sourced from brew), not a PATH binary
-if [[ -f /opt/homebrew/opt/antidote/share/antidote/antidote.zsh ]]; then
-  ok "antidote"
-else
-  fail "antidote"
-fi
+check "antidote" test -f /opt/homebrew/opt/antidote/share/antidote/antidote.zsh
 for cmd in starship zoxide fzf eza bat fd rg gh glab git delta lazygit jaq xh; do
   check "$cmd" command -v "$cmd"
 done
@@ -39,7 +29,7 @@ done
 
 echo
 echo "=== Stow symlinks ==="
-for rel in .gitconfig .vimrc .tmux.conf .gitignore_global .ssh/config; do
+for rel in "${STOW_FILES[@]}"; do
   if [[ -L "$HOME/$rel" ]]; then
     ok "$rel -> $(readlink "$HOME/$rel")"
   elif [[ -e "$HOME/$rel" ]]; then
@@ -51,13 +41,13 @@ done
 
 echo
 echo "=== Repo state ==="
-HOOKS_PATH=$(git -C "$REPO" config core.hooksPath 2>/dev/null || echo "<unset>")
+HOOKS_PATH=$(git -C "$REPO_ROOT" config core.hooksPath 2>/dev/null || echo "<unset>")
 if [[ "$HOOKS_PATH" == ".githooks" ]]; then
   ok "core.hooksPath = .githooks"
 else
   warn "core.hooksPath = $HOOKS_PATH (run install.sh to fix)"
 fi
-if [[ -f "$REPO/secrets.zsh" ]]; then
+if [[ -f "$REPO_ROOT/secrets.zsh" ]]; then
   ok "secrets.zsh present"
 else
   warn "secrets.zsh missing (optional)"
@@ -65,16 +55,13 @@ fi
 
 echo
 echo "=== Git auth ==="
-if gh auth status >/dev/null 2>&1; then
-  ok "gh auth ok"
-else
-  warn "gh auth not configured"
-fi
-if glab auth status >/dev/null 2>&1; then
-  ok "glab auth ok"
-else
-  warn "glab auth not configured"
-fi
+for tool in gh glab; do
+  if "$tool" auth status >/dev/null 2>&1; then
+    ok "$tool auth ok"
+  else
+    warn "$tool auth not configured"
+  fi
+done
 
 echo
 echo "=== Startup time ==="
