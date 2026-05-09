@@ -1,0 +1,51 @@
+[include]
+	path = ~/.gitconfig.local
+[color]
+	ui = auto
+	diff = true
+[alias]
+	st = status -sb
+	ci = commit
+	co = checkout
+	pu = pull --rebase --all
+	ps = push
+	all = "!f() { find . -wholename '*/.git/config' -type f -exec sh -c 'readlink -f \"$(dirname \"$1\")\"/..' _ {} \\; | xargs -I{} sh -c 'echo \"$1\" && git -C \"$1\" $2;' _ {} \"$1\"; }; f"
+	integrate = "!test \"$(git merge-base HEAD \"$1\")\" = \"$(git rev-parse HEAD)\" && git merge --no-ff --edit $1 || echo >&2 \"Not up-to-date; refusing to merge, rebase first!\""
+	unstage = reset HEAD
+	undo-commit = reset --soft
+	clean = reset --hard
+	b = branch
+	c = commit
+	p = pull
+	ll = log --graph --oneline --decorate --color --all --pretty=format:'%C(yellow)%h|%Cred%ad|%Cblue%an%Creset%C(auto)%d %s' --date=short
+[core]
+	autocrlf = input
+	pager = delta
+[interactive]
+	diffFilter = delta --color-only
+[delta]
+	navigate = true
+	side-by-side = true
+	light = true
+[push]
+	default = simple
+	autoSetupRemote = true
+[pull]
+	rebase = true
+[merge]
+	conflictstyle = diff3
+[init]
+	defaultBranch = main
+[commit]
+	template = ~/opt/zsh-settings/home/commitTemplate.txt
+[filter "lfs"]
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+	clean = git-lfs clean -- %f
+[credential "https://github.com"]
+	helper =
+	helper = !/opt/homebrew/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper =
+	helper = !/opt/homebrew/bin/gh auth git-credential

@@ -1,0 +1,58 @@
+# Starship prompt — Pure-style layout, default Starship colors
+"$schema" = 'https://starship.rs/config-schema.json'
+
+format = """
+$username\
+$hostname\
+$directory\
+$git_branch\
+$git_state\
+$git_status\
+$jobs\
+$line_break\
+$character"""
+
+[directory]
+style = "cyan"
+
+[git_branch]
+format = "[|](bright-black) [$branch]($style)"
+style = "bright-black"
+
+[git_status]
+format = "[[(*$conflicted$untracked$modified$staged$renamed$deleted)](red) ($ahead_behind$stashed)]($style)"
+style = "bright-black"
+conflicted = "​"
+untracked = "​"
+modified = "​"
+staged = "​"
+renamed = "​"
+deleted = "​"
+stashed = "≡"
+ahead = "↑${count}"
+behind = "↓${count}"
+diverged = "↑${ahead_count}↓${behind_count}"
+
+[git_state]
+format = ' [|](bright-black) \([$state( $progress_current/$progress_total)]($style)\)'
+style = "yellow"
+
+[cmd_duration]
+disabled = true
+
+[jobs]
+format = " [|](bright-black) [$symbol$number]($style)"
+style = "cyan"
+
+# Disabled modules
+[gcloud]
+disabled = true
+
+[nodejs]
+disabled = true
+
+[package]
+disabled = true
+
+[python]
+disabled = true
