@@ -39,6 +39,10 @@ export MANPATH="/opt/homebrew/opt/gnu-sed/libexec/gnuman:/opt/homebrew/opt/coreu
 # --- Locale ---
 export LANG="en_US.UTF-8"
 
+# --- Editor ---
+export EDITOR="vim"
+export VISUAL="vim"
+
 # --- Claude Code ---
 export CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1
 

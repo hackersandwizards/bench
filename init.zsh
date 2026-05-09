@@ -57,7 +57,10 @@ source "$ZSH_SETTINGS_DIR/fzf.zsh"
 source "$ZSH_SETTINGS_DIR/functions.zsh"
 source "$ZSH_SETTINGS_DIR/aliases.zsh"
 
-# --- Bracketed paste magic ---
+# --- Bracketed paste magic (quote URLs / shell metachars when pasting) ---
+# zsh ships the widget but does not wire it up by default.
+autoload -Uz bracketed-paste-magic url-quote-magic
+zle -N bracketed-paste bracketed-paste-magic
 pasteinit() {
   OLD_SELF_INSERT=${${(s.:.)widgets[self-insert]}[2,3]}
   zle -N self-insert url-quote-magic
