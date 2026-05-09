@@ -26,7 +26,7 @@ backup() {
 }
 
 # ---------- 1. Brewfile ----------
-step "Step 1/9: Install Homebrew packages from Brewfile"
+step "Step 1/10: Install Homebrew packages from Brewfile"
 if ! have brew; then
   if ask "Homebrew not installed. Install it now?"; then
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -44,7 +44,7 @@ else
 fi
 
 # ---------- 2. Stow symlinks ----------
-step "Step 2/9: Symlink home/ via Stow"
+step "Step 2/10: Symlink home/ via Stow"
 if ! have stow; then
   warn "stow not installed — run step 1 first or 'brew install stow'"
 elif ask "Symlink dotfiles in home/ to \$HOME via stow?"; then
@@ -60,7 +60,7 @@ else
 fi
 
 # ---------- 3. Personal git identity ----------
-step "Step 3/9: Personal git identity (~/.gitconfig.local)"
+step "Step 3/10: Personal git identity (~/.gitconfig.local)"
 if [[ -f "$HOME/.gitconfig.local" ]]; then
   ok "$HOME/.gitconfig.local already exists, skipping"
 elif ask "Create ~/.gitconfig.local with [user] block?"; then
@@ -77,7 +77,7 @@ else
 fi
 
 # ---------- 4. Repo-local git hooks ----------
-step "Step 4/9: Activate repo-local git hooks (gitleaks + shellcheck)"
+step "Step 4/10: Activate repo-local git hooks (gitleaks + shellcheck)"
 if [[ "$(hooks_path)" == ".githooks" ]]; then
   ok "core.hooksPath already set to .githooks"
 elif ask "Set core.hooksPath = .githooks for this repo?"; then
@@ -88,7 +88,7 @@ else
 fi
 
 # ---------- 5. Source init.zsh from ~/.zshrc ----------
-step "Step 5/9: Source init.zsh from ~/.zshrc"
+step "Step 5/10: Source init.zsh from ~/.zshrc"
 if grep -qF "$REPO_ROOT/init.zsh" "$HOME/.zshrc" 2>/dev/null; then
   ok "init.zsh already sourced in ~/.zshrc"
 elif ask "Append source line to ~/.zshrc?"; then
@@ -99,7 +99,7 @@ else
 fi
 
 # ---------- 6. Ghostty config ----------
-step "Step 6/9: Ghostty config symlink"
+step "Step 6/10: Ghostty config symlink"
 mkdir -p "$HOME/.config/ghostty"
 ghostty_target="$HOME/.config/ghostty/config.ghostty"
 if [[ -L "$ghostty_target" ]]; then
@@ -115,7 +115,7 @@ else
 fi
 
 # ---------- 7. atuin history migration ----------
-step "Step 7/9: atuin history import"
+step "Step 7/10: atuin history import"
 if ! have atuin; then
   warn "atuin not installed — run step 1 (Brewfile) first"
 elif [[ -f "$HOME/.local/share/atuin/history.db" ]]; then
@@ -127,11 +127,32 @@ else
   skip "Skipped — run 'atuin import auto' manually later"
 fi
 
-# ---------- 8. chsh to brew zsh ----------
+# ---------- 8. Antidote pre-warm ----------
+# Generate plugins.zsh + plugins-post.zsh ahead of first interactive shell so
+# the user doesn't pay the cold-cache cost (~5–10s of git clones + bundle
+# compile) on first login. Mirrors init.zsh:_antidote_bundle exactly.
+# bench-update invalidates these caches by deleting them; this is the inverse.
+step "Step 8/10: Pre-warm antidote plugin bundles"
+if [[ ! -f "$ANTIDOTE_SH" ]]; then
+  warn "antidote not at $ANTIDOTE_SH — run step 1 (Brewfile) first"
+elif [[ -s "$REPO_ROOT/plugins.zsh" && -s "$REPO_ROOT/plugins-post.zsh" \
+        && "$REPO_ROOT/plugins.zsh" -nt "$REPO_ROOT/plugins.txt" \
+        && "$REPO_ROOT/plugins-post.zsh" -nt "$REPO_ROOT/plugins-post.txt" ]]; then
+  ok "Antidote bundles already cached and up to date"
+elif ask "Pre-warm antidote bundles now? (avoids slow first shell start)"; then
+  zsh -c "source '$ANTIDOTE_SH'
+          antidote bundle < '$REPO_ROOT/plugins.txt' > '$REPO_ROOT/plugins.zsh'
+          antidote bundle < '$REPO_ROOT/plugins-post.txt' > '$REPO_ROOT/plugins-post.zsh'"
+  ok "Antidote bundles pre-warmed"
+else
+  skip "Skipped antidote pre-warm"
+fi
+
+# ---------- 9. chsh to brew zsh ----------
 # Apple ships zsh in /bin/zsh; brew ships its own at /opt/homebrew/bin/zsh.
 # Both usually match major version, but switching ensures future zsh updates
 # land via brew on the user's cadence rather than tied to macOS releases.
-step "Step 8/9: Switch login shell to brew zsh"
+step "Step 9/10: Switch login shell to brew zsh"
 BREW_ZSH=/opt/homebrew/bin/zsh
 if [[ ! -x "$BREW_ZSH" ]]; then
   warn "$BREW_ZSH not found — run step 1 (Brewfile) first"
@@ -147,8 +168,8 @@ else
   skip "Skipped chsh"
 fi
 
-# ---------- 9. Touch ID for sudo ----------
-step "Step 9/9: Enable Touch ID for sudo"
+# ---------- 10. Touch ID for sudo ----------
+step "Step 10/10: Enable Touch ID for sudo"
 if [[ -f /etc/pam.d/sudo_local ]] && grep -qE '^auth\s+sufficient\s+pam_tid\.so' /etc/pam.d/sudo_local; then
   ok "Touch ID for sudo already enabled"
 elif [[ ! -f /etc/pam.d/sudo_local.template ]]; then
