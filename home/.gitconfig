@@ -30,10 +30,6 @@
 	light = true
 	line-numbers = true
 	syntax-theme = GitHub
-	minus-style = syntax
-	minus-emph-style = syntax bold
-	plus-style = syntax
-	plus-emph-style = syntax bold
 [push]
 	default = simple
 	autoSetupRemote = true
