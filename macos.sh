@@ -39,6 +39,34 @@ defaults -currentHost write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
 defaults write NSGlobalDomain CGDisableCursorLocationMagnification -bool true
 
 # ============================================================================
+# Save / print panels — expanded by default
+# Skip the disclosure-triangle click on every ⌘S and ⌘P. The "2"-suffixed keys
+# cover apps built against the newer NSSavePanel/PMPrintPanel APIs.
+# ============================================================================
+defaults write NSGlobalDomain NSNavPanelExpandedStateForSaveMode -bool true
+defaults write NSGlobalDomain NSNavPanelExpandedStateForSaveMode2 -bool true
+defaults write NSGlobalDomain PMPrintingExpandedStateForPrint -bool true
+defaults write NSGlobalDomain PMPrintingExpandedStateForPrint2 -bool true
+
+# ============================================================================
+# Crash reporter — quiet notification instead of blocking modal dialog
+# ============================================================================
+defaults write com.apple.CrashReporter DialogType none
+
+# ============================================================================
+# Default browser — Safari
+# Idempotent: re-runs reset Safari as default if anything else changed it.
+# Requires the `defaultbrowser` cask (see Brewfile); first invocation may
+# trigger a one-time macOS approval prompt.
+# ============================================================================
+if have defaultbrowser; then
+  defaultbrowser safari >/dev/null
+  ok "Default browser set to Safari"
+else
+  warn "defaultbrowser CLI missing — run install.sh step 1 to install it"
+fi
+
+# ============================================================================
 # Finder
 # ============================================================================
 defaults write com.apple.finder AppleShowAllFiles -bool true
