@@ -1,10 +1,15 @@
+# Ruby ABI from the brew keg (the /opt/homebrew/opt/ruby symlink follows upgrades).
+_ruby_dirs=( /opt/homebrew/opt/ruby/lib/ruby/gems/*(/N:t) )
+RUBY_API="${_ruby_dirs[1]-}"
+unset _ruby_dirs
+
 # --- PATH ---
 export PATH="\
 $ZSH_SETTINGS_DIR/bin:\
 $HOME/.local/bin:\
 $HOME/.cargo/bin:\
 $HOME/go/bin:\
-$HOME/.gem/ruby/4.0.0/bin:\
+${RUBY_API:+$HOME/.gem/ruby/$RUBY_API/bin:}\
 $HOME/.antigravity/antigravity/bin:\
 $HOME/Library/Application Support/JetBrains/Toolbox/scripts:\
 /opt/homebrew/opt/ruby/bin:\
@@ -18,14 +23,18 @@ $HOME/Library/Application Support/JetBrains/Toolbox/scripts:\
 $PATH"
 
 # --- Ruby ---
-export GEM_HOME="$HOME/.gem/ruby/4.0.0"
-export GEM_PATH="$GEM_HOME:/opt/homebrew/lib/ruby/gems/4.0.0"
+if [[ -n "$RUBY_API" ]]; then
+  export GEM_HOME="$HOME/.gem/ruby/$RUBY_API"
+  export GEM_PATH="$GEM_HOME:/opt/homebrew/lib/ruby/gems/$RUBY_API"
+fi
+unset RUBY_API
 export LDFLAGS="-L/opt/homebrew/opt/ruby/lib"
 export CPPFLAGS="-I/opt/homebrew/opt/ruby/include"
 export PKG_CONFIG_PATH="/opt/homebrew/opt/ruby/lib/pkgconfig"
 
 # --- Google Cloud SDK (path only, completions deferred to init.zsh) ---
-source "/opt/homebrew/share/google-cloud-sdk/path.zsh.inc"
+[[ -f "/opt/homebrew/share/google-cloud-sdk/path.zsh.inc" ]] \
+  && source "/opt/homebrew/share/google-cloud-sdk/path.zsh.inc"
 
 # --- Manpages ---
 export MANPATH="/opt/homebrew/opt/gnu-sed/libexec/gnuman:/opt/homebrew/opt/coreutils/libexec/gnuman:$MANPATH"
