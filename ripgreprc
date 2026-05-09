@@ -1,0 +1,5 @@
+# Search hidden files and directories by default.
+--hidden
+
+# rg does not auto-skip .git/ when --hidden is on; exclude it explicitly.
+--glob=!.git/

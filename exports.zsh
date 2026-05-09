@@ -45,5 +45,8 @@ export CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1
 # --- bat ---
 export BAT_THEME="ansi"
 
+# --- ripgrep ---
+export RIPGREP_CONFIG_PATH="$ZSH_SETTINGS_DIR/ripgreprc"
+
 # --- Secrets (untracked, gitignored) ---
 [[ -f "$ZSH_SETTINGS_DIR/secrets.zsh" ]] && source "$ZSH_SETTINGS_DIR/secrets.zsh"
