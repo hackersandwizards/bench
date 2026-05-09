@@ -1,11 +1,29 @@
 #!/usr/bin/env bash
-# Block commits that contain secrets. Requires `gitleaks` (brew install gitleaks).
+# Pre-commit checks: gitleaks (secrets), shellcheck (*.sh), zsh -n (*.zsh).
 set -e
 
-if ! command -v gitleaks >/dev/null 2>&1; then
-  echo "pre-commit: gitleaks not installed — skipping scan" >&2
+# --- gitleaks: block commits containing secrets ---
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks git --staged --redact --no-banner
+else
+  echo "pre-commit: gitleaks not installed — skipping secret scan" >&2
   echo "  install: brew install gitleaks" >&2
-  exit 0
 fi
 
-gitleaks git --staged --redact --no-banner
+# --- shellcheck: lint staged *.sh files ---
+if command -v shellcheck >/dev/null 2>&1; then
+  staged_sh=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.sh$' || true)
+  if [[ -n "$staged_sh" ]]; then
+    echo "$staged_sh" | xargs shellcheck
+  fi
+else
+  echo "pre-commit: shellcheck not installed — skipping shell lint" >&2
+fi
+
+# --- zsh syntax check: staged *.zsh files (zsh-aware, no full lint) ---
+if command -v zsh >/dev/null 2>&1; then
+  staged_zsh=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.zsh$' || true)
+  if [[ -n "$staged_zsh" ]]; then
+    echo "$staged_zsh" | xargs -I {} zsh -n {}
+  fi
+fi
