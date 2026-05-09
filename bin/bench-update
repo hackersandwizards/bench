@@ -10,10 +10,8 @@ run "Homebrew update"     brew update
 run "Homebrew upgrade"    brew upgrade
 run "Homebrew cleanup"    brew cleanup -s
 
-if [[ -f /opt/homebrew/opt/antidote/share/antidote/antidote.zsh ]]; then
-  run "Antidote plugins" zsh -c '
-    source /opt/homebrew/opt/antidote/share/antidote/antidote.zsh
-    antidote update'
+if [[ -f "$ANTIDOTE_SH" ]]; then
+  run "Antidote plugins" zsh -c "source '$ANTIDOTE_SH' && antidote update"
   rm -f "$REPO_ROOT/plugins.zsh" "$REPO_ROOT/plugins-post.zsh"
   ok "Antidote static bundles invalidated (regenerate on next shell)"
 fi
