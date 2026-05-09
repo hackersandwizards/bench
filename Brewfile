@@ -109,6 +109,8 @@ brew "kubernetes-cli"
 brew "lazygit"
 # Pager program similar to more
 brew "less"
+# Mac App Store command-line interface
+brew "mas"
 # Open-source, cross-platform JavaScript runtime environment
 brew "node"
 # Protocol buffers (Google's data interchange format)
@@ -201,6 +203,39 @@ brew "hashicorp/tap/terraform"
 brew "mongodb/brew/mongodb-community"
 # Redpanda CLI & toolbox
 brew "redpanda-data/tap/redpanda"
+cask "adguard"
+cask "antigravity"
+cask "claude"
+cask "cleanmymac"
+cask "conductor"
+cask "cursor"
+cask "daisydisk"
+cask "deepl"
+cask "docker-desktop"
+cask "fathom"
+cask "ghostty"
+cask "google-chrome"
+cask "jetbrains-toolbox"
+cask "microsoft-excel"
+cask "microsoft-powerpoint"
+cask "microsoft-teams"
+cask "microsoft-word"
+cask "notion"
+cask "notion-calendar"
+cask "podman-desktop"
+cask "slack"
+cask "superwhisper"
+cask "visual-studio-code"
+cask "warp"
+cask "whatsapp"
+cask "yubico-authenticator"
+cask "zed"
+cask "zoom"
+mas "Keynote", id: 409183694
+mas "Moom", id: 419330170
+mas "Numbers", id: 409203825
+mas "Pages", id: 409201541
+mas "Xcode", id: 497799835
 vscode "anthropic.claude-code"
 vscode "github.copilot-chat"
 vscode "jetbrains.kotlin"
