@@ -2,15 +2,12 @@
 # Refresh package inventories (Brewfile + docs/) and sync home/ from $HOME.
 set -u
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+# shellcheck source-path=SCRIPTDIR
+# shellcheck source=_lib.sh
+. "$(dirname "$0")/_lib.sh"
+
 DOCS="$REPO_ROOT/docs"
 HOME_DIR="$REPO_ROOT/home"
-
-step() { printf '\n\033[1;36m▸ %s\033[0m\n' "$1"; }
-ok()   { printf '\033[32m✓\033[0m %s\n' "$1"; }
-warn() { printf '\033[33m⚠\033[0m %s\n' "$1"; }
-have() { command -v "$1" >/dev/null 2>&1; }
 
 mkdir -p "$DOCS"
 
@@ -26,9 +23,13 @@ fi
 
 # --- docs/ snapshots (portable, offline-readable) ---
 step "docs/ snapshots"
-have brew  && brew tap    > "$DOCS/brew-taps.txt"   2>/dev/null && ok "brew-taps.txt"
-have brew  && brew leaves > "$DOCS/brew-leaves.txt" 2>/dev/null && ok "brew-leaves.txt"
-have brew  && brew list   > "$DOCS/brews.txt"       2>/dev/null && ok "brews.txt"
+if have brew; then
+  brew tap    > "$DOCS/brew-taps.txt"   2>/dev/null &
+  brew leaves > "$DOCS/brew-leaves.txt" 2>/dev/null &
+  brew list   > "$DOCS/brews.txt"       2>/dev/null &
+  wait
+  ok "brew-taps.txt brew-leaves.txt brews.txt"
+fi
 have bun   && bun pm -g list      > "$DOCS/buns.txt"  2>/dev/null && ok "buns.txt"
 have gem   && gem list            > "$DOCS/gems.txt"  2>/dev/null && ok "gems.txt"
 have pip   && pip freeze          > "$DOCS/pip.txt"   2>/dev/null && ok "pip.txt"
@@ -42,15 +43,7 @@ have mix   && mix archive         > "$DOCS/mix.txt"   2>/dev/null && ok "mix.txt
 
 # --- home/ sync: copy real $HOME files back into repo, skip Stow symlinks ---
 step "home/ sync (Symlinks → skip, real files → copy back)"
-SYNC_FILES=(
-  ".gitconfig"
-  ".vimrc"
-  ".mongorc.js"
-  ".tmux.conf"
-  ".gitignore_global"
-  ".ssh/config"
-)
-for rel in "${SYNC_FILES[@]}"; do
+for rel in "${STOW_FILES[@]}"; do
   src="$HOME/$rel"
   dst="$HOME_DIR/$rel"
   if [[ ! -e "$src" ]]; then
