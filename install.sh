@@ -28,8 +28,15 @@ backup() {
 # ---------- 1. Brewfile ----------
 step "Step 1/7: Install Homebrew packages from Brewfile"
 if ! have brew; then
-  warn "Homebrew not installed — install from https://brew.sh first"
-elif ask "Run 'brew bundle' now?"; then
+  if ask "Homebrew not installed. Install it now?"; then
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+    ok "Homebrew installed"
+  else
+    skip "Skipped — Homebrew required for remaining steps"
+  fi
+fi
+if have brew && ask "Run 'brew bundle' now?"; then
   brew bundle --file="$REPO_ROOT/Brewfile"
   ok "Brewfile installed"
 else
