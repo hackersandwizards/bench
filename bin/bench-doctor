@@ -21,7 +21,13 @@ fi
 
 echo
 echo "=== Required tools ==="
-for cmd in starship antidote zoxide fzf eza bat fd rg gh git delta lazygit jaq xh; do
+# antidote is a zsh function (sourced from brew), not a PATH binary
+if [[ -f /opt/homebrew/opt/antidote/share/antidote/antidote.zsh ]]; then
+  ok "antidote"
+else
+  fail "antidote"
+fi
+for cmd in starship zoxide fzf eza bat fd rg gh git delta lazygit jaq xh; do
   check "$cmd" command -v "$cmd"
 done
 
