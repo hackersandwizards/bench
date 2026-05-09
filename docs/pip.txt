@@ -1,10 +1,7 @@
-Package      Version
------------- ---------
-certifi      2026.4.22
-cffi         2.0.0
-cryptography 48.0.0
-ndiff        7.99
-packaging    26.2
-pip          26.1
-pycparser    3.0
-wheel        0.47.0
+certifi==2026.4.22
+cffi==2.0.0
+cryptography==48.0.0
+ndiff==7.99
+packaging==26.2
+pycparser==3.0
+wheel==0.47.0

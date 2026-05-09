@@ -1,5 +1,5 @@
 antidote
-bash
+atuin
 bat
 bfs
 binutils
@@ -8,6 +8,7 @@ claude-squad
 composer
 coreutils
 diffutils
+direnv
 docker-compose
 ed
 elixir
@@ -22,6 +23,8 @@ gh
 git
 git-delta
 git-filter-repo
+gitleaks
+glab
 gnu-indent
 gnu-sed
 gnu-tar
@@ -66,6 +69,7 @@ screen
 shellcheck
 sslscan
 starship
+stow
 tectonic
 tmux
 tree

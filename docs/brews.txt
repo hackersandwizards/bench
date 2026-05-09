@@ -5,6 +5,7 @@ aom
 apr
 apr-util
 argon2
+atuin
 autoconf
 bash
 bat
@@ -25,6 +26,7 @@ curl
 cypher-shell
 dav1d
 diffutils
+direnv
 docker-compose
 ed
 elixir
@@ -50,6 +52,8 @@ git
 git-delta
 git-filter-repo
 git-lfs
+gitleaks
+glab
 glib
 gmp
 gnu-indent
@@ -180,6 +184,7 @@ simdutf
 sqlite
 sslscan
 starship
+stow
 svt-av1
 tectonic
 terraform
