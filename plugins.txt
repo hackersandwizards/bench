@@ -1,0 +1,4 @@
+zsh-users/zsh-completions
+zsh-users/zsh-autosuggestions
+zdharma-continuum/fast-syntax-highlighting
+djui/alias-tips
