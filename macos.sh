@@ -26,9 +26,17 @@ defaults write NSGlobalDomain NSAutomaticSpellingCorrectionEnabled -bool false
 defaults write NSGlobalDomain AppleKeyboardUIMode -int 3
 
 # ============================================================================
-# Trackpad
+# Trackpad — tap to click everywhere (built-in, Bluetooth, login screen)
 # ============================================================================
 defaults write com.apple.AppleMultitouchTrackpad Clicking -bool true
+defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true
+defaults write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
+defaults -currentHost write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
+
+# ============================================================================
+# Cursor — disable shake-to-find-cursor magnification
+# ============================================================================
+defaults write NSGlobalDomain CGDisableCursorLocationMagnification -bool true
 
 # ============================================================================
 # Finder
