@@ -18,6 +18,7 @@ $HOME/Library/Application Support/JetBrains/Toolbox/scripts:\
 /opt/homebrew/opt/gnu-tar/libexec/gnubin:\
 /opt/homebrew/opt/coreutils/libexec/gnubin:\
 /opt/homebrew/opt/unzip/bin:\
+/opt/homebrew/share/google-cloud-sdk/bin:\
 /opt/homebrew/bin:\
 /opt/homebrew/sbin:\
 $PATH"
@@ -31,10 +32,6 @@ unset RUBY_API
 export LDFLAGS="-L/opt/homebrew/opt/ruby/lib"
 export CPPFLAGS="-I/opt/homebrew/opt/ruby/include"
 export PKG_CONFIG_PATH="/opt/homebrew/opt/ruby/lib/pkgconfig"
-
-# --- Google Cloud SDK (path only, completions deferred to init.zsh) ---
-[[ -f "/opt/homebrew/share/google-cloud-sdk/path.zsh.inc" ]] \
-  && source "/opt/homebrew/share/google-cloud-sdk/path.zsh.inc"
 
 # --- Manpages ---
 export MANPATH="/opt/homebrew/opt/gnu-sed/libexec/gnuman:/opt/homebrew/opt/coreutils/libexec/gnuman:$MANPATH"
