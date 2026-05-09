@@ -14,7 +14,7 @@ fkill() {
 
 fview() {
   local f
-  f=$(fzf --preview "$FZF_BAT_PREVIEW") && "$EDITOR" "$f"
+  f=$(fzf --preview "$FZF_BAT_PREVIEW") && "${EDITOR:-vim}" "$f"
 }
 
 cdf() {
