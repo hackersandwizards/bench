@@ -1,4 +1,3 @@
-^/commitTemplate\.txt$
 ^/\.gitconfig\.local$
 ^/\.ssh/control(/.*)?$
 ^/\.ssh/id_.*$
