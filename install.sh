@@ -26,7 +26,7 @@ backup() {
 }
 
 # ---------- 1. Brewfile ----------
-step "Step 1/7: Install Homebrew packages from Brewfile"
+step "Step 1/8: Install Homebrew packages from Brewfile"
 if ! have brew; then
   if ask "Homebrew not installed. Install it now?"; then
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -44,7 +44,7 @@ else
 fi
 
 # ---------- 2. Stow symlinks ----------
-step "Step 2/7: Symlink home/ via Stow"
+step "Step 2/8: Symlink home/ via Stow"
 if ! have stow; then
   warn "stow not installed — run step 1 first or 'brew install stow'"
 elif ask "Symlink dotfiles in home/ to \$HOME via stow?"; then
@@ -60,7 +60,7 @@ else
 fi
 
 # ---------- 3. Personal git identity ----------
-step "Step 3/7: Personal git identity (~/.gitconfig.local)"
+step "Step 3/8: Personal git identity (~/.gitconfig.local)"
 if [[ -f "$HOME/.gitconfig.local" ]]; then
   ok "$HOME/.gitconfig.local already exists, skipping"
 elif ask "Create ~/.gitconfig.local with [user] block?"; then
@@ -77,7 +77,7 @@ else
 fi
 
 # ---------- 4. Repo-local git hooks ----------
-step "Step 4/7: Activate repo-local git hooks (gitleaks + shellcheck)"
+step "Step 4/8: Activate repo-local git hooks (gitleaks + shellcheck)"
 if [[ "$(hooks_path)" == ".githooks" ]]; then
   ok "core.hooksPath already set to .githooks"
 elif ask "Set core.hooksPath = .githooks for this repo?"; then
@@ -88,7 +88,7 @@ else
 fi
 
 # ---------- 5. Source init.zsh from ~/.zshrc ----------
-step "Step 5/7: Source init.zsh from ~/.zshrc"
+step "Step 5/8: Source init.zsh from ~/.zshrc"
 if grep -qF "$REPO_ROOT/init.zsh" "$HOME/.zshrc" 2>/dev/null; then
   ok "init.zsh already sourced in ~/.zshrc"
 elif ask "Append source line to ~/.zshrc?"; then
@@ -99,7 +99,7 @@ else
 fi
 
 # ---------- 6. Ghostty config ----------
-step "Step 6/7: Ghostty config symlink"
+step "Step 6/8: Ghostty config symlink"
 mkdir -p "$HOME/.config/ghostty"
 ghostty_target="$HOME/.config/ghostty/config.ghostty"
 if [[ -L "$ghostty_target" ]]; then
@@ -115,7 +115,7 @@ else
 fi
 
 # ---------- 7. atuin history migration ----------
-step "Step 7/7: atuin history import"
+step "Step 7/8: atuin history import"
 if ! have atuin; then
   warn "atuin not installed — run step 1 (Brewfile) first"
 elif [[ -f "$HOME/.local/share/atuin/history.db" ]]; then
@@ -127,7 +127,21 @@ else
   skip "Skipped — run 'atuin import auto' manually later"
 fi
 
-# ---------- 8. Secure secrets.zsh ----------
+# ---------- 8. Touch ID for sudo ----------
+step "Step 8/8: Enable Touch ID for sudo"
+if [[ -f /etc/pam.d/sudo_local ]] && grep -qE '^auth\s+sufficient\s+pam_tid\.so' /etc/pam.d/sudo_local; then
+  ok "Touch ID for sudo already enabled"
+elif [[ ! -f /etc/pam.d/sudo_local.template ]]; then
+  warn "/etc/pam.d/sudo_local.template missing — needs Sonoma+ (you're on macOS Tahoe so this should exist)"
+elif ask "Enable Touch ID for sudo? (uses /etc/pam.d/sudo_local — survives system updates)"; then
+  sudo cp /etc/pam.d/sudo_local.template /etc/pam.d/sudo_local
+  sudo sed -i '' 's/^#auth/auth/' /etc/pam.d/sudo_local
+  ok "Touch ID enabled — your next 'sudo' will prompt for fingerprint"
+else
+  skip "Skipped Touch ID for sudo"
+fi
+
+# ---------- Secure secrets.zsh ----------
 # Why 600: an unprivileged process could otherwise slurp live API keys.
 if [[ -f "$REPO_ROOT/secrets.zsh" ]]; then
   chmod 600 "$REPO_ROOT/secrets.zsh"
