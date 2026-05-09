@@ -100,6 +100,24 @@ defaults write com.apple.ActivityMonitor SortColumn -string "CPUUsage"
 defaults write com.apple.ActivityMonitor SortDirection -int 0
 
 # ============================================================================
+# Desktop wallpaper
+# Sets the image on every active space. Placement (Fill Screen) and
+# "Show on all Spaces" are preserved from existing user prefs — no public
+# Tahoe API to force them. Image matches display res (5120x2880), so all
+# placement modes render identically on this hardware.
+# ============================================================================
+WALLPAPER="$REPO_ROOT/assets/wallpaper.png"
+if [[ -f "$WALLPAPER" ]]; then
+  if osascript -e "tell application \"System Events\" to set picture of every desktop to \"$WALLPAPER\"" 2>/dev/null; then
+    ok "Wallpaper set"
+  else
+    warn "Wallpaper set failed (may need login or System Events permission)"
+  fi
+else
+  warn "Wallpaper missing at $WALLPAPER — skipping"
+fi
+
+# ============================================================================
 # Time Machine + Image Capture
 # ============================================================================
 defaults write com.apple.TimeMachine DoNotOfferNewDisksForBackup -bool true
