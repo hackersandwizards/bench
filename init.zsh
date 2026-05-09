@@ -1,3 +1,6 @@
+# --- Profiling toggle (set ZSH_PROFILE=1 before sourcing to enable) ---
+[[ -n "$ZSH_PROFILE" ]] && zmodload zsh/zprof
+
 # --- Self-discovery: resolve repo dir from this file's location ---
 export ZSH_SETTINGS_DIR="${${(%):-%N}:A:h}"
 
@@ -15,19 +18,24 @@ antidote load "$ZSH_SETTINGS_DIR/plugins.txt"
 # --- zoxide ---
 eval "$(zoxide init zsh)"
 
-# --- History ---
-HISTSIZE=10000
-SAVEHIST=20000
-setopt HIST_IGNORE_DUPS
-setopt HIST_IGNORE_SPACE
-setopt SHARE_HISTORY
-setopt APPEND_HISTORY
+# --- atuin (replaces zsh native history with SQLite-backed search) ---
+if command -v atuin >/dev/null 2>&1; then
+  eval "$(atuin init zsh)"
+else
+  HISTSIZE=10000
+  SAVEHIST=20000
+  setopt HIST_IGNORE_DUPS
+  setopt HIST_IGNORE_SPACE
+  setopt SHARE_HISTORY
+  setopt APPEND_HISTORY
+fi
 
 # --- Completions fpath (must be before compinit) ---
 fpath=(/opt/homebrew/share/zsh/site-functions $HOME/.docker/completions $fpath)
 
 # --- Source modules ---
 source "$ZSH_SETTINGS_DIR/fzf.zsh"
+source "$ZSH_SETTINGS_DIR/functions.zsh"
 source "$ZSH_SETTINGS_DIR/aliases.zsh"
 
 # --- Bracketed paste magic ---
@@ -92,3 +100,9 @@ if [[ ! -f "$_entire_cache" ]] || [[ -n $(find "$_entire_cache" -mtime +7 2>/dev
   entire completion zsh > "$_entire_cache" 2>/dev/null
 fi
 source "$_entire_cache" 2>/dev/null
+
+# --- direnv (per-project env vars, runs after global secrets) ---
+command -v direnv >/dev/null 2>&1 && eval "$(direnv hook zsh)"
+
+# --- Profiling report (only emitted if ZSH_PROFILE=1) ---
+[[ -n "$ZSH_PROFILE" ]] && zprof
