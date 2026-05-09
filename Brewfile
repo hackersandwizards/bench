@@ -91,6 +91,8 @@ brew "haskell-stack"
 brew "helm"
 # Client library for huggingface.co hub
 brew "hf"
+# User-friendly cURL replacement (command-line HTTP client)
+brew "httpie"
 # JQ clone focussed on correctness, speed, and simplicity
 brew "jaq"
 # Lightweight and flexible command-line JSON processor

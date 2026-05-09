@@ -1,14 +1,14 @@
 /Users/bstemmildt/.bun/install/global node_modules (2184)
 ├── @augmentcode/auggie@0.26.0
 ├── @es4x/create@0.22.0
-├── @github/copilot@1.0.43
+├── @github/copilot@1.0.44
 ├── @google/gemini-cli@0.41.2
 ├── @googleworkspace/cli@0.22.5
 ├── @mariozechner/pi-coding-agent@0.73.1
-├── @openai/codex@0.129.0
+├── @openai/codex@0.130.0
 ├── ccusage@18.0.11
 ├── codebuff@1.0.673
-├── command-code@0.25.9
+├── command-code@0.25.10
 ├── corepack@0.34.7
 ├── freebuff@0.0.84
 ├── node-gyp@12.3.0
