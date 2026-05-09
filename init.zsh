@@ -21,10 +21,10 @@ source "$ZSH_SETTINGS_DIR/exports.zsh"
 #     when the binary is newer than the cached file. Zero forks on cache hit
 #     ($commands is a zsh builtin associative array). ---
 _init_cache() {
-  local name="$1" bin="$2"; shift 2
-  local out="$HOME/.cache/zsh/$name.zsh"
+  local bin="$1"; shift
+  local out="$HOME/.cache/zsh/$bin.zsh"
   if [[ ! -f "$out" || "$commands[$bin]" -nt "$out" ]]; then
-    [[ -d "$HOME/.cache/zsh" ]] || mkdir -p "$HOME/.cache/zsh"
+    mkdir -p "$HOME/.cache/zsh"
     "$bin" "$@" > "$out" 2>/dev/null
   fi
   source "$out" 2>/dev/null
@@ -32,7 +32,7 @@ _init_cache() {
 
 # --- Starship prompt ---
 export STARSHIP_CONFIG="$ZSH_SETTINGS_DIR/starship.toml"
-_init_cache starship starship init zsh
+_init_cache starship init zsh
 
 # --- Antidote (static bundles regenerated when source txt changes) ---
 _antidote_bundle() {
@@ -46,8 +46,8 @@ _antidote_bundle() {
 _antidote_bundle plugins
 
 # --- zoxide / atuin (cached) ---
-_init_cache zoxide zoxide init zsh
-_init_cache atuin atuin init zsh
+_init_cache zoxide init zsh
+_init_cache atuin init zsh
 
 # --- Completions fpath (must be before compinit) ---
 fpath=(/opt/homebrew/share/zsh/site-functions $HOME/.docker/completions $fpath)
@@ -83,7 +83,7 @@ _antidote_bundle plugins-post
 # command starting with `git p`" reflex.
 bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
-zstyle ':fzf-tab:*' fzf-flags --height 40% --layout=reverse --border
+# fzf-tab inherits FZF_DEFAULT_OPTS, so layout/border/colors are already covered.
 # Reuse the FZF_*_PREVIEW commands from fzf.zsh, swapping the `{}` placeholder
 # for fzf-tab's `$realpath` (single source of truth for preview formatting).
 _eza_pv="${FZF_EZA_PREVIEW//\{\}/\$realpath}"
@@ -127,7 +127,7 @@ function gcloud() {
 }
 function entire() {
   unfunction entire
-  _init_cache entire entire completion zsh
+  _init_cache entire completion zsh
   entire "$@"
 }
 function bun() {
@@ -137,7 +137,7 @@ function bun() {
 }
 
 # direnv adds a chpwd hook — must be registered eagerly to fire on every cd.
-_init_cache direnv direnv hook zsh
+_init_cache direnv hook zsh
 
 # --- Profiling report (only emitted if ZSH_PROFILE=1) ---
 [[ -n "$ZSH_PROFILE" ]] && zprof

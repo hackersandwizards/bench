@@ -121,8 +121,7 @@ else
 fi
 
 # ---------- 8. Secure secrets.zsh ----------
-# Idempotent. Runs whether or not the user has secrets yet — if the file exists,
-# pin it to user-only read so an unprivileged process can't slurp live API keys.
+# Why 600: an unprivileged process could otherwise slurp live API keys.
 if [[ -f "$REPO_ROOT/secrets.zsh" ]]; then
   chmod 600 "$REPO_ROOT/secrets.zsh"
   ok "secrets.zsh chmod 600"

@@ -1,5 +1,9 @@
-# --- Color-aware diff (delta when interactive, plain otherwise) ---
-diff() { if [ -t 1 ]; then delta "$@"; else command diff "$@"; fi }
+# --- Color-aware diff (delta when interactive and installed, plain otherwise) ---
+diff() {
+  if [[ -t 1 ]] && (( $+commands[delta] )); then delta "$@"
+  else                                            command diff "$@"
+  fi
+}
 
 # --- fzf-driven helpers ---
 fkill() {
