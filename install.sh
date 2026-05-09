@@ -8,8 +8,6 @@ set -u
 . "$(dirname "$0")/bin/_lib.sh"
 cd "$REPO_ROOT" || exit 1
 
-skip() { printf '\033[2m·\033[0m %s\n' "$1"; }
-
 ask() {
   local prompt="$1" default="${2:-Y}" reply hint
   if [[ "$default" == "Y" ]]; then hint="[Y/n]"; else hint="[y/N]"; fi

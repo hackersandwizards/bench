@@ -6,6 +6,7 @@ step() { printf '\n\033[1;36m▸ %s\033[0m\n' "$1"; }
 ok()   { printf '\033[32m✓\033[0m %s\n' "$1"; }
 warn() { printf '\033[33m⚠\033[0m %s\n' "$1"; }
 fail() { printf '\033[31m✗\033[0m %s\n' "$1"; }
+skip() { printf '\033[2m·\033[0m %s\n' "$1"; }
 have() { command -v "$1" >/dev/null 2>&1; }
 
 # Run "$@" silently; ok on success, fail on non-zero. Used by bench-doctor.
@@ -24,6 +25,9 @@ run() {
 # shellcheck disable=SC2034  # consumed by bench-* and install.sh
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+# shellcheck disable=SC2034  # consumed by bench-update / bench-doctor
+ANTIDOTE_SH="/opt/homebrew/opt/antidote/share/antidote/antidote.zsh"
+
 # shellcheck disable=SC2034  # consumed by bench-* and install.sh
 STOW_FILES=(
   ".gitconfig"
@@ -31,5 +35,6 @@ STOW_FILES=(
   ".mongorc.js"
   ".tmux.conf"
   ".gitignore_global"
+  ".commitTemplate.txt"
   ".ssh/config"
 )

@@ -16,7 +16,7 @@ fi
 echo
 echo "=== Required tools ==="
 # antidote is a zsh function (sourced from brew), not a PATH binary
-check "antidote" test -f /opt/homebrew/opt/antidote/share/antidote/antidote.zsh
+check "antidote" test -f "$ANTIDOTE_SH"
 for cmd in starship zoxide fzf eza bat fd rg gh glab git delta lazygit jaq xh; do
   check "$cmd" command -v "$cmd"
 done
