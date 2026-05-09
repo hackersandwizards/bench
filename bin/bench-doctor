@@ -27,7 +27,7 @@ if [[ -f /opt/homebrew/opt/antidote/share/antidote/antidote.zsh ]]; then
 else
   fail "antidote"
 fi
-for cmd in starship zoxide fzf eza bat fd rg gh git delta lazygit jaq xh; do
+for cmd in starship zoxide fzf eza bat fd rg gh glab git delta lazygit jaq xh; do
   check "$cmd" command -v "$cmd"
 done
 
@@ -69,6 +69,11 @@ if gh auth status >/dev/null 2>&1; then
   ok "gh auth ok"
 else
   warn "gh auth not configured"
+fi
+if glab auth status >/dev/null 2>&1; then
+  ok "glab auth ok"
+else
+  warn "glab auth not configured"
 fi
 
 echo
