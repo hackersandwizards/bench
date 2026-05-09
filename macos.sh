@@ -8,10 +8,6 @@ set -u
 echo "Closing System Settings to avoid override conflicts..."
 osascript -e 'tell application "System Settings" to quit' 2>/dev/null || true
 
-# Ask for sudo upfront (some keys need it; we only set user defaults below
-# but a few require root if Apple ever changes scope)
-sudo -v || true
-
 # ============================================================================
 # Keyboard
 # ============================================================================
