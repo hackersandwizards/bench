@@ -12,14 +12,20 @@ Personal zsh configuration and dotfiles for Apple Silicon macOS. Contains shell 
 init.zsh              # Main entry point, self-discovers $ZSH_SETTINGS_DIR
 exports.zsh           # PATH, env vars (sources secrets.zsh if present)
 aliases.zsh           # Shell aliases
-fzf.zsh               # fzf config + helper functions
-plugins.txt           # Antidote plugin list (plugins.zsh is generated, gitignored)
+functions.zsh         # Shell functions (fkill, cdf, gs, gshow, v, fview, diff)
+fzf.zsh               # fzf defaults + preview command env vars
+plugins.txt           # Antidote main plugins (plugins.zsh generated, gitignored)
+plugins-post.txt      # Antidote post-compinit plugins (fzf-tab)
 starship.toml         # Starship prompt config
 secrets.zsh           # Untracked, gitignored — API keys go here
-install.sh            # Fresh-machine bootstrap
+install.sh            # Fresh-machine bootstrap (sources bin/_lib.sh)
+macos.sh              # Opt-in macOS system defaults
+Brewfile              # Executable source of truth for brew packages
+bin/                  # Maintenance commands (bench-doctor/update/export, _lib.sh)
+.githooks/pre-commit  # gitleaks + shellcheck + zsh -n on staged files
 ghostty/              # Ghostty terminal config
-home/                 # Dotfile templates (.gitconfig, .vimrc, commit template)
-docs/                 # Package manifests (brew, bun, gem, npm, pip, sdks)
+home/                 # Dotfile templates symlinked via Stow
+docs/                 # Package manifest snapshots (offline-readable)
 ```
 
 ## Conventions
