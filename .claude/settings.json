@@ -20,7 +20,9 @@
   "skipAutoPermissionPrompt": true,
   "voiceEnabled": true,
   "outputStyle": "truth-challenger",
-  "enabledMcpjsonServers": ["lean-ctx"],
+  "enabledMcpjsonServers": [
+    "lean-ctx"
+  ],
   "hooks": {
     "PreToolUse": [
       {
@@ -42,5 +44,8 @@
         ]
       }
     ]
-  }
+  },
+  "model": "opusplan",
+  "advisorModel": "opus",
+  "effortLevel": "xhigh"
 }
