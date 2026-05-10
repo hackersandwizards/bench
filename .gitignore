@@ -13,3 +13,4 @@ home/.gitconfig.local
 home/.ssh/id_*
 home/.ssh/known_hosts*
 home/.ssh/control/
+.lean-ctx/
