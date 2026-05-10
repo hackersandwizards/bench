@@ -48,7 +48,7 @@ home/                 Stow package — symlinked into $HOME
 ghostty/              Ghostty terminal config (single source of truth for theme)
 docs/                 Package inventory snapshots (committed; portable)
 .claude/              Claude Code statusline + rules + settings
-.rtk/                 Token-saving CLI proxy filters
+.mcp.json             lean-ctx MCP server registration (token compression)
 .githooks/pre-commit  gitleaks + shellcheck + zsh -n (repo-local)
 ```
 
