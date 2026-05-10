@@ -1,6 +1,7 @@
 tap "hashicorp/tap"
 tap "mongodb/brew"
 tap "redpanda-data/tap"
+tap "yvgude/lean-ctx"
 # Plugin manager for zsh, inspired by antigen and antibody
 brew "antidote"
 # Library for manipulating PNG images
@@ -107,6 +108,8 @@ brew "kafka"
 brew "kubernetes-cli"
 # Simple terminal UI for git commands
 brew "lazygit"
+# Context Engineering Layer for AI coding (token compression + MCP server)
+brew "lean-ctx"
 # Pager program similar to more
 brew "less"
 # Mac App Store command-line interface

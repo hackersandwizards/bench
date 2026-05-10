@@ -45,6 +45,7 @@ k9s
 kafka
 kubernetes-cli
 lazygit
+lean-ctx
 less
 mongodb/brew/mongodb-community
 mysql

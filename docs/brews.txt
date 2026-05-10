@@ -86,6 +86,7 @@ krb5
 kubernetes-cli
 lame
 lazygit
+lean-ctx
 less
 libavif
 libdatrie

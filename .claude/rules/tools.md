@@ -37,6 +37,6 @@ Modern CLI replacements installed via Homebrew. Prefer when running shell comman
 - `uvx` for running tools without installing
 - `pipx` for persistent CLI installs
 
-**Token optimization:** `rtk` proxies common dev commands.
+**Token optimization:** `lean-ctx` compresses LLM context (shell hook + MCP server).
 
 Environment: macOS (darwin), Homebrew, zsh, Ghostty terminal.
