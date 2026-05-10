@@ -66,3 +66,10 @@ alias taskmaster='task-master'
 alias cld='claude --dangerously-skip-permissions'
 alias cldr='cld --resume'
 alias cldc='cld --continue'
+alias cldp='cld -p'
+
+# --- Codex ---
+alias cdx='codex --yolo'
+alias cdxr='cdx resume'
+alias cdxc='cdx resume --last'
+alias cdxe='codex exec --yolo'
