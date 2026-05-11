@@ -26,6 +26,7 @@ Modern CLI replacements installed via Homebrew. Prefer when running shell comman
 - `btop` over `htop`, `watch` for repeated commands
 - `just` as command runner, `parallel` for fan-out
 - `shellcheck` for shell-script linting
+- `cdxe` to start Codex exec (`codex exec`)
 
 **JavaScript/TypeScript:**
 - `bun` instead of `node` for running scripts
