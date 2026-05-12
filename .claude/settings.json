@@ -12,7 +12,7 @@
     "CLAUDE_CODE_FORK_SUBAGENT": "1"
   },
   "permissions": {
-    "defaultMode": "auto"
+    "defaultMode": "bypassPermissions"
   },
   "tui": "fullscreen",
   "autoDreamEnabled": true,
