@@ -40,13 +40,14 @@ hf
 httpie
 jaq
 jq
+jundot/omlx/omlx
 just
 k9s
 kafka
 kubernetes-cli
 lazygit
-lean-ctx
 less
+mas
 mongodb/brew/mongodb-community
 mysql
 nano
@@ -58,6 +59,7 @@ pango
 parallel
 pipx
 podman-compose
+poppler
 postgresql@18
 redpanda-data/tap/redpanda
 rename
@@ -83,6 +85,7 @@ wget
 whisper-cpp
 xh
 ykman
+yvgude/lean-ctx/lean-ctx
 zeromq
 zlib
 zoxide

@@ -1,4 +1,5 @@
 tap "hashicorp/tap"
+tap "jundot/omlx", "https://github.com/jundot/omlx"
 tap "mongodb/brew"
 tap "redpanda-data/tap"
 tap "yvgude/lean-ctx"
@@ -108,8 +109,6 @@ brew "kafka"
 brew "kubernetes-cli"
 # Simple terminal UI for git commands
 brew "lazygit"
-# Context Engineering Layer for AI coding (token compression + MCP server)
-brew "lean-ctx"
 # Pager program similar to more
 brew "less"
 # Mac App Store command-line interface
@@ -142,6 +141,8 @@ brew "pkgconf"
 brew "podman"
 # Alternative to docker-compose using podman
 brew "podman-compose"
+# PDF rendering library (based on the xpdf-3.0 code base)
+brew "poppler"
 # Object-relational database system
 brew "postgresql@18"
 # Perl-powered file rename script with many helpful built-ins
@@ -202,10 +203,14 @@ brew "zoxide"
 brew "zsh"
 # Terraform
 brew "hashicorp/tap/terraform"
+# LLM inference server optimized for Apple Silicon
+brew "jundot/omlx/omlx"
 # High-performance, schema-free, document-oriented database
 brew "mongodb/brew/mongodb-community"
 # Redpanda CLI & toolbox
 brew "redpanda-data/tap/redpanda"
+# Context Engineering Layer for AI coding (token compression + MCP server)
+brew "yvgude/lean-ctx/lean-ctx"
 cask "adguard"
 cask "antigravity"
 cask "claude"

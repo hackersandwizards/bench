@@ -1,4 +1,5 @@
 hashicorp/tap
+jundot/omlx
 mongodb/brew
 redpanda-data/tap
 yvgude/lean-ctx
