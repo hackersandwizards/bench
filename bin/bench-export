@@ -25,8 +25,20 @@ dump_to() {
   fi
 }
 
-# --- Brewfile (executable source of truth) ---
-have brew && run "Brewfile" brew bundle dump --describe --force --file="$REPO_ROOT/Brewfile"
+# --- Brewfile drift check (never auto-overwrite: cask/mas entries are aspirational
+# fresh-install targets, not always present locally; `brew bundle dump --force`
+# would silently delete them). Report missing leaves so they can be added by hand.
+if have brew; then
+  step "Brewfile drift"
+  declared="$(grep -E '^brew "' "$REPO_ROOT/Brewfile" | sed -E 's/^brew "([^"]+)".*/\1/' | sort -u)"
+  missing="$(comm -23 <(brew leaves | sort -u) <(printf '%s\n' "$declared"))"
+  if [[ -z "$missing" ]]; then
+    ok "Brewfile in sync with brew leaves"
+  else
+    warn "Installed leaves missing from Brewfile — add by hand:"
+    printf '%s\n' "$missing" | sed 's/^/    /'
+  fi
+fi
 
 # --- docs/ snapshots (portable, offline-readable) ---
 # Each tool is its own subprocess and stat-bound — fan out, then `wait`.
