@@ -67,7 +67,7 @@ alias cld='claude --dangerously-skip-permissions'
 alias cldr='cld --resume'
 alias cldc='cld --continue'
 alias cldp='cld -p'
-alias clda='claude agents'
+alias clda='claude agents --dangerously-skip-permissions'
 
 # --- Codex ---
 alias cdx='codex --yolo'
