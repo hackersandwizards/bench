@@ -24,7 +24,6 @@ Modern CLI replacements installed via Homebrew. Prefer when running shell comman
 - Global git aliases from `~/.gitconfig` that add workflow behavior:
   - `git all <args...>` -> run `git <args...>` in every repository under the current tree
   - `git integrate <branch>` -> merge a branch with `--no-ff --edit` after confirming `HEAD` is up to date with that branch
-- Other git aliases are human shorthands; prefer explicit git commands in agent output.
 
 **System and shell:**
 - `btop` over `htop`, `watch` for repeated commands
