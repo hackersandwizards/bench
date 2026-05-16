@@ -5,15 +5,13 @@
 	diff = true
 [alias]
 	st = status -sb
-	ci = commit
 	co = checkout
 	pu = pull --rebase --all
 	ps = push
-	all = "!f() { find . -wholename '*/.git/config' -type f -exec sh -c 'readlink -f \"$(dirname \"$1\")\"/..' _ {} \\; | xargs -I{} sh -c 'echo \"$1\" && git -C \"$1\" $2;' _ {} \"$1\"; }; f"
-	integrate = "!test \"$(git merge-base HEAD \"$1\")\" = \"$(git rev-parse HEAD)\" && git merge --no-ff --edit $1 || echo >&2 \"Not up-to-date; refusing to merge, rebase first!\""
+	all = "!/bin/zsh -fc 'emulate -L zsh; /opt/homebrew/bin/fd -H -0 \"^\\.git$\" . --prune | while IFS= read -r -d \"\" gitpath; do repo=${gitpath:h}; print -r -- \"${repo:a}\"; git -C \"$repo\" \"$@\"; done' --"
+	integrate = "!f() { test -n \"$1\" || { echo >&2 \"usage: git integrate <branch>\"; exit 2; }; test \"$(git merge-base HEAD \"$1\")\" = \"$(git rev-parse HEAD)\" || { echo >&2 \"Not up-to-date; refusing to merge, rebase first!\"; exit 1; }; git merge --no-ff --edit \"$1\"; }; f"
 	unstage = reset HEAD
 	undo-commit = reset --soft
-	clean = reset --hard
 	b = branch
 	c = commit
 	p = pull
@@ -52,3 +50,6 @@
 [credential "https://gist.github.com"]
 	helper =
 	helper = !/opt/homebrew/bin/gh auth git-credential
+[credential "https://gitlab.com"]
+	helper =
+	helper = !/opt/homebrew/bin/glab auth git-credential
