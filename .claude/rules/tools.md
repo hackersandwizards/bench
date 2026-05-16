@@ -21,6 +21,19 @@ Modern CLI replacements installed via Homebrew. Prefer when running shell comman
 **Git and code-host:**
 - `gh` for GitHub (issues, PRs, CI runs)
 - `lazygit` for git TUI, `git-filter-repo` for history rewrites
+- Global git aliases from `~/.gitconfig`:
+  - `git st` -> `git status -sb`
+  - `git co` -> `git checkout`
+  - `git pu` -> `git pull --rebase --all`
+  - `git ps` -> `git push`
+  - `git all <args...>` -> run `git <args...>` in every repository under the current tree
+  - `git integrate <branch>` -> merge a branch with `--no-ff --edit` after confirming `HEAD` is up to date with that branch
+  - `git unstage` -> `git reset HEAD`
+  - `git undo-commit` -> `git reset --soft`
+  - `git b` -> `git branch`
+  - `git c` -> `git commit`
+  - `git p` -> `git pull`
+  - `git ll` -> decorated graph log with short hashes, dates, authors, refs, and subjects
 
 **System and shell:**
 - `btop` over `htop`, `watch` for repeated commands
