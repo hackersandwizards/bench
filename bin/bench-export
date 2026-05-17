@@ -40,7 +40,17 @@ if have brew; then
   fi
 fi
 
-# --- docs/ snapshots (portable, offline-readable) ---
+# SDKMAN's `sdk` is a shell function, not a binary — source its init so the
+# `sdk current` snapshot below can see it (`have sdk` is false otherwise).
+SDKMAN_INIT="$HOME/.sdkman/bin/sdkman-init.sh"
+if [[ -s "$SDKMAN_INIT" ]]; then
+  set +u
+  # shellcheck disable=SC1090
+  source "$SDKMAN_INIT"
+  set -u
+fi
+
+# --- docs/ snapshots (replayed by install.sh, offline-readable) ---
 # Each tool is its own subprocess and stat-bound — fan out, then `wait`.
 step "docs/ snapshots"
 if have brew; then

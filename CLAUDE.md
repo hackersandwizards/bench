@@ -26,7 +26,7 @@ bin/                  # Maintenance commands (bench-doctor/update/export, _lib.s
 .claude/              # Statusline command + Claude Code rules/settings
 ghostty/              # Ghostty terminal config
 home/                 # Dotfile templates symlinked via Stow
-docs/                 # Package manifest snapshots (offline-readable)
+docs/                 # Package snapshots, replayed by install.sh (offline-readable)
 ```
 
 ## Conventions

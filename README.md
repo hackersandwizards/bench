@@ -17,7 +17,7 @@ cd ~/opt/zsh-settings
 ./macos.sh          # optional: ~45 macOS system defaults
 ```
 
-The wizard handles each step opt-in: `brew bundle`, Stow symlinks, `~/.gitconfig.local` generation, repo-local git hooks, `~/.zshrc` source line, Ghostty config symlink.
+The wizard handles each step opt-in: `brew bundle`, Stow symlinks, `~/.gitconfig.local` generation, repo-local git hooks, `~/.zshrc` source line, Ghostty config symlink, language-ecosystem globals (uv/npm/bun), SDKMAN + JVM SDKs.
 
 ## File structure
 
@@ -46,7 +46,7 @@ home/                 Stow package — symlinked into $HOME
   .vimrc, .mongorc.js, .tmux.conf
   .ssh/config           Hardened (Keychain, ControlMaster, no ForwardAgent)
 ghostty/              Ghostty terminal config (single source of truth for theme)
-docs/                 Package inventory snapshots (committed; portable)
+docs/                 Package inventory snapshots (committed; replayed by install.sh)
 .claude/              Claude Code statusline + rules + settings
 .mcp.json             lean-ctx MCP server registration (token compression)
 .githooks/pre-commit  gitleaks + shellcheck + zsh -n (repo-local)
