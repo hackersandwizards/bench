@@ -25,6 +25,7 @@ cryptography
 curl
 cypher-shell
 dav1d
+deno
 diffutils
 direnv
 docker-compose
@@ -144,6 +145,7 @@ mongodb-database-tools
 mongosh
 mpdecimal
 mpfr
+mtplx
 mysql
 nano
 nbytes
@@ -188,6 +190,7 @@ pycparser
 python-certifi
 python-cryptography
 python@3.11
+python@3.13
 python@3.14
 readline
 redpanda

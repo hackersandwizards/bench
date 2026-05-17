@@ -7,6 +7,7 @@ btop
 claude-squad
 composer
 coreutils
+deno
 diffutils
 direnv
 docker-compose
@@ -85,6 +86,7 @@ wget
 whisper-cpp
 xh
 ykman
+youssofal/mtplx/mtplx
 yvgude/lean-ctx/lean-ctx
 zeromq
 zlib
