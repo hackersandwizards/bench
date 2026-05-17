@@ -115,10 +115,10 @@ defaults write com.apple.dock show-process-indicators -bool true
 defaults write com.apple.dock tilesize -int 48
 
 # ============================================================================
-# Activity Monitor — Dock icon shows per-core CPU history bars
+# Activity Monitor — Dock icon shows the default application icon
 # ============================================================================
 defaults write com.apple.ActivityMonitor OpenMainWindow -bool true
-defaults write com.apple.ActivityMonitor IconType -int 6
+defaults write com.apple.ActivityMonitor IconType -int 0
 defaults write com.apple.ActivityMonitor SortColumn -string "CPUUsage"
 defaults write com.apple.ActivityMonitor SortDirection -int 0
 
