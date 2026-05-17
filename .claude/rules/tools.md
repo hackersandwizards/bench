@@ -3,6 +3,15 @@
 - Delegate when: (a) a task spans 3+ files, (b) research could fill the main context, (c) multiple independent queries can run in parallel.
 - One task per subagent for focused execution.
 
+# Reading large files (avoid "Output too large")
+
+A single tool result that exceeds ~25k tokens gets truncated. Long transcripts, research and data dumps, and big `git diff` outputs trip this regularly.
+
+- Default to `Read(file, offset=N, limit=M)` for any file over ~1000 lines. Do not full-file-read a transcript to answer a question about one section.
+- Grep first, Read second. Use `rg` or the Grep tool to locate exact line numbers, then Read a narrow window around them.
+- Pipe Bash output through filters at the source: `head`, `tail`, `rg`, `jaq`. Never dump full logs. For `git diff`, scope to a path or run `--stat` first to triage.
+- When a single source file is chronically too large to read in one pass, propose splitting it (e.g. `YYYY-MM-DD-context-part1.md` / `part2.md`) rather than working around it every session.
+
 # Tooling preferences
 
 Modern CLI replacements installed via Homebrew. Prefer when running shell commands.
@@ -17,6 +26,7 @@ Modern CLI replacements installed via Homebrew. Prefer when running shell comman
 **HTTP and data:**
 - `xh` over `curl` and `httpie`
 - `jaq` over `jq` (Rust port, faster), `pandoc` for document conversion
+- `scrapling` to scrape web pages to markdown (`scrapling extract get <url> out.md`)
 
 **Git and code-host:**
 - `gh` for GitHub (issues, PRs, CI runs)
