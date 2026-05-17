@@ -17,7 +17,7 @@ cd ~/opt/zsh-settings
 ./macos.sh          # optional: ~45 macOS system defaults
 ```
 
-The wizard handles each step opt-in: `brew bundle`, Stow symlinks, `~/.gitconfig.local` generation, repo-local git hooks, `~/.zshrc` source line, Ghostty config symlink, language-ecosystem globals (uv/npm/bun), SDKMAN + JVM SDKs.
+The wizard handles each step opt-in: `brew bundle`, Stow symlinks, `~/.gitconfig.local` generation, repo-local git hooks, `~/.zshrc` source line, Ghostty config symlink, language-ecosystem globals (uv/npm/bun/cargo/gem/pip), SDKMAN + JVM SDKs.
 
 ## File structure
 
