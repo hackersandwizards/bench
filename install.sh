@@ -25,8 +25,23 @@ backup() {
   warn "backed up $target → $bak"
 }
 
+# Install each non-blank line from stdin as a package via "$@ <pkg>".
+# Idempotent: the package managers skip anything already installed.
+replay_globals() {
+  local label="$1"; shift
+  local pkg
+  while read -r pkg; do
+    [[ -n "$pkg" ]] || continue
+    if "$@" "$pkg" > /dev/null 2>&1; then
+      ok "$label: $pkg"
+    else
+      warn "$label: $pkg failed"
+    fi
+  done
+}
+
 # ---------- 1. Brewfile ----------
-step "Step 1/10: Install Homebrew packages from Brewfile"
+step "Step 1/12: Install Homebrew packages from Brewfile"
 if ! have brew; then
   if ask "Homebrew not installed. Install it now?"; then
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -44,7 +59,7 @@ else
 fi
 
 # ---------- 2. Stow symlinks ----------
-step "Step 2/10: Symlink home/ via Stow"
+step "Step 2/12: Symlink home/ via Stow"
 if ! have stow; then
   warn "stow not installed — run step 1 first or 'brew install stow'"
 elif ask "Symlink dotfiles in home/ to \$HOME via stow?"; then
@@ -60,7 +75,7 @@ else
 fi
 
 # ---------- 3. Personal git identity ----------
-step "Step 3/10: Personal git identity (~/.gitconfig.local)"
+step "Step 3/12: Personal git identity (~/.gitconfig.local)"
 if [[ -f "$HOME/.gitconfig.local" ]]; then
   ok "$HOME/.gitconfig.local already exists, skipping"
 elif ask "Create ~/.gitconfig.local with [user] block?"; then
@@ -77,7 +92,7 @@ else
 fi
 
 # ---------- 4. Repo-local git hooks ----------
-step "Step 4/10: Activate repo-local git hooks (gitleaks + shellcheck)"
+step "Step 4/12: Activate repo-local git hooks (gitleaks + shellcheck)"
 if [[ "$(hooks_path)" == ".githooks" ]]; then
   ok "core.hooksPath already set to .githooks"
 elif ask "Set core.hooksPath = .githooks for this repo?"; then
@@ -88,7 +103,7 @@ else
 fi
 
 # ---------- 5. Source init.zsh from ~/.zshrc ----------
-step "Step 5/10: Source init.zsh from ~/.zshrc"
+step "Step 5/12: Source init.zsh from ~/.zshrc"
 if grep -qF "$REPO_ROOT/init.zsh" "$HOME/.zshrc" 2>/dev/null; then
   ok "init.zsh already sourced in ~/.zshrc"
 elif ask "Append source line to ~/.zshrc?"; then
@@ -99,7 +114,7 @@ else
 fi
 
 # ---------- 6. Ghostty config ----------
-step "Step 6/10: Ghostty config symlink"
+step "Step 6/12: Ghostty config symlink"
 mkdir -p "$HOME/.config/ghostty"
 ghostty_target="$HOME/.config/ghostty/config.ghostty"
 if [[ -L "$ghostty_target" ]]; then
@@ -115,7 +130,7 @@ else
 fi
 
 # ---------- 7. atuin history migration ----------
-step "Step 7/10: atuin history import"
+step "Step 7/12: atuin history import"
 if ! have atuin; then
   warn "atuin not installed — run step 1 (Brewfile) first"
 elif [[ -f "$HOME/.local/share/atuin/history.db" ]]; then
@@ -132,7 +147,7 @@ fi
 # the user doesn't pay the cold-cache cost (~5–10s of git clones + bundle
 # compile) on first login. Mirrors init.zsh:_antidote_bundle exactly.
 # bench-update invalidates these caches by deleting them; this is the inverse.
-step "Step 8/10: Pre-warm antidote plugin bundles"
+step "Step 8/12: Pre-warm antidote plugin bundles"
 if [[ ! -f "$ANTIDOTE_SH" ]]; then
   warn "antidote not at $ANTIDOTE_SH — run step 1 (Brewfile) first"
 elif [[ -s "$REPO_ROOT/plugins.zsh" && -s "$REPO_ROOT/plugins-post.zsh" \
@@ -152,7 +167,7 @@ fi
 # Apple ships zsh in /bin/zsh; brew ships its own at /opt/homebrew/bin/zsh.
 # Both usually match major version, but switching ensures future zsh updates
 # land via brew on the user's cadence rather than tied to macOS releases.
-step "Step 9/10: Switch login shell to brew zsh"
+step "Step 9/12: Switch login shell to brew zsh"
 BREW_ZSH=/opt/homebrew/bin/zsh
 if [[ ! -x "$BREW_ZSH" ]]; then
   warn "$BREW_ZSH not found — run step 1 (Brewfile) first"
@@ -169,7 +184,7 @@ else
 fi
 
 # ---------- 10. Touch ID for sudo ----------
-step "Step 10/10: Enable Touch ID for sudo"
+step "Step 10/12: Enable Touch ID for sudo"
 if [[ -f /etc/pam.d/sudo_local ]] && grep -qE '^auth\s+sufficient\s+pam_tid\.so' /etc/pam.d/sudo_local; then
   ok "Touch ID for sudo already enabled"
 elif [[ ! -f /etc/pam.d/sudo_local.template ]]; then
@@ -180,6 +195,71 @@ elif ask "Enable Touch ID for sudo? (uses /etc/pam.d/sudo_local — survives sys
   ok "Touch ID enabled — your next 'sudo' will prompt for fingerprint"
 else
   skip "Skipped Touch ID for sudo"
+fi
+
+# ---------- 11. Language-ecosystem global CLIs ----------
+# Replay the package snapshots bench-export writes to docs/. One package per
+# line; the package managers skip anything already installed, so re-running is
+# safe. Extras (e.g. scrapling[all]) aren't recorded by `uv tool list` and
+# won't round-trip — re-add those by hand if needed.
+step "Step 11/12: Install language-ecosystem global CLIs (uv, npm, bun)"
+if ask "Install uv / npm / bun global CLIs from docs/ snapshots?"; then
+  uv_doc="$REPO_ROOT/docs/uv.txt"
+  if have uv && [[ -s "$uv_doc" ]]; then
+    awk 'NF && $1 !~ /^-/ { print $1 }' "$uv_doc" \
+      | replay_globals uv uv tool install
+  else
+    skip "uv globals — uv missing or docs/uv.txt empty"
+  fi
+
+  npm_doc="$REPO_ROOT/docs/npms.txt"
+  if have npm && [[ -s "$npm_doc" ]]; then
+    awk 'NF { print $NF }' "$npm_doc" | grep '@' | sed -E 's/@[^@]*$//' \
+      | grep -vx npm | replay_globals npm npm install -g
+  else
+    skip "npm globals — npm missing or docs/npms.txt empty"
+  fi
+
+  bun_doc="$REPO_ROOT/docs/buns.txt"
+  if have bun && [[ -s "$bun_doc" ]]; then
+    awk 'NF { print $NF }' "$bun_doc" | grep '@' | sed -E 's/@[^@]*$//' \
+      | grep -vx npm | replay_globals bun bun add -g
+  else
+    skip "bun globals — bun missing or docs/buns.txt empty"
+  fi
+else
+  skip "Skipped language-ecosystem globals"
+fi
+
+# ---------- 12. SDKMAN + JVM-ecosystem SDKs ----------
+# `sdk` is a shell function exported by sdkman-init.sh, not a binary, so it
+# must be sourced before use. `set +u` guards the init script's unset-var refs.
+# `< /dev/null` keeps `sdk install` from blocking on its "set as default?" prompt.
+step "Step 12/12: Install SDKMAN and JVM-ecosystem SDKs"
+SDKMAN_INIT="$HOME/.sdkman/bin/sdkman-init.sh"
+if [[ ! -s "$SDKMAN_INIT" ]] && ask "SDKMAN not installed. Install it now?"; then
+  curl -s "https://get.sdkman.io" | bash
+fi
+if [[ ! -s "$SDKMAN_INIT" ]]; then
+  skip "Skipped SDKMAN"
+else
+  sdks_doc="$REPO_ROOT/docs/sdks.txt"
+  if [[ -s "$sdks_doc" ]] && ask "Install JVM SDKs from docs/sdks.txt?"; then
+    set +u
+    # shellcheck disable=SC1090
+    source "$SDKMAN_INIT"
+    set -u
+    while read -r candidate version; do
+      [[ -n "$candidate" ]] || continue
+      if sdk install "$candidate" "$version" < /dev/null > /dev/null 2>&1; then
+        ok "sdk: $candidate $version"
+      else
+        warn "sdk: $candidate $version failed"
+      fi
+    done < <(awk 'NF == 2 { print $1, $2 }' "$sdks_doc")
+  else
+    skip "Skipped JVM SDK install"
+  fi
 fi
 
 # ---------- Secure secrets.zsh ----------
