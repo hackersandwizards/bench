@@ -25,19 +25,28 @@ backup() {
   warn "backed up $target → $bak"
 }
 
-# Install each non-blank line from stdin as a package via "$@ <pkg>".
-# Idempotent: the package managers skip anything already installed.
+# Install each stdin line as a package: runs `"$@" <line fields…>` per line, so
+# single-token lines (uv/npm/bun/cargo) and multi-token lines (sdk: name version)
+# both work. Idempotent — re-running skips already-installed packages.
+# `< /dev/null` stops a package manager that reads stdin from draining the loop.
 replay_globals() {
   local label="$1"; shift
-  local pkg
-  while read -r pkg; do
-    [[ -n "$pkg" ]] || continue
-    if "$@" "$pkg" > /dev/null 2>&1; then
-      ok "$label: $pkg"
+  local -a fields
+  while read -r -a fields; do
+    [[ ${#fields[@]} -gt 0 ]] || continue
+    if "$@" "${fields[@]}" < /dev/null > /dev/null 2>&1; then
+      ok "$label: ${fields[*]}"
     else
-      warn "$label: $pkg failed"
+      warn "$label: ${fields[*]} failed"
     fi
   done
+}
+
+# Extract package names from an `npm`/`bun` global-list snapshot: last field of
+# each entry, keep versioned lines, strip the trailing @version. `npm` itself is
+# dropped — re-installing the package manager is a no-op.
+parse_node_globals() {
+  awk 'NF { print $NF }' "$1" | grep '@' | sed -E 's/@[^@]*$//' | grep -vx npm
 }
 
 # ---------- 1. Brewfile ----------
@@ -198,11 +207,10 @@ else
 fi
 
 # ---------- 11. Language-ecosystem global CLIs ----------
-# Replay the package snapshots bench-export writes to docs/. One package per
-# line; the package managers skip anything already installed, so re-running is
-# safe.
-step "Step 11/12: Install language-ecosystem global CLIs (uv, npm, bun)"
-if ask "Install uv / npm / bun global CLIs from docs/ snapshots?"; then
+# Replay the package snapshots bench-export writes to docs/. The package
+# managers skip anything already installed, so re-running is safe.
+step "Step 11/12: Install language-ecosystem global CLIs (uv, npm, bun, cargo, gem, pip)"
+if ask "Install uv / npm / bun / cargo / gem / pip global CLIs from docs/ snapshots?"; then
   uv_doc="$REPO_ROOT/docs/uv.txt"
   if have uv && [[ -s "$uv_doc" ]]; then
     awk 'NF && $1 !~ /^-/ { print $1 }' "$uv_doc" \
@@ -213,52 +221,61 @@ if ask "Install uv / npm / bun global CLIs from docs/ snapshots?"; then
 
   npm_doc="$REPO_ROOT/docs/npms.txt"
   if have npm && [[ -s "$npm_doc" ]]; then
-    awk 'NF { print $NF }' "$npm_doc" | grep '@' | sed -E 's/@[^@]*$//' \
-      | grep -vx npm | replay_globals npm npm install -g
+    parse_node_globals "$npm_doc" | replay_globals npm npm install -g
   else
     skip "npm globals — npm missing or docs/npms.txt empty"
   fi
 
   bun_doc="$REPO_ROOT/docs/buns.txt"
   if have bun && [[ -s "$bun_doc" ]]; then
-    awk 'NF { print $NF }' "$bun_doc" | grep '@' | sed -E 's/@[^@]*$//' \
-      | grep -vx npm | replay_globals bun bun add -g
+    parse_node_globals "$bun_doc" | replay_globals bun bun add -g
   else
     skip "bun globals — bun missing or docs/buns.txt empty"
+  fi
+
+  cargo_doc="$REPO_ROOT/docs/cargo.txt"
+  if have cargo && [[ -s "$cargo_doc" ]]; then
+    awk '/^[^[:space:]]/ { print $1 }' "$cargo_doc" \
+      | replay_globals cargo cargo install
+  else
+    skip "cargo globals — cargo missing or docs/cargo.txt empty"
+  fi
+
+  gem_doc="$REPO_ROOT/docs/gems.txt"
+  if have gem && [[ -s "$gem_doc" ]]; then
+    # Skip Ruby's bundled gems (a lone `default:` version) — replay only gems
+    # carrying a user-installed version.
+    awk -F' *[()] *' 'NF > 1 && $2 !~ /^default:/ { print $1 }' "$gem_doc" \
+      | replay_globals gem gem install
+  else
+    skip "gem globals — gem missing or docs/gems.txt empty"
+  fi
+
+  pip_doc="$REPO_ROOT/docs/pip.txt"
+  if have pip && [[ -s "$pip_doc" ]]; then
+    awk -F'==' '/==/ { print $1 }' "$pip_doc" | replay_globals pip pip install
+  else
+    skip "pip globals — pip missing or docs/pip.txt empty"
   fi
 else
   skip "Skipped language-ecosystem globals"
 fi
 
 # ---------- 12. SDKMAN + JVM-ecosystem SDKs ----------
-# `sdk` is a shell function exported by sdkman-init.sh, not a binary, so it
-# must be sourced before use. `set +u` guards the init script's unset-var refs.
-# `< /dev/null` keeps `sdk install` from blocking on its "set as default?" prompt.
+# SDKMAN_INIT and source_sdkman live in _lib.sh — `sdk` is a shell function, not
+# a binary, so its init must be sourced before `sdk install` works.
 step "Step 12/12: Install SDKMAN and JVM-ecosystem SDKs"
-SDKMAN_INIT="$HOME/.sdkman/bin/sdkman-init.sh"
 if [[ ! -s "$SDKMAN_INIT" ]] && ask "SDKMAN not installed. Install it now?"; then
   curl -s "https://get.sdkman.io" | bash
 fi
+sdks_doc="$REPO_ROOT/docs/sdks.txt"
 if [[ ! -s "$SDKMAN_INIT" ]]; then
   skip "Skipped SDKMAN"
+elif [[ -s "$sdks_doc" ]] && ask "Install JVM SDKs from docs/sdks.txt?"; then
+  source_sdkman
+  awk 'NF == 2 { print $1, $2 }' "$sdks_doc" | replay_globals sdk sdk install
 else
-  sdks_doc="$REPO_ROOT/docs/sdks.txt"
-  if [[ -s "$sdks_doc" ]] && ask "Install JVM SDKs from docs/sdks.txt?"; then
-    set +u
-    # shellcheck disable=SC1090
-    source "$SDKMAN_INIT"
-    set -u
-    while read -r candidate version; do
-      [[ -n "$candidate" ]] || continue
-      if sdk install "$candidate" "$version" < /dev/null > /dev/null 2>&1; then
-        ok "sdk: $candidate $version"
-      else
-        warn "sdk: $candidate $version failed"
-      fi
-    done < <(awk 'NF == 2 { print $1, $2 }' "$sdks_doc")
-  else
-    skip "Skipped JVM SDK install"
-  fi
+  skip "Skipped JVM SDK install"
 fi
 
 # ---------- Secure secrets.zsh ----------
