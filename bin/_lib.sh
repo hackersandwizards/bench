@@ -36,9 +36,9 @@ ANTIDOTE_SH="/opt/homebrew/opt/antidote/share/antidote/antidote.zsh"
 SDKMAN_INIT="$HOME/.sdkman/bin/sdkman-init.sh"
 
 # Source SDKMAN's init so the `sdk` shell function exists (it is not a binary,
-# so `have sdk` is false until this runs). `set +u` guards the init script's
-# references to unset vars; `set -u` after restores nounset, which both callers
-# rely on. Returns 1 when SDKMAN is not installed.
+# so `have sdk` is false until this runs). The init script references unset
+# vars, so `set +u` wraps it; `set -u` after re-enables nounset — both callers
+# run under `set -u` and depend on it staying on. Returns 1 when SDKMAN is absent.
 source_sdkman() {
   [[ -s "$SDKMAN_INIT" ]] || return 1
   set +u

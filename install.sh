@@ -25,28 +25,50 @@ backup() {
   warn "backed up $target → $bak"
 }
 
-# Install each stdin line as a package: runs `"$@" <line fields…>` per line, so
-# single-token lines (uv/npm/bun/cargo) and multi-token lines (sdk: name version)
-# both work. Idempotent — re-running skips already-installed packages.
-# `< /dev/null` stops a package manager that reads stdin from draining the loop.
+# Install each stdin line as a package: runs `"$@" <fields…>` per line, so
+# single-token lines and multi-token `sdk` lines (name version) both work.
+# `< /dev/null` keeps a package manager that reads stdin from draining the loop.
+# On failure the captured output is shown — a fresh-machine install needs the
+# reason (missing toolchain, native-extension build error), not a bare "failed".
 replay_globals() {
   local label="$1"; shift
   local -a fields
+  local output
   while read -r -a fields; do
     [[ ${#fields[@]} -gt 0 ]] || continue
-    if "$@" "${fields[@]}" < /dev/null > /dev/null 2>&1; then
+    if output=$("$@" "${fields[@]}" < /dev/null 2>&1); then
       ok "$label: ${fields[*]}"
     else
       warn "$label: ${fields[*]} failed"
+      [[ -n "$output" ]] && printf '%s\n' "$output" | tail -n 8 | sed 's/^/    /'
     fi
   done
 }
 
-# Extract package names from an `npm`/`bun` global-list snapshot: last field of
-# each entry, keep versioned lines, strip the trailing @version. `npm` itself is
-# dropped — re-installing the package manager is a no-op.
-parse_node_globals() {
-  awk 'NF { print $NF }' "$1" | grep '@' | sed -E 's/@[^@]*$//' | grep -vx npm
+# docs/ snapshot parsers — each reads a snapshot file and emits one package per
+# line (parse_sdk emits "name version"); the output feeds replay_globals.
+parse_uv()    { awk 'NF && $1 !~ /^-/ { print $1 }' "$1"; }
+parse_cargo() { awk '/^[^[:space:]]/ { print $1 }' "$1"; }
+parse_pip()   { awk -F'==' '/==/ { print $1 }' "$1"; }
+parse_sdk()   { awk 'NF == 2 { print $1, $2 }' "$1"; }
+# Replay only gems carrying a user-installed version; skip Ruby's bundled gems
+# (those show a lone `default:` version).
+parse_gem()   { awk -F' *[()] *' 'NF > 1 && $2 !~ /^default:/ { print $1 }' "$1"; }
+# npm/bun global lists: take the last `name@version` field and strip the version.
+# `npm` is dropped — reinstalling the package manager is a no-op.
+parse_node()  { awk 'NF && $NF ~ /@/ { n=$NF; sub(/@[^@]*$/, "", n); if (n != "npm") print n }' "$1"; }
+
+# Guard, parse and replay one ecosystem's docs/ snapshot; skip cleanly when the
+# tool is absent or its snapshot is empty.
+#   replay_ecosystem <tool> <docs-basename> <parser-fn> <install-cmd…>
+replay_ecosystem() {
+  local tool="$1" file="$2" parser="$3"; shift 3
+  local doc="$REPO_ROOT/docs/$file"
+  if have "$tool" && [[ -s "$doc" ]]; then
+    "$parser" "$doc" | replay_globals "$tool" "$@"
+  else
+    skip "$tool globals — $tool missing or docs/$file empty"
+  fi
 }
 
 # ---------- 1. Brewfile ----------
@@ -207,56 +229,17 @@ else
 fi
 
 # ---------- 11. Language-ecosystem global CLIs ----------
-# Replay the package snapshots bench-export writes to docs/. The package
-# managers skip anything already installed, so re-running is safe.
+# Replay the package snapshots bench-export writes to docs/. Each manager is
+# asked to install every snapshotted package; already-present ones resolve
+# quickly, and a package that fails is reported without aborting the rest.
 step "Step 11/12: Install language-ecosystem global CLIs (uv, npm, bun, cargo, gem, pip)"
 if ask "Install uv / npm / bun / cargo / gem / pip global CLIs from docs/ snapshots?"; then
-  uv_doc="$REPO_ROOT/docs/uv.txt"
-  if have uv && [[ -s "$uv_doc" ]]; then
-    awk 'NF && $1 !~ /^-/ { print $1 }' "$uv_doc" \
-      | replay_globals uv uv tool install
-  else
-    skip "uv globals — uv missing or docs/uv.txt empty"
-  fi
-
-  npm_doc="$REPO_ROOT/docs/npms.txt"
-  if have npm && [[ -s "$npm_doc" ]]; then
-    parse_node_globals "$npm_doc" | replay_globals npm npm install -g
-  else
-    skip "npm globals — npm missing or docs/npms.txt empty"
-  fi
-
-  bun_doc="$REPO_ROOT/docs/buns.txt"
-  if have bun && [[ -s "$bun_doc" ]]; then
-    parse_node_globals "$bun_doc" | replay_globals bun bun add -g
-  else
-    skip "bun globals — bun missing or docs/buns.txt empty"
-  fi
-
-  cargo_doc="$REPO_ROOT/docs/cargo.txt"
-  if have cargo && [[ -s "$cargo_doc" ]]; then
-    awk '/^[^[:space:]]/ { print $1 }' "$cargo_doc" \
-      | replay_globals cargo cargo install
-  else
-    skip "cargo globals — cargo missing or docs/cargo.txt empty"
-  fi
-
-  gem_doc="$REPO_ROOT/docs/gems.txt"
-  if have gem && [[ -s "$gem_doc" ]]; then
-    # Skip Ruby's bundled gems (a lone `default:` version) — replay only gems
-    # carrying a user-installed version.
-    awk -F' *[()] *' 'NF > 1 && $2 !~ /^default:/ { print $1 }' "$gem_doc" \
-      | replay_globals gem gem install
-  else
-    skip "gem globals — gem missing or docs/gems.txt empty"
-  fi
-
-  pip_doc="$REPO_ROOT/docs/pip.txt"
-  if have pip && [[ -s "$pip_doc" ]]; then
-    awk -F'==' '/==/ { print $1 }' "$pip_doc" | replay_globals pip pip install
-  else
-    skip "pip globals — pip missing or docs/pip.txt empty"
-  fi
+  replay_ecosystem uv    uv.txt    parse_uv    uv tool install
+  replay_ecosystem npm   npms.txt  parse_node  npm install -g
+  replay_ecosystem bun   buns.txt  parse_node  bun add -g
+  replay_ecosystem cargo cargo.txt parse_cargo cargo install
+  replay_ecosystem gem   gems.txt  parse_gem   gem install
+  replay_ecosystem pip   pip.txt   parse_pip   pip install
 else
   skip "Skipped language-ecosystem globals"
 fi
@@ -266,14 +249,14 @@ fi
 # a binary, so its init must be sourced before `sdk install` works.
 step "Step 12/12: Install SDKMAN and JVM-ecosystem SDKs"
 if [[ ! -s "$SDKMAN_INIT" ]] && ask "SDKMAN not installed. Install it now?"; then
-  curl -s "https://get.sdkman.io" | bash
+  curl -fsSL "https://get.sdkman.io" | bash
 fi
 sdks_doc="$REPO_ROOT/docs/sdks.txt"
 if [[ ! -s "$SDKMAN_INIT" ]]; then
   skip "Skipped SDKMAN"
 elif [[ -s "$sdks_doc" ]] && ask "Install JVM SDKs from docs/sdks.txt?"; then
   source_sdkman
-  awk 'NF == 2 { print $1, $2 }' "$sdks_doc" | replay_globals sdk sdk install
+  parse_sdk "$sdks_doc" | replay_globals sdk sdk install
 else
   skip "Skipped JVM SDK install"
 fi
