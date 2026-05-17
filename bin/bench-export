@@ -51,6 +51,7 @@ fi
 have bun   && dump_to "$DOCS/buns.txt"  bun pm -g list             &
 have gem   && dump_to "$DOCS/gems.txt"  gem list                   &
 have pip   && dump_to "$DOCS/pip.txt"   pip freeze                 &
+have uv    && dump_to "$DOCS/uv.txt"    uv tool list               &
 have npm   && dump_to "$DOCS/npms.txt"  npm list -g --depth=0      &
 have cargo && dump_to "$DOCS/cargo.txt" cargo install --list       &
 have sdk   && dump_to "$DOCS/sdks.txt"  sdk current                &

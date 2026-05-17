@@ -27,6 +27,7 @@ _pip_upgrade_globals() {
   pip freeze | grep -v @ | cut -d= -f1 | xargs -r pip install --upgrade
 }
 have pip && run "Python pip globals" _pip_upgrade_globals
+have uv  && run "uv tools" uv tool upgrade --all
 
 if have sdk; then
   run "SDKMAN selfupdate" sdk selfupdate
