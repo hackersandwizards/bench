@@ -200,8 +200,7 @@ fi
 # ---------- 11. Language-ecosystem global CLIs ----------
 # Replay the package snapshots bench-export writes to docs/. One package per
 # line; the package managers skip anything already installed, so re-running is
-# safe. Extras (e.g. scrapling[all]) aren't recorded by `uv tool list` and
-# won't round-trip — re-add those by hand if needed.
+# safe.
 step "Step 11/12: Install language-ecosystem global CLIs (uv, npm, bun)"
 if ask "Install uv / npm / bun global CLIs from docs/ snapshots?"; then
   uv_doc="$REPO_ROOT/docs/uv.txt"
