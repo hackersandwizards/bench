@@ -71,7 +71,7 @@ To change the theme: edit the `palette` section in `ghostty/config.ghostty`. All
 
 ```bash
 bench-doctor                   # verify everything is wired up
-bench-update                   # upgrade brew, antidote, rust, ruby, python, bun, sdkman
+bench-update                   # upgrade brew, antidote, rust, ruby, python, uv, bun, sdkman
 bench-export                   # snapshot installed packages + sync home/ from $HOME
 ZSH_PROFILE=1 zsh -i -c exit   # profile shell startup (zprof report)
 ```
