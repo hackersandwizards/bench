@@ -23,11 +23,33 @@ if have gem; then
   run "RubyGems cleanup"  gem cleanup
 fi
 
-_pip_upgrade_globals() {
-  pip freeze | grep -v @ | cut -d= -f1 | xargs -r pip install --upgrade
+have pipx && run "pipx apps" pipx upgrade-all
+have uv   && run "uv tools" uv tool upgrade --all
+
+_pip_managed_names() {
+  # Names of pip-managed installs (have a RECORD file).
+  # Brew-installed packages skip RECORD, so this filters them out.
+  python3 -c 'import importlib.metadata as m
+print("\n".join(d.metadata["Name"] for d in m.distributions() if d.read_text("RECORD")))' 2>/dev/null
 }
-have pip && run "Python pip globals" _pip_upgrade_globals
-have uv  && run "uv tools" uv tool upgrade --all
+
+_pip_global_upgrade() {
+  local managed; managed=$(_pip_managed_names)
+  [[ -z "$managed" ]] && return 0
+  pip list --outdated --format=json 2>/dev/null \
+    | jaq -r '.[].name' \
+    | rg -ixFf <(printf '%s\n' "$managed") \
+    | xargs -r pip install --upgrade
+}
+
+_pip_user_upgrade() {
+  pip list --user --outdated --format=json 2>/dev/null \
+    | jaq -r '.[].name' \
+    | xargs -r pip install --user --upgrade
+}
+
+have pip && run "Python pip globals"   _pip_global_upgrade
+have pip && run "Python pip user-site" _pip_user_upgrade
 
 if have sdk; then
   run "SDKMAN selfupdate" sdk selfupdate
