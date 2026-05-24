@@ -19,6 +19,7 @@ cairo
 certifi
 cffi
 claude-squad
+cmux
 composer
 coreutils
 cryptography
