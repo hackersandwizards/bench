@@ -147,6 +147,31 @@ defaults write com.apple.TimeMachine DoNotOfferNewDisksForBackup -bool true
 defaults write com.apple.ImageCapture disableHotPlug -bool true
 
 # ============================================================================
+# cmux — UI-only settings that don't round-trip through ~/.config/cmux/cmux.json.
+# The schema'd settings (app/sidebar/sidebarAppearance/shortcuts/…) live in the
+# symlinked cmux.json. The keys below are only reachable via the Settings UI
+# and persist in NSUserDefaults, so replay them here. Quit cmux before running
+# or the in-memory state will overwrite the writes on exit.
+# ============================================================================
+defaults write com.cmuxterm.app appearanceMode -string "light"
+defaults write com.cmuxterm.app appIconMode -string "light"
+defaults write com.cmuxterm.app sendAnonymousTelemetry -bool false
+defaults write com.cmuxterm.app showMenuBarExtra -bool false
+defaults write com.cmuxterm.app sidebarMatchTerminalBackground -bool true
+defaults write com.cmuxterm.app sidebarTintHex -string "#000000"
+defaults write com.cmuxterm.app sidebarTintOpacity -float 0.18
+defaults write com.cmuxterm.app sidebarPreset -string "nativeSidebar"
+defaults write com.cmuxterm.app sidebarMaterial -string "sidebar"
+defaults write com.cmuxterm.app sidebarBlendMode -string "withinWindow"
+defaults write com.cmuxterm.app sidebarBlurOpacity -float 1
+defaults write com.cmuxterm.app sidebarCornerRadius -int 0
+defaults write com.cmuxterm.app sidebarHideAllDetails -bool false
+defaults write com.cmuxterm.app sidebarState -string "followWindow"
+defaults write com.cmuxterm.app "rightSidebar.mode" -string "files"
+defaults write com.cmuxterm.app "fileExplorer.width" -int 276
+defaults write com.cmuxterm.app browserImportHintVariant -string "toolbarChip"
+
+# ============================================================================
 # Restart affected processes
 # ============================================================================
 step "Restarting Finder, Dock, SystemUIServer"

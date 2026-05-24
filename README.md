@@ -4,8 +4,8 @@ Terminal setup for hackers&wizards: zsh, Ghostty, Starship, fzf, modern CLI repl
 > **Highly opinionated. Don't install blindly.**
 >
 > Every choice reflects specific tooling preferences. Walk through the files with an AI agent (Claude Code, Cursor, etc.) before running `install.sh` so you understand:
-> - what gets installed (Brewfile: brew packages + Ghostty cask)
-> - what gets configured globally (Stow symlinks home/ → $HOME, line appended to `~/.zshrc`, Ghostty config symlink)
+> - what gets installed (Brewfile: brew packages + Ghostty + cmux casks)
+> - what gets configured globally (Stow symlinks home/ → $HOME, line appended to `~/.zshrc`, Ghostty + cmux config symlinks)
 > - which choices wouldn't fit your setup
 
 ## Setup
@@ -17,7 +17,7 @@ cd ~/opt/zsh-settings
 ./macos.sh          # optional: ~45 macOS system defaults
 ```
 
-The wizard handles each step opt-in: `brew bundle`, Stow symlinks, `~/.gitconfig.local` generation, repo-local git hooks, `~/.zshrc` source line, Ghostty config symlink, language-ecosystem globals (uv/npm/bun/cargo/gem/pip), SDKMAN + JVM SDKs.
+The wizard handles each step opt-in: `brew bundle`, Stow symlinks, `~/.gitconfig.local` generation, repo-local git hooks, `~/.zshrc` source line, Ghostty config symlink, cmux config symlink, language-ecosystem globals (uv/npm/bun/cargo/gem/pip), SDKMAN + JVM SDKs.
 
 ## File structure
 
@@ -46,6 +46,7 @@ home/                 Stow package — symlinked into $HOME
   .vimrc, .mongorc.js, .tmux.conf
   .ssh/config           Hardened (Keychain, ControlMaster, no ForwardAgent)
 ghostty/              Ghostty terminal config (single source of truth for theme)
+cmux/                 cmux.json — schema'd app settings; UI-only knobs live in macos.sh
 docs/                 Package inventory snapshots (committed; replayed by install.sh)
 .claude/              Claude Code statusline + rules + settings
 .mcp.json             lean-ctx MCP server registration (token compression)
