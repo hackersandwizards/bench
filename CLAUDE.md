@@ -35,9 +35,3 @@ docs/                 # Package snapshots, replayed by install.sh (offline-reada
 - Internal paths use `$ZSH_SETTINGS_DIR` (set by `init.zsh` self-discovery — no hardcoded install location)
 - Global npm/bun packages preferred over system installs
 - `/opt/homebrew` hardcoded — Apple Silicon only (Intel Macs not supported)
-
-## Verified facts & conventions
-
-Durable, human-confirmed facts for this repo (merged from per-project memory; keep versioned here).
-
-- **`CLAUDE_CODE_*` env duplication is intentional.** The same `CLAUDE_CODE_*` keys live in both `exports.zsh` and `.claude/settings.json` `env`. Keep both copies — do not flag them as duplicates or remove either side in reviews or `/simplify` passes. (User confirmed twice.)
