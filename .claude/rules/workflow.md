@@ -55,3 +55,4 @@ After 3 distinct investigation attempts without progress, escalate with: goal, a
 - Writing 20+ lines without running a test → break and verify.
 - Elaborate abstractions before core integration → prove the happy path first.
 - Multiple features in flight → finish one, then move.
+- "This output looks corrupted / a tool is broken" → reproduce with a one-line `echo` and suspect your own command flags first, before blaming hooks, infra, or another tool.
