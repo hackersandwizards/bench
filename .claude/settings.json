@@ -20,32 +20,7 @@
   "skipAutoPermissionPrompt": true,
   "voiceEnabled": true,
   "outputStyle": "truth-challenger",
-  "enabledMcpjsonServers": [
-    "lean-ctx"
-  ],
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "command -v lean-ctx >/dev/null && lean-ctx hook rewrite || cat"
-          }
-        ]
-      },
-      {
-        "matcher": "Read|Grep",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "command -v lean-ctx >/dev/null && lean-ctx hook redirect || cat"
-          }
-        ]
-      }
-    ]
-  },
+  "enabledMcpjsonServers": [],
   "model": "opus",
-
   "effortLevel": "xhigh"
 }

@@ -87,7 +87,6 @@ whisper-cpp
 xh
 ykman
 youssofal/mtplx/mtplx
-yvgude/lean-ctx/lean-ctx
 zeromq
 zlib
 zoxide

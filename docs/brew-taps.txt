@@ -3,4 +3,3 @@ jundot/omlx
 mongodb/brew
 redpanda-data/tap
 youssofal/mtplx
-yvgude/lean-ctx

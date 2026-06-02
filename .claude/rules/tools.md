@@ -52,6 +52,6 @@ Modern CLI replacements installed via Homebrew. Prefer when running shell comman
 - `uvx` for running tools without installing
 - `pipx` for persistent CLI installs
 
-**Token optimization:** `lean-ctx` over `rtk` for shell-output compression via Claude Code hooks; lean-ctx adds MCP-cached file reads and code graph search.
+**Token optimization:** `rtk` for shell-output compression via Claude Code hooks.
 
 Environment: macOS (darwin), Homebrew, zsh, Ghostty terminal.

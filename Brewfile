@@ -3,7 +3,6 @@ tap "jundot/omlx", "https://github.com/jundot/omlx"
 tap "mongodb/brew"
 tap "redpanda-data/tap"
 tap "youssofal/mtplx"
-tap "yvgude/lean-ctx"
 # Plugin manager for zsh, inspired by antigen and antibody
 brew "antidote"
 # Library for manipulating PNG images
@@ -215,7 +214,6 @@ brew "redpanda-data/tap/redpanda"
 # Native MTP speculative decoding for Qwen3-Next on Apple Silicon
 brew "youssofal/mtplx/mtplx"
 # Context Engineering Layer for AI coding (token compression + MCP server)
-brew "yvgude/lean-ctx/lean-ctx"
 cask "adguard"
 cask "antigravity"
 cask "claude"

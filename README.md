@@ -49,7 +49,6 @@ ghostty/              Ghostty terminal config (single source of truth for theme)
 cmux/                 cmux.json — schema'd app settings; UI-only knobs live in macos.sh
 docs/                 Package inventory snapshots (committed; replayed by install.sh)
 .claude/              Claude Code statusline + rules + settings
-.mcp.json             lean-ctx MCP server registration (token compression)
 .githooks/pre-commit  gitleaks + shellcheck + zsh -n (repo-local)
 ```
 
