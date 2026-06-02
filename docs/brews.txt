@@ -197,7 +197,6 @@ redpanda
 rename
 ripgrep
 rsync
-rtk
 ruby
 rust
 rustup

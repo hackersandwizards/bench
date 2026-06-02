@@ -153,8 +153,6 @@ brew "rename"
 brew "ripgrep"
 # Utility that provides fast incremental file transfer
 brew "rsync"
-# CLI proxy to minimize LLM token consumption
-brew "rtk"
 # Powerful, clean, object-oriented scripting language
 brew "ruby"
 # Safe, concurrent, practical language
