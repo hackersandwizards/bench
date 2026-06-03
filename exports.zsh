@@ -36,6 +36,12 @@ export PKG_CONFIG_PATH="/opt/homebrew/opt/ruby/lib/pkgconfig"
 # --- Manpages ---
 export MANPATH="/opt/homebrew/opt/gnu-sed/libexec/gnuman:/opt/homebrew/opt/coreutils/libexec/gnuman:$MANPATH"
 
+# --- Homebrew ---
+# Load formulae/casks/commands only from official or explicitly-trusted taps
+# (default in Homebrew 6.0 / 5.2). Trust state lives in ~/.homebrew/trust.json;
+# add taps with `brew trust --tap <user>/<tap>`.
+export HOMEBREW_REQUIRE_TAP_TRUST=1
+
 # --- Locale ---
 export LANG="en_US.UTF-8"
 

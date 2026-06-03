@@ -83,6 +83,19 @@ if ! have brew; then
   fi
 fi
 if have brew && ask "Run 'brew bundle' now?"; then
+  # Trust the non-official taps the Brewfile declares before bundling, so
+  # HOMEBREW_REQUIRE_TAP_TRUST=1 (exports.zsh; default in Homebrew 6.0/5.2) does
+  # not make bundle silently skip their formulae. Parsed from the Brewfile's own
+  # `tap` lines — single source of truth, so a tap added there is trusted on the
+  # next install with no extra step. brew trust is idempotent.
+  awk -F'"' '/^tap /{print $2}' "$REPO_ROOT/Brewfile" | while read -r tap; do
+    [[ -n "$tap" ]] || continue
+    if brew trust --tap "$tap" >/dev/null 2>&1; then
+      ok "Trusted tap: $tap"
+    else
+      warn "Could not trust tap: $tap"
+    fi
+  done
   brew bundle --file="$REPO_ROOT/Brewfile"
   ok "Brewfile installed"
 else
