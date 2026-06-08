@@ -236,3 +236,5 @@ zlib-ng-compat
 zoxide
 zsh
 zstd
+crossover
+orbstack
