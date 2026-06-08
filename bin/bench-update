@@ -6,9 +6,14 @@ set -u
 # shellcheck source=_lib.sh
 . "$(dirname "$0")/_lib.sh"
 
-run "Homebrew update"     brew update
-run "Homebrew upgrade"    brew upgrade
-run "Homebrew cleanup"    brew cleanup -s
+if brew_bottles_supported; then
+  run "Homebrew update"   brew update
+  run "Homebrew upgrade"  brew upgrade
+  run "Homebrew cleanup"  brew cleanup -s
+else
+  step "Homebrew"
+  brew_unsupported_notice
+fi
 
 if [[ -f "$ANTIDOTE_SH" ]]; then
   run "Antidote plugins" zsh -c "source '$ANTIDOTE_SH' && antidote update"

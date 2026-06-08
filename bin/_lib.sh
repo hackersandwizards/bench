@@ -22,6 +22,39 @@ run() {
   if "$@"; then ok "$label"; else warn "$label failed (continuing)"; fi
 }
 
+# --- Homebrew bottle-support guard ------------------------------------------
+# Homebrew maps the running macOS major to a codename (its macos_version.rb
+# SYMBOLS table). A macOS newer than the newest entry has no codename, so the
+# bottle tag becomes "arm64_dunno" and every formulae.brew.sh JSON-API fetch
+# 404s — brew upgrade/cleanup/leaves fail and retry in a loop. This lasts from a
+# major macOS release until Homebrew ships support for it. Reading brew's own
+# map (not a hardcoded ceiling) makes the guard self-clear the day brew updates.
+
+# Newest macOS major Homebrew ships bottles for; empty when the map is unreadable.
+brew_newest_macos() {
+  local map; map="$(brew --repository 2>/dev/null)/Library/Homebrew/macos_version.rb"
+  [[ -r "$map" ]] || return 0
+  sed -n 's/^[[:space:]]*[a-z_]*:[[:space:]]*"\([0-9][0-9.]*\)".*/\1/p' "$map" \
+    | cut -d. -f1 | sort -n | tail -1
+}
+
+# True unless the running macOS is newer than brew's newest supported major.
+# An unreadable map or non-macOS host counts as supported — never wrongly block.
+brew_bottles_supported() {
+  local major newest
+  major="$(sw_vers -productVersion 2>/dev/null)"; major="${major%%.*}"
+  newest="$(brew_newest_macos)"
+  [[ -z "$major" || -z "$newest" ]] && return 0
+  (( major <= newest ))
+}
+
+# One-line explanation for why brew steps were skipped on an unsupported macOS.
+brew_unsupported_notice() {
+  local major; major="$(sw_vers -productVersion 2>/dev/null)"; major="${major%%.*}"
+  warn "Homebrew has no bottles for macOS $major yet (newest: $(brew_newest_macos)) — skipping brew steps"
+  skip "tag is arm64_dunno; formulae.brew.sh 404s until Homebrew ships macOS $major support"
+}
+
 # shellcheck disable=SC2034  # consumed by bench-* and install.sh
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 

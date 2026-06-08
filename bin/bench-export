@@ -28,7 +28,10 @@ dump_to() {
 # --- Brewfile drift check (never auto-overwrite: cask/mas entries are aspirational
 # fresh-install targets, not always present locally; `brew bundle dump --force`
 # would silently delete them). Report missing leaves so they can be added by hand.
-if have brew; then
+if have brew && ! brew_bottles_supported; then
+  step "Brewfile drift"
+  brew_unsupported_notice
+elif have brew; then
   step "Brewfile drift"
   declared="$(grep -E '^brew "' "$REPO_ROOT/Brewfile" | sed -E 's/^brew "([^"]+)".*/\1/' | sort -u)"
   missing="$(comm -23 <(brew leaves | sort -u) <(printf '%s\n' "$declared"))"
@@ -47,7 +50,7 @@ source_sdkman || true
 # --- docs/ snapshots (replayed by install.sh, offline-readable) ---
 # Each tool is its own subprocess and stat-bound — fan out, then `wait`.
 step "docs/ snapshots"
-if have brew; then
+if have brew && brew_bottles_supported; then   # unsupported notice already shown above
   dump_to "$DOCS/brew-taps.txt"   brew tap    &
   dump_to "$DOCS/brew-leaves.txt" brew leaves &
   dump_to "$DOCS/brews.txt"       brew list   &

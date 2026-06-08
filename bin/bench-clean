@@ -18,7 +18,11 @@ bg() {  # bg slot "label" cmd...
 }
 
 step "Caches + .DS_Store (parallel)"
-have brew && bg 1 "Homebrew cleanup"  brew cleanup -s
+if have brew && brew_bottles_supported; then
+  bg 1 "Homebrew cleanup"  brew cleanup -s
+elif have brew; then
+  brew_unsupported_notice >"$WORK/1" 2>&1   # printed in slot order by the cat below
+fi
 # `bun pm cache rm` demands a package.json in cwd — target the cache dir directly
 # instead (covers bunx too; it lives under the same path).
 have bun  && bg 2 "Bun install cache" rm_path "${BUN_INSTALL:-$HOME/.bun}/install/cache"
