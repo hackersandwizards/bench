@@ -25,6 +25,7 @@ fi
 
 have pipx && run "pipx apps" pipx upgrade-all
 have uv   && run "uv tools" uv tool upgrade --all
+have uv   && run "uv cache prune" env UV_LOCK_TIMEOUT=10 uv cache prune
 
 _pip_managed_names() {
   # Names of pip-managed installs (have a RECORD file).

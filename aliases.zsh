@@ -49,7 +49,9 @@ alias gl=gitlog
 # --- System ---
 alias ports="lsof -iTCP -sTCP:LISTEN -P -n"
 alias localip="ipconfig getifaddr en0"
-alias cleanup="fd -H -I -t f '.DS_Store' / --exclude '*BACKUP*' --exclude '*timemachine*' --exclude '*TimeMachine*' --exclude '/System/Volumes/Data' -x rm {} 2>/dev/null"
+
+# --- Reclaim disk (delegates to bin/bench-clean: caches, .DS_Store, VS Code dedup) ---
+alias cleanup=bench-clean
 
 # --- Upgrade all (delegates to bin/bench-update) ---
 alias ua=bench-update
