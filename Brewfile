@@ -39,8 +39,6 @@ brew "deno"
 brew "diffutils"
 # Load/unload environment variables based on $PWD
 brew "direnv"
-# Isolated development environments using Docker
-brew "docker-compose"
 # Classic UNIX line editor
 brew "ed"
 # Functional metaprogramming aware language built on Erlang VM
@@ -139,10 +137,6 @@ brew "parallel"
 brew "pipx"
 # Package compiler and linker metadata toolkit
 brew "pkgconf"
-# Tool for managing OCI containers and pods
-brew "podman"
-# Alternative to docker-compose using podman
-brew "podman-compose"
 # PDF rendering library (based on the xpdf-3.0 code base)
 brew "poppler"
 # Object-relational database system
@@ -221,7 +215,6 @@ cask "conductor"
 cask "cursor"
 cask "daisydisk"
 cask "deepl"
-cask "docker-desktop"
 cask "fathom"
 cask "ghostty"
 cask "google-chrome"
@@ -232,7 +225,7 @@ cask "microsoft-teams"
 cask "microsoft-word"
 cask "notion"
 cask "notion-calendar"
-cask "podman-desktop"
+cask "orbstack"
 cask "slack"
 cask "superwhisper"
 cask "visual-studio-code"
