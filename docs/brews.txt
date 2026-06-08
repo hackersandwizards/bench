@@ -19,7 +19,6 @@ cairo
 certifi
 cffi
 claude-squad
-cmux
 composer
 coreutils
 cryptography
@@ -29,7 +28,6 @@ dav1d
 deno
 diffutils
 direnv
-docker-compose
 ed
 elixir
 erlang
@@ -134,7 +132,6 @@ little-cms2
 llhttp
 llvm
 lua
-lua@5.4
 lz4
 lzo
 m4
@@ -173,15 +170,12 @@ p7zip
 pandoc
 pango
 parallel
-pcre
 pcre2
 php
 pinentry
 pipx
 pixman
 pkgconf
-podman
-podman-compose
 poppler
 popt
 postgresql@18

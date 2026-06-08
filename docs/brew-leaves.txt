@@ -10,7 +10,6 @@ coreutils
 deno
 diffutils
 direnv
-docker-compose
 ed
 elixir
 eza
@@ -59,13 +58,13 @@ pandoc
 pango
 parallel
 pipx
-podman-compose
 poppler
 postgresql@18
 redpanda-data/tap/redpanda
 rename
 ripgrep
 rsync
+ruby
 rust
 rustup
 screen
