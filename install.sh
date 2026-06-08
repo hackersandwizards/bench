@@ -82,7 +82,10 @@ if ! have brew; then
     skip "Skipped — Homebrew required for remaining steps"
   fi
 fi
-if have brew && ask "Run 'brew bundle' now?"; then
+if have brew && ! brew_bottles_supported; then
+  brew_unsupported_notice
+  skip "Skipped Brewfile install — bottles unavailable until Homebrew ships support"
+elif have brew && ask "Run 'brew bundle' now?"; then
   # Trust the non-official taps the Brewfile declares before bundling, so
   # HOMEBREW_REQUIRE_TAP_TRUST=1 (exports.zsh; default in Homebrew 6.0/5.2) does
   # not make bundle silently skip their formulae. Parsed from the Brewfile's own
