@@ -82,15 +82,15 @@ if ! have brew; then
     skip "Skipped — Homebrew required for remaining steps"
   fi
 fi
-if have brew && ! brew_bottles_supported; then
-  brew_unsupported_notice
-  skip "Skipped Brewfile install — bottles unavailable until Homebrew ships support"
-elif have brew && ask "Run 'brew bundle' now?"; then
-  # Trust the non-official taps the Brewfile declares before bundling, so
-  # HOMEBREW_REQUIRE_TAP_TRUST=1 (exports.zsh; default in Homebrew 6.0/5.2) does
-  # not make bundle silently skip their formulae. Parsed from the Brewfile's own
-  # `tap` lines — single source of truth, so a tap added there is trusted on the
-  # next install with no extra step. brew trust is idempotent.
+# Trust the non-official taps the Brewfile declares, independent of whether
+# `brew bundle` runs. HOMEBREW_REQUIRE_TAP_TRUST=1 (exports.zsh; default in
+# Homebrew 6.0/5.2) makes brew skip untrusted taps' formulae — so `ua` and every
+# brew command warn on each non-official tap unless trust is set even when bundle
+# is skipped (macOS too new for bottles) or declined. Parsed from the Brewfile's
+# own `tap` lines — single source of truth, so a tap added there is trusted on
+# the next install with no extra step. brew trust is idempotent and records trust
+# even before the tap is tapped.
+if have brew; then
   awk -F'"' '/^tap /{print $2}' "$REPO_ROOT/Brewfile" | while read -r tap; do
     [[ -n "$tap" ]] || continue
     if brew trust --tap "$tap" >/dev/null 2>&1; then
@@ -99,6 +99,11 @@ elif have brew && ask "Run 'brew bundle' now?"; then
       warn "Could not trust tap: $tap"
     fi
   done
+fi
+if have brew && ! brew_bottles_supported; then
+  brew_unsupported_notice
+  skip "Skipped Brewfile install — bottles unavailable until Homebrew ships support"
+elif have brew && ask "Run 'brew bundle' now?"; then
   brew bundle --file="$REPO_ROOT/Brewfile"
   ok "Brewfile installed"
 else
