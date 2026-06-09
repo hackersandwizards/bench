@@ -68,6 +68,6 @@ if have bun; then
 fi
 
 have npm-check && \
-  run "npm globals" env NPM_CHECK_INSTALLER=npm npm-check --global --update --save-exact
+  run "npm globals" env NPM_CHECK_INSTALLER=npm npm-check --global --update-all --save-exact
 
 step "Done"
