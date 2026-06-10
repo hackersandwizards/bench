@@ -111,6 +111,8 @@ brew "kafka"
 brew "kubernetes-cli"
 # Simple terminal UI for git commands
 brew "lazygit"
+# Fast and powerful Git hooks manager for any type of projects
+brew "lefthook"
 # Pager program similar to more
 brew "less"
 # Mac App Store command-line interface

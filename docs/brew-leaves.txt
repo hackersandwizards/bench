@@ -47,6 +47,7 @@ k9s
 kafka
 kubernetes-cli
 lazygit
+lefthook
 less
 mas
 mongodb/brew/mongodb-community
