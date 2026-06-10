@@ -54,18 +54,18 @@ docs/                 Package inventory snapshots (committed; replayed by instal
 
 ## Theming — Ghostty as single source of truth
 
-The 16 ANSI palette colors plus `background`/`foreground`/`cursor`/`selection` in `ghostty/config.ghostty` are the **only** color definitions in this repo. Every other tool inherits via ANSI indices:
+The 16 ANSI palette colors plus `background`/`foreground`/`cursor`/`selection` in `ghostty/config.ghostty` are the **only** literal color definitions in this repo. Most tools inherit them via ANSI indices; delta is the exception — it pins a GitHub light theme to match the white background:
 
 | Tool       | How it inherits                                          |
 |------------|----------------------------------------------------------|
 | starship   | ANSI color names (`cyan`, `bright-black`, …)             |
 | bat        | `BAT_THEME=ansi`                                         |
 | fzf        | `FZF_DEFAULT_OPTS --color=fg:0,bg:-1,hl:4,…`             |
-| delta      | `minus-style = syntax`, `plus-style = syntax`            |
+| delta      | `syntax-theme = GitHub`, `light = true` (not ANSI)       |
 | vim        | no `termguicolors` → terminal palette                    |
 | tmux       | named colors in status-style                             |
 
-To change the theme: edit the `palette` section in `ghostty/config.ghostty`. All tools follow automatically.
+To change the theme: edit the `palette` section in `ghostty/config.ghostty`. Every tool except delta follows automatically.
 
 ## Maintenance
 
