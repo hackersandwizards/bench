@@ -65,9 +65,9 @@ if have sdk; then
   # this shell, so it reads this variable directly.
   # shellcheck disable=SC2034  # consumed by the sourced `sdk` function
   sdkman_auto_answer=true
-  run "SDKMAN selfupdate" sdk selfupdate
-  run "SDKMAN update"     sdk update
-  run "SDKMAN upgrade"    sdk upgrade
+  run "SDKMAN selfupdate" sdk_run selfupdate
+  run "SDKMAN update"     sdk_run update
+  run "SDKMAN upgrade"    sdk_run upgrade
 fi
 
 if have bun; then

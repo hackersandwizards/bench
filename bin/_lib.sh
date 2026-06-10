@@ -81,6 +81,18 @@ source_sdkman() {
   set -u
 }
 
+# Run the `sdk` function with nounset relaxed and restore it after. SDKMAN reads
+# $2 (and other unset vars) unconditionally — `sdk selfupdate` aborts with
+# "$2: unbound variable" under `set -u`, which all bench-* scripts enable.
+# Requires source_sdkman to have run first. Returns sdk's own exit code.
+sdk_run() {
+  set +u
+  sdk "$@"
+  local rc=$?
+  set -u
+  return "$rc"
+}
+
 # Idempotently set KEY=VALUE in SDKMAN's etc/config (the file holding prompt and
 # auto-answer settings). Rewrites an existing KEY= line or appends a new one.
 # No-op when SDKMAN is absent. Edits via a temp file (no `sed -i`) so it works

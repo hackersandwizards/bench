@@ -1,5 +1,5 @@
 Current default versions:
-gradle 9.5.0
-java 26-tem
-maven 3.9.15
-quarkus 3.35.2
+gradle 9.5.1
+java 26.0.1-tem
+maven 3.9.16
+quarkus 3.36.1
