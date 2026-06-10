@@ -291,11 +291,16 @@ fi
 sdks_doc="$REPO_ROOT/docs/sdks.txt"
 if [[ ! -s "$SDKMAN_INIT" ]]; then
   skip "Skipped SDKMAN"
-elif [[ -s "$sdks_doc" ]] && ask "Install JVM SDKs from docs/sdks.txt?"; then
-  source_sdkman
-  parse_sdk "$sdks_doc" | replay_globals sdk sdk install
 else
-  skip "Skipped JVM SDK install"
+  # Auto-answer every prompt: install/upgrade always set the newest as default
+  # and never ask. Keeps interactive `sdk` and unattended `bench-update` silent.
+  sdkman_set_config sdkman_auto_answer true && ok "SDKMAN auto-answer enabled"
+  if [[ -s "$sdks_doc" ]] && ask "Install JVM SDKs from docs/sdks.txt?"; then
+    source_sdkman
+    parse_sdk "$sdks_doc" | replay_globals sdk sdk install
+  else
+    skip "Skipped JVM SDK install"
+  fi
 fi
 
 # ---------- Secure secrets.zsh ----------

@@ -67,6 +67,7 @@ hooks_path() {
 ANTIDOTE_SH="/opt/homebrew/opt/antidote/share/antidote/antidote.zsh"
 
 SDKMAN_INIT="$HOME/.sdkman/bin/sdkman-init.sh"
+SDKMAN_CONFIG="$HOME/.sdkman/etc/config"
 
 # Source SDKMAN's init so the `sdk` shell function exists (it is not a binary,
 # so `have sdk` is false until this runs). The init script references unset
@@ -78,6 +79,23 @@ source_sdkman() {
   # shellcheck disable=SC1090
   source "$SDKMAN_INIT"
   set -u
+}
+
+# Idempotently set KEY=VALUE in SDKMAN's etc/config (the file holding prompt and
+# auto-answer settings). Rewrites an existing KEY= line or appends a new one.
+# No-op when SDKMAN is absent. Edits via a temp file (no `sed -i`) so it works
+# under both BSD and GNU sed; `cat >` preserves the config's perms and inode.
+sdkman_set_config() {
+  local key="$1" value="$2" tmp
+  [[ -f "$SDKMAN_CONFIG" ]] || return 1
+  if grep -q "^${key}=" "$SDKMAN_CONFIG"; then
+    tmp="$(mktemp)"
+    sed "s/^${key}=.*/${key}=${value}/" "$SDKMAN_CONFIG" > "$tmp" \
+      && cat "$tmp" > "$SDKMAN_CONFIG"
+    rm -f "$tmp"
+  else
+    printf '%s=%s\n' "$key" "$value" >> "$SDKMAN_CONFIG"
+  fi
 }
 
 # shellcheck disable=SC2034  # consumed by bench-* and install.sh
