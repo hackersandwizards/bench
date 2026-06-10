@@ -65,9 +65,15 @@ done
 
 echo
 echo "=== Startup time ==="
-# bash 5.3+ exposes $EPOCHREALTIME (microsecond float, no fork). Strip the dot to
-# get an integer microseconds count, then divide.
-start=${EPOCHREALTIME/./}
-zsh -i -c exit >/dev/null 2>&1
-end=${EPOCHREALTIME/./}
-echo "  zsh -i -c exit took $(( (end - start) / 1000 ))ms"
+# bash 5+ exposes $EPOCHREALTIME (microsecond float, no fork). Strip the dot to
+# get an integer microseconds count, then divide. It is empty under bash 3.2
+# (macOS's /bin/bash) — guard it so a wrong interpreter reports honestly instead
+# of a false 0ms. `env bash` normally resolves to brew's bash 5.x.
+if [[ -n "${EPOCHREALTIME:-}" ]]; then
+  start=${EPOCHREALTIME/./}
+  zsh -i -c exit >/dev/null 2>&1
+  end=${EPOCHREALTIME/./}
+  echo "  zsh -i -c exit took $(( (end - start) / 1000 ))ms"
+else
+  warn "startup timing needs bash 5+ for \$EPOCHREALTIME (running $BASH_VERSION)"
+fi
