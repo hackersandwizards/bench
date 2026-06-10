@@ -62,5 +62,30 @@ assert_eq "parse_node: strip version, drop npm, keep scope" "typescript
 @angular/cli" "$(parse_node "$fix")"
 rm -f "$fix"
 
+step "brew bottle-support guard"
+# Shim `brew --repository` at a fixture Homebrew checkout and `sw_vers` at a
+# chosen macOS version, so the parse + comparison run without the real system.
+brewdir=$(mktemp -d)
+mkdir -p "$brewdir/Library/Homebrew"
+cat > "$brewdir/Library/Homebrew/macos_version.rb" <<'RB'
+  SYMBOLS = {
+    sequoia:  "15",
+    sonoma:   "14",
+    monterey: "12.7",
+  }.freeze
+RB
+# Both shims are invoked indirectly (via brew_bottles_supported), so SC2329 off.
+macos_ver=""
+# shellcheck disable=SC2329
+brew() { echo "$brewdir"; }
+# shellcheck disable=SC2329
+sw_vers() { echo "$macos_ver"; }
+assert_eq "brew_newest_macos: highest major from the map" "15" "$(brew_newest_macos)"
+macos_ver="14.5"; assert_ok   "supported when running major <= newest"            brew_bottles_supported
+macos_ver="26.0"; assert_fail "unsupported when running major > newest"           brew_bottles_supported
+macos_ver="";     assert_ok   "fail-open (supported) when the version is unknown" brew_bottles_supported
+unset -f brew sw_vers
+rm -rf "$brewdir"
+
 step "$passed passed, $failed failed"
 (( failed == 0 ))
