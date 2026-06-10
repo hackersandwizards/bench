@@ -45,18 +45,8 @@ replay_globals() {
   done
 }
 
-# docs/ snapshot parsers — each reads a snapshot file and emits one package per
-# line (parse_sdk emits "name version"); the output feeds replay_globals.
-parse_uv()    { awk 'NF && $1 !~ /^-/ { print $1 }' "$1"; }
-parse_cargo() { awk '/^[^[:space:]]/ { print $1 }' "$1"; }
-parse_pip()   { awk -F'==' '/==/ { print $1 }' "$1"; }
-parse_sdk()   { awk 'NF == 2 { print $1, $2 }' "$1"; }
-# Replay only gems carrying a user-installed version; skip Ruby's bundled gems
-# (those show a lone `default:` version).
-parse_gem()   { awk -F' *[()] *' 'NF > 1 && $2 !~ /^default:/ { print $1 }' "$1"; }
-# npm/bun global lists: take the last `name@version` field and strip the version.
-# `npm` is dropped — reinstalling the package manager is a no-op.
-parse_node()  { awk 'NF && $NF ~ /@/ { n=$NF; sub(/@[^@]*$/, "", n); if (n != "npm") print n }' "$1"; }
+# parse_* docs/ snapshot parsers live in _lib.sh (sourced above) so they are
+# sourceable and unit-tested by bench-test; replay_ecosystem calls them by name.
 
 # Guard, parse and replay one ecosystem's docs/ snapshot; skip cleanly when the
 # tool is absent or its snapshot is empty.

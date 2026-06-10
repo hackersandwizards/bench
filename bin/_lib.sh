@@ -120,3 +120,17 @@ STOW_FILES=(
   ".commitTemplate.txt"
   ".ssh/config"
 )
+
+# docs/ snapshot parsers — each reads a snapshot file ($1) and emits one package
+# per line (parse_sdk emits "name version"); the output feeds install.sh's
+# replay_globals. Sourced from here so they are unit-testable (see bench-test).
+parse_uv()    { awk 'NF && $1 !~ /^-/ { print $1 }' "$1"; }
+parse_cargo() { awk '/^[^[:space:]]/ { print $1 }' "$1"; }
+parse_pip()   { awk -F'==' '/==/ { print $1 }' "$1"; }
+parse_sdk()   { awk 'NF == 2 { print $1, $2 }' "$1"; }
+# Replay only gems carrying a user-installed version; skip Ruby's bundled gems
+# (those show a lone `default:` version).
+parse_gem()   { awk -F' *[()] *' 'NF > 1 && $2 !~ /^default:/ { print $1 }' "$1"; }
+# npm/bun global lists: take the last `name@version` field and strip the version.
+# `npm` is dropped — reinstalling the package manager is a no-op.
+parse_node()  { awk 'NF && $NF ~ /@/ { n=$NF; sub(/@[^@]*$/, "", n); if (n != "npm") print n }' "$1"; }

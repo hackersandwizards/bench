@@ -41,5 +41,26 @@ sdkman_set_config sdkman_auto_answer true
 assert_eq "is idempotent (one line)" "1"    "$(grep -c '^sdkman_auto_answer=true' "$cfg")"
 rm -f "$cfg"
 
+step "parse_* (docs/ snapshot parsers)"
+fix=$(mktemp)
+printf 'black v24.0.0\n- black\n- blackd\nruff v0.1.0\n- ruff\n' > "$fix"
+assert_eq "parse_uv: tool names, skip executables" "black
+ruff" "$(parse_uv "$fix")"
+printf 'ripgrep v13.0.0:\n    rg\nfd-find v8.7.0:\n    fd\n' > "$fix"
+assert_eq "parse_cargo: crate names, skip binaries" "ripgrep
+fd-find" "$(parse_cargo "$fix")"
+printf 'requests==2.31.0\nurllib3==2.0.0\n' > "$fix"
+assert_eq "parse_pip: name before ==" "requests
+urllib3" "$(parse_pip "$fix")"
+printf 'Current default versions:\ngradle 9.5.1\njava 26.0.1-tem\n' > "$fix"
+assert_eq "parse_sdk: candidate + version" "gradle 9.5.1
+java 26.0.1-tem" "$(parse_sdk "$fix")"
+printf 'rake (13.0.6)\nbigdecimal (default: 3.1.4)\n' > "$fix"
+assert_eq "parse_gem: keep user gems, skip bundled defaults" "rake" "$(parse_gem "$fix")"
+printf '/opt/homebrew/lib\n├── npm@10.2.0\n├── typescript@5.3.3\n└── @angular/cli@17.0.0\n' > "$fix"
+assert_eq "parse_node: strip version, drop npm, keep scope" "typescript
+@angular/cli" "$(parse_node "$fix")"
+rm -f "$fix"
+
 step "$passed passed, $failed failed"
 (( failed == 0 ))
