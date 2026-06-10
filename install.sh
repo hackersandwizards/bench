@@ -245,6 +245,19 @@ fi
 # quickly, and a package that fails is reported without aborting the rest.
 step "Step 11/12: Install language-ecosystem global CLIs (uv, npm, bun, cargo, gem, pip)"
 if ask "Install uv / npm / bun / cargo / gem / pip global CLIs from docs/ snapshots?"; then
+  # uv and bun aren't brew formulae in this setup — they live at ~/.local/bin and
+  # ~/.bun via their official installers (matching exports.zsh's PATH/BUN_INSTALL
+  # and init.zsh's ~/.bun/_bun completion stub). npm/gem/cargo arrive with their
+  # brew formulae in step 1, but nothing installs uv/bun, so their snapshots below
+  # would silently skip on a fresh machine. Install them first (gated, and only
+  # when absent — a no-op on an established machine), then add their bin dirs to
+  # PATH so the replay sees them this run, before ~/.zshrc sources exports.zsh.
+  if ! have uv && ask "  uv not found — install it (astral.sh)?"; then
+    curl -LsSf https://astral.sh/uv/install.sh | sh && export PATH="$HOME/.local/bin:$PATH"
+  fi
+  if ! have bun && ask "  bun not found — install it (bun.sh)?"; then
+    curl -fsSL https://bun.sh/install | bash && export PATH="$HOME/.bun/bin:$PATH"
+  fi
   replay_ecosystem uv    uv.txt    parse_uv    uv tool install
   replay_ecosystem npm   npms.txt  parse_node  npm install -g
   replay_ecosystem bun   buns.txt  parse_node  bun add -g
