@@ -81,11 +81,14 @@ fi
 
 # --- fzf-tab + history-substring-search (must load after compinit) ---
 _antidote_bundle plugins-post
-# Up/Down walk history filtered by the prefix already typed on the command line.
-# Atuin owns Ctrl-R for fuzzy search; this covers the "I just want the previous
-# command starting with `git p`" reflex.
+# Re-assert the history keybindings last, after every tool that grabs them.
+# Up/Down: prefix-filtered history walk — the "previous command starting with
+# `git p`" reflex. Ctrl-R: atuin's fuzzy search (fzf's key-bindings.zsh, sourced
+# above, binds Ctrl-R to its own widget — atuin would lose it without this). fzf
+# keeps Ctrl-T + Alt-C, which is why only those have FZF_*_OPTS in fzf.zsh.
 bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
+bindkey '^R' atuin-search
 # fzf-tab inherits FZF_DEFAULT_OPTS, so layout/border/colors are already covered.
 # Reuse the FZF_*_PREVIEW commands from fzf.zsh, swapping the `{}` placeholder
 # for fzf-tab's `$realpath` (single source of truth for preview formatting).
