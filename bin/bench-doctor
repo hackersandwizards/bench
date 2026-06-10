@@ -70,10 +70,20 @@ echo "=== Startup time ==="
 # (macOS's /bin/bash) — guard it so a wrong interpreter reports honestly instead
 # of a false 0ms. `env bash` normally resolves to brew's bash 5.x.
 if [[ -n "${EPOCHREALTIME:-}" ]]; then
-  start=${EPOCHREALTIME/./}
-  zsh -i -c exit >/dev/null 2>&1
-  end=${EPOCHREALTIME/./}
-  echo "  zsh -i -c exit took $(( (end - start) / 1000 ))ms"
+  # One warm-up run (absorbs any stale-cache regeneration), then report the best
+  # of three. A single sample swings 40%+ with system load — a cold run here
+  # measured 135ms against a 91ms steady state — and the minimum is the cleanest,
+  # least-contended figure, so the number stays honest and reproducible.
+  zsh -i -c exit >/dev/null 2>&1   # warm-up, discarded
+  best=""
+  for _ in 1 2 3; do
+    start=${EPOCHREALTIME/./}
+    zsh -i -c exit >/dev/null 2>&1
+    end=${EPOCHREALTIME/./}
+    ms=$(( (end - start) / 1000 ))
+    { [[ -z $best ]] || (( ms < best )); } && best=$ms
+  done
+  echo "  zsh -i -c exit took ${best}ms (best of 3)"
 else
   warn "startup timing needs bash 5+ for \$EPOCHREALTIME (running $BASH_VERSION)"
 fi
