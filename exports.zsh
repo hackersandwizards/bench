@@ -13,7 +13,7 @@ ${RUBY_API:+$HOME/.gem/ruby/$RUBY_API/bin:}\
 $HOME/.antigravity/antigravity/bin:\
 $HOME/Library/Application Support/JetBrains/Toolbox/scripts:\
 /opt/homebrew/opt/ruby/bin:\
-/opt/homebrew/opt/python@3.14/libexec/bin:\
+/opt/homebrew/opt/python3/libexec/bin:\
 /opt/homebrew/opt/unzip/bin:\
 /opt/homebrew/share/google-cloud-sdk/bin:\
 /opt/homebrew/bin:\
