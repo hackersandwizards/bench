@@ -91,12 +91,14 @@ krb5
 kubernetes-cli
 lame
 lazygit
+lefthook
 less
 libassuan
 libavif
 libdatrie
 libdeflate
 libevent
+libffi
 libgcrypt
 libgit2
 libgpg-error
