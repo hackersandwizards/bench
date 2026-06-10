@@ -4,6 +4,7 @@ bat
 bfs
 binutils
 btop
+bun
 claude-squad
 composer
 coreutils
@@ -77,6 +78,7 @@ tmux
 tree
 ugrep
 unzip
+uv
 vim
 watch
 wdiff

@@ -11,6 +11,7 @@ $HOME/.cargo/bin:\
 $HOME/go/bin:\
 ${RUBY_API:+$HOME/.gem/ruby/$RUBY_API/bin:}\
 $HOME/.antigravity/antigravity/bin:\
+$HOME/.antigravity-ide/antigravity-ide/bin:\
 $HOME/Library/Application Support/JetBrains/Toolbox/scripts:\
 /opt/homebrew/opt/ruby/bin:\
 /opt/homebrew/opt/python3/libexec/bin:\
