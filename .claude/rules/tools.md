@@ -7,6 +7,8 @@
 
 Modern CLI replacements installed via Homebrew. Prefer when running shell commands.
 
+**GNU vs BSD:** unprefixed CLI tools are BSD on macOS, GNU on Linux. Write scripts to run on both (POSIX, no flavor-specific flags). GNU builds are `g*` (`gsed`, `gdate`, `gtimeout`).
+
 **Text and file navigation:**
 - `eza` over `ls`, `bat` over `cat` and `less`
 - `fd` over `find` for terse search; `bfs` when `find` syntax is needed (POSIX-compatible, faster traversal)

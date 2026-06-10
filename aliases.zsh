@@ -50,6 +50,12 @@ alias gl=gitlog
 alias ports="lsof -iTCP -sTCP:LISTEN -P -n"
 alias localip="ipconfig getifaddr en0"
 
+# --- GNU gap tools (macOS ships no equivalent, so no BSD/GNU ambiguity) ---
+alias timeout=gtimeout
+alias nproc=gnproc
+alias shuf=gshuf
+alias sha256sum=gsha256sum
+
 # --- Reclaim disk (delegates to bin/bench-clean: caches, .DS_Store, VS Code dedup) ---
 alias cleanup=bench-clean
 
