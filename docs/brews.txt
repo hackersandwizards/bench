@@ -238,5 +238,6 @@ zlib-ng-compat
 zoxide
 zsh
 zstd
+antigravity-cli
 crossover
 orbstack
