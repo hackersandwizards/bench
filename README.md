@@ -39,6 +39,7 @@ bin/
   bench-update          Update brew, antidote, language tools, globals
   bench-export          Refresh Brewfile + docs/ snapshots + sync home/ from $HOME
   bench-doctor          Health check
+  bench-test            Unit tests for _lib.sh helpers (plain bash asserts)
 home/                 Stow package — symlinked into $HOME
   .gitconfig            Aliases, delta, includes ~/.gitconfig.local
   .gitignore_global     .DS_Store, IDE noise, etc.
@@ -72,6 +73,7 @@ To change the theme: edit the `palette` section in `ghostty/config.ghostty`. All
 bench-doctor                   # verify everything is wired up
 bench-update                   # upgrade brew, antidote, rust, ruby, python, uv, bun, sdkman
 bench-export                   # snapshot installed packages + sync home/ from $HOME
+bench-test                     # run unit tests for bin/_lib.sh helpers
 ZSH_PROFILE=1 zsh -i -c exit   # profile shell startup (zprof report)
 ```
 

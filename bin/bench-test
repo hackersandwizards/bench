@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Unit tests for the pure helpers in _lib.sh — plain bash asserts, no framework.
+# Run: bench-test   (exits non-zero if any assertion fails)
+set -u
+
+# shellcheck source-path=SCRIPTDIR
+# shellcheck source=_lib.sh
+. "$(dirname "$0")/_lib.sh"
+
+passed=0 failed=0
+assert_eq() {  # assert_eq label expected actual
+  if [[ "$2" == "$3" ]]; then ok "$1"; passed=$((passed + 1))
+  else fail "$1 — expected [$2], got [$3]"; failed=$((failed + 1)); fi
+}
+assert_ok() {  # assert_ok label cmd...  (expects zero exit)
+  local label="$1"; shift
+  if "$@" >/dev/null 2>&1; then ok "$label"; passed=$((passed + 1))
+  else fail "$label — command failed: $*"; failed=$((failed + 1)); fi
+}
+assert_fail() {  # assert_fail label cmd...  (expects non-zero exit)
+  local label="$1"; shift
+  if "$@" >/dev/null 2>&1; then fail "$label — expected non-zero exit"; failed=$((failed + 1))
+  else ok "$label"; passed=$((passed + 1)); fi
+}
+
+step "have()"
+assert_ok   "finds an existing binary" have sh
+assert_fail "rejects a missing binary" have zzz-not-a-real-binary
+
+step "sdkman_set_config()"
+# Point the helper at a throwaway config — never touches the real ~/.sdkman.
+cfg=$(mktemp)
+printf 'sdkman_auto_answer=false\nsdkman_colour_enable=true\n' > "$cfg"
+SDKMAN_CONFIG="$cfg"
+sdkman_set_config sdkman_auto_answer true
+assert_eq "updates an existing key"  "true" "$(awk -F= '/^sdkman_auto_answer=/{print $2}' "$cfg")"
+assert_eq "leaves other keys intact" "true" "$(awk -F= '/^sdkman_colour_enable=/{print $2}' "$cfg")"
+sdkman_set_config sdkman_new_key yes
+assert_eq "appends a missing key"    "yes"  "$(awk -F= '/^sdkman_new_key=/{print $2}' "$cfg")"
+sdkman_set_config sdkman_auto_answer true
+assert_eq "is idempotent (one line)" "1"    "$(grep -c '^sdkman_auto_answer=true' "$cfg")"
+rm -f "$cfg"
+
+step "$passed passed, $failed failed"
+(( failed == 0 ))
