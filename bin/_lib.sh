@@ -22,6 +22,12 @@ run() {
   if "$@"; then ok "$label"; else warn "$label failed (continuing)"; fi
 }
 
+# Homebrew's Python is externally-managed (PEP 668); pip refuses to install into
+# it without this. install.sh's replay and bench-update's upgrades run pip under
+# bash — and on a fresh machine ~/.zshrc has not yet sourced exports.zsh — so set
+# it here, the one file every script sources. Mirrors exports.zsh (interactive).
+export PIP_BREAK_SYSTEM_PACKAGES=1
+
 # --- Homebrew bottle-support guard ------------------------------------------
 # Homebrew maps the running macOS major to a codename (its macos_version.rb
 # SYMBOLS table). A macOS newer than the newest entry has no codename, so the

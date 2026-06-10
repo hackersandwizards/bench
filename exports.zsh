@@ -56,5 +56,12 @@ export BAT_THEME="ansi"
 # --- ripgrep ---
 export RIPGREP_CONFIG_PATH="$ZSH_SETTINGS_DIR/ripgreprc"
 
+# --- Python / pip ---
+# Homebrew's Python is externally-managed (PEP 668), so `pip install` refuses to
+# touch its site-packages without this. Sets it in version control instead of an
+# untracked ~/.config/pip/pip.conf, so a fresh machine works. The bench-*/install
+# scripts set the same in bin/_lib.sh (they run under bash, not this file).
+export PIP_BREAK_SYSTEM_PACKAGES=1
+
 # --- Secrets (untracked, gitignored) ---
 [[ -f "$ZSH_SETTINGS_DIR/secrets.zsh" ]] && source "$ZSH_SETTINGS_DIR/secrets.zsh"
