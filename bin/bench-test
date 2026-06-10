@@ -55,8 +55,14 @@ urllib3" "$(parse_pip "$fix")"
 printf 'Current default versions:\ngradle 9.5.1\njava 26.0.1-tem\n' > "$fix"
 assert_eq "parse_sdk: candidate + version" "gradle 9.5.1
 java 26.0.1-tem" "$(parse_sdk "$fix")"
-printf 'rake (13.0.6)\nbigdecimal (default: 3.1.4)\n' > "$fix"
-assert_eq "parse_gem: keep user gems, skip bundled defaults" "rake" "$(parse_gem "$fix")"
+# `json (2.19.8, default: 2.18.0)` is the dominant real shape: a user-updated
+# version alongside the bundled one. It must be kept — the `^` anchor in the
+# parser (`$2 !~ /^default:/`) is what distinguishes it from a `(default: X)`
+# bundled-only gem. Without this case an unanchored regex would pass the test
+# but silently drop every updated stdlib gem from replay.
+printf 'rake (13.0.6)\nbigdecimal (default: 3.1.4)\njson (2.19.8, default: 2.18.0)\n' > "$fix"
+assert_eq "parse_gem: keep user gems, skip bundled defaults" "rake
+json" "$(parse_gem "$fix")"
 printf '/opt/homebrew/lib\n├── npm@10.2.0\n├── typescript@5.3.3\n└── @angular/cli@17.0.0\n' > "$fix"
 assert_eq "parse_node: strip version, drop npm, keep scope" "typescript
 @angular/cli" "$(parse_node "$fix")"
