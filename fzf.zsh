@@ -1,7 +1,12 @@
-# --- Completion & key bindings (interactive shells only — key-bindings touches zle) ---
+# --- Completion & key bindings (interactive shells only) ---
+# Both scripts save and restore the whole option set via `eval options=(…)`,
+# which trips "(eval):1: can't change option: zle" — zle is read-only, so
+# restoring it errors. The bindings still install; the error is pure noise on
+# every shell start, so silence both. (completion.zsh also emits harmless
+# compdef warnings, since it is sourced before compinit.)
 if [[ $- == *i* ]]; then
-  source "/opt/homebrew/opt/fzf/shell/completion.zsh" 2> /dev/null
-  source "/opt/homebrew/opt/fzf/shell/key-bindings.zsh"
+  source "/opt/homebrew/opt/fzf/shell/completion.zsh" 2>/dev/null
+  source "/opt/homebrew/opt/fzf/shell/key-bindings.zsh" 2>/dev/null
 fi
 
 # --- Preview commands (reused by fzf-tab styles in init.zsh and functions.zsh) ---
