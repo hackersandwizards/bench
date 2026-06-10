@@ -259,8 +259,13 @@ if ask "Install uv / npm / bun / cargo / gem / pip global CLIs from docs/ snapsh
   # would silently skip on a fresh machine. Install them first (gated, and only
   # when absent — a no-op on an established machine), then add their bin dirs to
   # PATH so the replay sees them this run, before ~/.zshrc sources exports.zsh.
+  # INSTALLER_NO_MODIFY_PATH: exports.zsh already puts ~/.local/bin on PATH, so let
+  # uv install the binary without appending a redundant PATH line to ~/.zshrc
+  # (centralized config — ~/.zshrc holds only the init.zsh source line). bun's
+  # installer has no such opt-out and its run also writes ~/.bun/_bun, which
+  # init.zsh's completion stub sources — so let it proceed; the dup PATH is benign.
   if ! have uv && ask "  uv not found — install it (astral.sh)?"; then
-    curl -LsSf https://astral.sh/uv/install.sh | sh && export PATH="$HOME/.local/bin:$PATH"
+    curl -LsSf https://astral.sh/uv/install.sh | INSTALLER_NO_MODIFY_PATH=1 sh && export PATH="$HOME/.local/bin:$PATH"
   fi
   if ! have bun && ask "  bun not found — install it (bun.sh)?"; then
     curl -fsSL https://bun.sh/install | bash && export PATH="$HOME/.bun/bin:$PATH"
