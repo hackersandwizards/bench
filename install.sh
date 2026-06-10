@@ -245,6 +245,11 @@ fi
 # quickly, and a package that fails is reported without aborting the rest.
 step "Step 11/12: Install language-ecosystem global CLIs (uv, npm, bun, cargo, gem, pip)"
 if ask "Install uv / npm / bun / cargo / gem / pip global CLIs from docs/ snapshots?"; then
+  # brew ruby and python are keg-only, so their gem/pip aren't on PATH until
+  # exports.zsh runs — which it hasn't on a fresh machine. Without this the replay
+  # would use /usr/bin/gem (system ruby, wrong ABI) and never find `pip` (brew
+  # links only pip3). Mirror exports.zsh so the replay uses brew's gem and pip.
+  export PATH="/opt/homebrew/opt/ruby/bin:/opt/homebrew/opt/python@3.14/libexec/bin:$PATH"
   # uv and bun aren't brew formulae in this setup — they live at ~/.local/bin and
   # ~/.bun via their official installers (matching exports.zsh's PATH/BUN_INSTALL
   # and init.zsh's ~/.bun/_bun completion stub). npm/gem/cargo arrive with their
