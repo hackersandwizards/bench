@@ -13,3 +13,9 @@ home/.gitconfig.local
 home/.ssh/id_*
 home/.ssh/known_hosts*
 home/.ssh/control/
+
+# Claude Code: settings.json is committed; per-machine and runtime files are not.
+# Owned by the repo (not just ~/.gitignore_global) so a fresh clone ignores them
+# before install.sh links the global excludesfile.
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
