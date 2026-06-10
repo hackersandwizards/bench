@@ -289,7 +289,11 @@ else
   sdkman_set_config sdkman_auto_answer true && ok "SDKMAN auto-answer enabled"
   if [[ -s "$sdks_doc" ]] && ask "Install JVM SDKs from docs/sdks.txt?"; then
     source_sdkman
-    parse_sdk "$sdks_doc" | replay_globals sdk sdk install
+    # sdk_run, not raw sdk: the `sdk` function reads $2 and other vars unset under
+    # install.sh's `set -u` (see _lib.sh). `sdk install <name> <ver>` clears the
+    # $2 read, but the install path goes deeper — sdk_run relaxes nounset for the
+    # whole call, matching how bench-update and bench-export invoke sdk.
+    parse_sdk "$sdks_doc" | replay_globals sdk sdk_run install
   else
     skip "Skipped JVM SDK install"
   fi
