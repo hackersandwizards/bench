@@ -205,7 +205,6 @@ brew "mongodb/brew/mongodb-community"
 brew "redpanda-data/tap/redpanda"
 # Native MTP speculative decoding for Qwen3-Next on Apple Silicon
 brew "youssofal/mtplx/mtplx"
-# Context Engineering Layer for AI coding (token compression + MCP server)
 cask "adguard"
 cask "antigravity"
 cask "claude"

@@ -33,7 +33,7 @@ if have brew && ! brew_bottles_supported; then
   brew_unsupported_notice
 elif have brew; then
   step "Brewfile drift"
-  declared="$(grep -E '^brew "' "$REPO_ROOT/Brewfile" | sed -E 's/^brew "([^"]+)".*/\1/' | sort -u)"
+  declared="$(awk -F'"' '/^brew /{print $2}' "$REPO_ROOT/Brewfile" | sort -u)"
   missing="$(comm -23 <(brew leaves | sort -u) <(printf '%s\n' "$declared"))"
   if [[ -z "$missing" ]]; then
     ok "Brewfile in sync with brew leaves"
