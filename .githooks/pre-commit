@@ -14,6 +14,17 @@ for f in "${staged[@]}"; do
   case $f in
     *.sh)  sh_files+=("$f") ;;
     *.zsh) zsh_files+=("$f") ;;
+    *)
+      # Extensionless scripts (e.g. bin/bench-*) would otherwise skip the linters.
+      # Classify by shebang. `|| continue` keeps `set -e` from aborting on an empty
+      # file (read hits EOF) and the `-f` guard avoids a redirect error on deletes.
+      [[ -f $f ]] || continue
+      IFS= read -r shebang < "$f" || continue
+      case $shebang in
+        '#!'*zsh*)  zsh_files+=("$f") ;;
+        '#!'*bash*) sh_files+=("$f") ;;
+      esac
+      ;;
   esac
 done
 
