@@ -19,6 +19,8 @@ brew "bfs"
 brew "binutils"
 # Resource monitor. C++ version and continuation of bashtop and bpytop
 brew "btop"
+# Incredibly fast JavaScript runtime, bundler, test runner, and package manager
+brew "bun"
 # Software library to render fonts
 brew "freetype"
 # Vector graphics library with cross-device output support
@@ -173,6 +175,8 @@ brew "tree"
 brew "ugrep"
 # Extraction utility for .zip compressed archives
 brew "unzip"
+# Extremely fast Python package installer and resolver, written in Rust
+brew "uv"
 # Vi 'workalike' with many additional features
 brew "vim"
 # Executes a program periodically, showing output fullscreen

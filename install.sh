@@ -252,24 +252,9 @@ if ask "Install uv / npm / bun / cargo / gem / pip global CLIs from docs/ snapsh
   # python3 is brew's alias for the current default python — version-agnostic, so
   # it tracks upgrades instead of pinning python@3.14.
   export PATH="/opt/homebrew/opt/ruby/bin:/opt/homebrew/opt/python3/libexec/bin:$PATH"
-  # uv and bun aren't brew formulae in this setup — they live at ~/.local/bin and
-  # ~/.bun via their official installers (matching exports.zsh's PATH/BUN_INSTALL
-  # and init.zsh's ~/.bun/_bun completion stub). npm/gem/cargo arrive with their
-  # brew formulae in step 1, but nothing installs uv/bun, so their snapshots below
-  # would silently skip on a fresh machine. Install them first (gated, and only
-  # when absent — a no-op on an established machine), then add their bin dirs to
-  # PATH so the replay sees them this run, before ~/.zshrc sources exports.zsh.
-  # INSTALLER_NO_MODIFY_PATH: exports.zsh already puts ~/.local/bin on PATH, so let
-  # uv install the binary without appending a redundant PATH line to ~/.zshrc
-  # (centralized config — ~/.zshrc holds only the init.zsh source line). bun's
-  # installer has no such opt-out and its run also writes ~/.bun/_bun, which
-  # init.zsh's completion stub sources — so let it proceed; the dup PATH is benign.
-  if ! have uv && ask "  uv not found — install it (astral.sh)?"; then
-    curl -LsSf https://astral.sh/uv/install.sh | INSTALLER_NO_MODIFY_PATH=1 sh && export PATH="$HOME/.local/bin:$PATH"
-  fi
-  if ! have bun && ask "  bun not found — install it (bun.sh)?"; then
-    curl -fsSL https://bun.sh/install | bash && export PATH="$HOME/.bun/bin:$PATH"
-  fi
+  # All six managers (uv, npm, bun, cargo, gem, pip) are installed by brew bundle
+  # in step 1; the replay only needs them on PATH, which the keg-only fix above
+  # ensures for gem/pip (uv, npm, bun, cargo are linked into /opt/homebrew/bin).
   replay_ecosystem uv    uv.txt    parse_uv    uv tool install
   replay_ecosystem npm   npms.txt  parse_node  npm install -g
   replay_ecosystem bun   buns.txt  parse_node  bun add -g

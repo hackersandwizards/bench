@@ -116,15 +116,16 @@ function sdk() {
   sdk "$@"
 }
 
-# --- Bun ---
+# --- Bun (binary from brew; `bun add -g` still targets $BUN_INSTALL/bin) ---
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
 # --- Deferred completions (lazy-loaded on first invocation, ~10ms saved at startup) ---
-# Trade-off: tab-complete on `gcloud`/`entire`/`bun <TAB>` is silent until the
-# command has been run once per session — then completions register and behave
-# normally. Direct invocations (`bun --version`) always work — they hit the
-# function stub which sources, unsets itself, and execs the binary.
+# Trade-off: tab-complete on `gcloud`/`entire` is silent until the command has been
+# run once per session — then completions register and behave normally. Direct
+# invocations always work — they hit the stub, which sources, unsets itself, and
+# execs the binary. (bun is installed via brew, so its _bun completion loads from
+# site-functions through compinit — no stub needed.)
 function gcloud() {
   unfunction gcloud
   source "/opt/homebrew/share/google-cloud-sdk/completion.zsh.inc"
@@ -134,11 +135,6 @@ function entire() {
   unfunction entire
   _init_cache entire completion zsh
   entire "$@"
-}
-function bun() {
-  unfunction bun
-  [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
-  bun "$@"
 }
 
 # direnv adds a chpwd hook — must be registered eagerly to fire on every cd.
