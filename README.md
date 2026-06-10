@@ -4,7 +4,7 @@ Terminal setup for hackers&wizards: zsh, Ghostty, Starship, fzf, modern CLI repl
 > **Highly opinionated. Don't install blindly.**
 >
 > Every choice reflects specific tooling preferences. Walk through the files with an AI agent (Claude Code, Cursor, etc.) before running `install.sh` so you understand:
-> - what gets installed (Brewfile: brew packages + Ghostty cask)
+> - what gets installed (Brewfile: brew CLI packages, GUI app casks — Ghostty, browsers, editors, Office, Slack, … — Mac App Store apps, and VS Code extensions)
 > - what gets configured globally (Stow symlinks home/ → $HOME, line appended to `~/.zshrc`, Ghostty config symlink)
 > - which choices wouldn't fit your setup
 
