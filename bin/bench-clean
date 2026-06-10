@@ -44,6 +44,7 @@ dedup_vscode() {
   manifest="$dir/extensions.json"
   [[ -d "$dir" && -f "$manifest" ]] || { skip "VS Code: no extensions manifest"; return 0; }
   for d in "$dir"/*/; do
+    [[ -d "$d" ]] || continue   # no extensions: glob stays literal, skip the phantom
     name=$(basename "$d")
     grep -qF "$name" "$manifest" || { rm -rf "$d" && removed=$((removed + 1)); }
   done
