@@ -11,7 +11,7 @@ function! ClearRegisters()
         let i=i+1
     endwhile
 endfunction
- 
+
 command! ClearRegisters call ClearRegisters()
 
 set rtp+=/opt/homebrew/opt/fzf
