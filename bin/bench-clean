@@ -27,7 +27,7 @@ fi
 # instead (covers bunx too; it lives under the same path).
 have bun  && bg 2 "Bun install cache" rm_path "${BUN_INSTALL:-$HOME/.bun}/install/cache"
 have uv   && bg 3 "uv cache (full)"   env UV_LOCK_TIMEOUT=10 uv cache clean
-bg 4 "Sweep .DS_Store" bash -c "fd -H -I -t f '.DS_Store' / \
+bg 4 "Sweep .DS_Store" bash -c "fd -H -I -t f -g '.DS_Store' / \
   --exclude '*BACKUP*' --exclude '*timemachine*' --exclude '*TimeMachine*' \
   --exclude '/System/Volumes/Data' -x rm {} 2>/dev/null; true"
 wait
