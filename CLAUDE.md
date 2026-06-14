@@ -32,6 +32,6 @@ docs/                 # Package snapshots, replayed by install.sh (offline-reada
 ## Conventions
 
 - Modern CLI tools: `eza` (ls), `bat` (cat), `fd` (find), `rg` (grep), `xh` (curl)
-- Internal paths use `$ZSH_SETTINGS_DIR` (set by `init.zsh` self-discovery - no hardcoded install location)
+- Internal paths use `$ZSH_SETTINGS_DIR` (set by `init.zsh` self-discovery, no hardcoded install location)
 - Global npm/bun packages preferred over system installs
-- `/opt/homebrew` hardcoded - Apple Silicon only (Intel Macs not supported)
+- `/opt/homebrew` hardcoded, Apple Silicon only (Intel Macs not supported)
