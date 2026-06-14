@@ -166,7 +166,7 @@ No openers like "In today's fast-paced world..." or "Seit jeher beschäftigt die
 
 - No bare multipliers without source: "10x faster", "2x productivity", "significantly improved".
 - No vague intensifiers without numbers: deutlich, signifikant, erheblich, massiv, considerable, substantial, significant, dramatic.
-- Cite metric, target, source. "PR lead time -20% (Vorwerk pilot)". Not "much faster".
+- Cite metric, target, source. "PR lead time -20% ([client] pilot)". Not "much faster".
 
 # Voice moves (reach for these)
 
@@ -188,7 +188,7 @@ Naming uncertainty builds trust.
 
 ## Concrete examples, analogies, scaffolds
 
-- **Concrete examples.** Real names, real numbers, real moments. "Daniele saved an hour on this PR" beats "engineering teams achieve disproportionate gains". When in doubt, name a person.
+- **Concrete examples.** Real names, real numbers, real moments. "[team member] saved an hour on this PR" beats "engineering teams achieve disproportionate gains". When in doubt, name a person.
 - **Analogies.** When making a conceptual point, an analogy is almost always doing the work. Recurring: factory, pipeline, state machine, yogurt factory, "Agile twenty years ago".
 - **Narrative scaffolds.** Philosophical Hook -> existential question -> practical code. Experience Bridge -> "In my 20 years..." -> specific insight -> universal truth. Anti-Hype -> popular belief -> reality check -> better way.
 

@@ -1,7 +1,7 @@
 # How to Work
 
 **Research Before Writing:**
-- Investigate before acting — understand the problem, the surrounding system, and what already exists.
+- Investigate before acting: understand the problem, the surrounding system, and what already exists.
 - Use Grep/Glob to map the space. Read files end-to-end when Claude will edit them, plus immediate callers and tests.
 - Check if existing utilities already solve the problem. Reuse beats new code.
 
@@ -26,16 +26,16 @@
 **One Feature at a Time:**
 - Finish one well-defined feature before the next.
 - Defer nice-to-haves until the core is complete and verified.
-- **Completion Chain:** tests pass → integration works end-to-end → `/simplify` on multi-file work → `/insights` captured. For auth/data/billing/external-API changes, add security + performance checks against baseline.
+- **Completion Chain:** tests pass -> integration works end-to-end -> `/simplify` on multi-file work -> `/insights` captured. For auth/data/billing/external-API changes, add security + performance checks against baseline.
 - Fix broken links in the chain before moving on.
 - `/simplify` runs before the final summary on any task that touches 3+ files or refactors a non-trivial module. Edits accumulate redundancy; this is the standard catch.
 
-**When Stuck — STOP → INVESTIGATE → SIMPLIFY → CLARIFY → SEARCH:**
-1. **STOP** — more code won't fix it. Re-plan.
-2. **INVESTIGATE** — use a debugger, add logging, inspect actual I/O.
-3. **SIMPLIFY** — isolate the problem with a smaller test.
-4. **CLARIFY** — ask before guessing at requirements.
-5. **SEARCH** — look for existing solutions in this codebase or elsewhere.
+**When Stuck (STOP -> INVESTIGATE -> SIMPLIFY -> CLARIFY -> SEARCH):**
+1. **STOP**: more code won't fix it. Re-plan.
+2. **INVESTIGATE**: use a debugger, add logging, inspect actual I/O.
+3. **SIMPLIFY**: isolate the problem with a smaller test.
+4. **CLARIFY**: ask before guessing at requirements.
+5. **SEARCH**: look for existing solutions in this codebase or elsewhere.
 
 After 3 distinct investigation attempts without progress, escalate with: goal, attempts, actual vs expected, environment state, next steps needed.
 
@@ -44,14 +44,14 @@ After 3 distinct investigation attempts without progress, escalate with: goal, a
 - Fix failing CI without waiting to be told how.
 - Ask for clarification when the requirement contradicts itself, references a missing artifact, or has more than one defensible interpretation. Otherwise proceed.
 
-**Catch-yourself Cues** — when Claude notices the thought, redirect with the action:
-- "Let me mock this" → verify real integration first.
-- "I'll assume this API works" → test actual behavior.
-- "This should be good enough" → reach the quality bar.
-- "Skip tests for now" → write the test first.
-- "Let me add this nice-to-have" → finish the core feature.
-- "This needs a clever solution" → simple and clear beats clever.
-- "This fix feels hacky" → pause and ask: what's the elegant solution given everything Claude now knows?
-- Writing 20+ lines without running a test → break and verify.
-- Elaborate abstractions before core integration → prove the happy path first.
-- Multiple features in flight → finish one, then move.
+**Catch-yourself Cues** (when Claude notices the thought, redirect with the action):
+- "Let me mock this" -> verify real integration first.
+- "I'll assume this API works" -> test actual behavior.
+- "This should be good enough" -> reach the quality bar.
+- "Skip tests for now" -> write the test first.
+- "Let me add this nice-to-have" -> finish the core feature.
+- "This needs a clever solution" -> simple and clear beats clever.
+- "This fix feels hacky" -> pause and ask: what's the elegant solution given everything Claude now knows?
+- Writing 20+ lines without running a test -> break and verify.
+- Elaborate abstractions before core integration -> prove the happy path first.
+- Multiple features in flight -> finish one, then move.
