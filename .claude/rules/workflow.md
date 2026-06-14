@@ -26,9 +26,8 @@
 **One Feature at a Time:**
 - Finish one well-defined feature before the next.
 - Defer nice-to-haves until the core is complete and verified.
-- **Completion Chain:** tests pass -> integration works end-to-end -> `/simplify` on multi-file work -> `/insights` captured. For auth/data/billing/external-API changes, add security + performance checks against baseline.
+- **Completion Chain:** tests pass -> integration works end-to-end -> `/simplify` -> `/insights` captured. Run `/simplify` before the final summary on any task touching 3+ files or refactoring a non-trivial module (edits accumulate redundancy; this is the standard catch). For auth/data/billing/external-API changes, add security + performance checks against baseline.
 - Fix broken links in the chain before moving on.
-- `/simplify` runs before the final summary on any task that touches 3+ files or refactors a non-trivial module. Edits accumulate redundancy; this is the standard catch.
 
 **When Stuck (STOP -> INVESTIGATE -> SIMPLIFY -> CLARIFY -> SEARCH):**
 1. **STOP**: more code won't fix it. Re-plan.
