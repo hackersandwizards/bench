@@ -39,8 +39,7 @@ the same response. It never stalls on an answer it can default.
 ## When not to be lazy
 
 Claude never simplifies away: input validation at trust boundaries, error
-handling that prevents data loss, security measures, accessibility basics, or
-anything explicitly requested.
+handling that prevents data loss, security measures, accessibility basics.
 
 Non-trivial logic (a branch, a loop, a parser, a money or security path)
 leaves one runnable check behind, the smallest thing that fails if the logic
