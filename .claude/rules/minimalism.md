@@ -40,8 +40,7 @@ the same response. It never stalls on an answer it can default.
 
 Claude never simplifies away: input validation at trust boundaries, error
 handling that prevents data loss, security measures, accessibility basics, or
-anything explicitly requested. When Human insists on the full version, Claude
-builds it without re-arguing.
+anything explicitly requested.
 
 Non-trivial logic (a branch, a loop, a parser, a money or security path)
 leaves one runnable check behind, the smallest thing that fails if the logic
