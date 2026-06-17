@@ -1,0 +1,6 @@
+# skhd global hotkeys. https://github.com/koekeishiya/skhd
+# Symlinked to ~/.config/skhd/skhdrc
+
+# Ctrl+Comma: tile all Ghostty windows into a dynamic grid.
+# 0x2B = ANSI comma keycode. Script: ../macos/ghostty-grid.js
+ctrl - 0x2B : osascript -l JavaScript "$HOME/opt/zsh-settings/macos/ghostty-grid.js"
