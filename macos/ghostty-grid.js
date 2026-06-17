@@ -17,17 +17,19 @@ function run() {
   var workW = vf.size.width;
   var workH = vf.size.height;
 
-  // --- gather real Ghostty windows ---
+  // --- gather Ghostty windows. Bulk reads: one Apple Event each, not one per window ---
   var se = Application('System Events');
   if (!se.processes[APP].exists()) return;
-  var wins = se.processes[APP].windows().filter(function (w) {
-    if (w.subrole() !== 'AXStandardWindow') return false;
-    try { if (w.minimized()) return false; } catch (e) {}  // Ghostty omits AXMinimized
-    return true;
-  }).map(function (w) {
-    var p = w.position();
-    return { w: w, x: p[0], y: p[1] };
-  });
+  var proc = se.processes[APP];
+  var refs = proc.windows();
+  var subroles = proc.windows.subrole();     // all subroles in a single round-trip
+  var positions = proc.windows.position();   // all positions in a single round-trip
+  var wins = [];
+  for (var i = 0; i < refs.length; i++) {
+    if (String(subroles[i]) === 'AXStandardWindow') {
+      wins.push({ w: refs[i], x: positions[i][0], y: positions[i][1] });
+    }
+  }
   var n = wins.length;
   if (n === 0) return;
 
@@ -38,17 +40,16 @@ function run() {
   // --- grid dimensions: cols = ceil(sqrt n), rows = ceil(n/cols) ---
   var cols = Math.ceil(Math.sqrt(n));
   var rows = Math.ceil(n / cols);
-  var cellW = (workW - GAP * (cols + 1)) / cols;
-  var cellH = (workH - GAP * (rows + 1)) / rows;
+  var cellW = Math.round((workW - GAP * (cols + 1)) / cols);
+  var cellH = Math.round((workH - GAP * (rows + 1)) / rows);
 
   // --- place each window, row-major (last row left-aligned) ---
-  for (var i = 0; i < n; i++) {
-    var col = i % cols, row = Math.floor(i / cols);
-    var x = Math.round(workX + GAP + col * (cellW + GAP));
-    var y = Math.round(workY + GAP + row * (cellH + GAP));
-    var w = wins[i].w;
-    w.position = [x, y];
-    w.size = [Math.round(cellW), Math.round(cellH)];
-    w.position = [x, y];   // re-apply: window may shift when resized
+  // Size before position: the position write is then authoritative, so no re-apply.
+  for (var j = 0; j < n; j++) {
+    var col = j % cols, row = Math.floor(j / cols);
+    var w = wins[j].w;
+    w.size = [cellW, cellH];
+    w.position = [Math.round(workX + GAP + col * (cellW + GAP)),
+                  Math.round(workY + GAP + row * (cellH + GAP))];
   }
 }
