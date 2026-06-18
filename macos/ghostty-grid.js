@@ -6,6 +6,12 @@ function run() {
   var GAP = 8;        // gap between windows and at screen edges (matches Moom)
   var APP = 'Ghostty';
 
+  // Single-window target: when only one Ghostty window is open, snap it to this
+  // reference geometry (top-left x/y, width/height) instead of maximizing it.
+  // Captured from a manually-placed window; re-read with:
+  //   osascript -l JavaScript -e 'Application("System Events").processes["Ghostty"].windows.position()' (and .size())
+  var SOLO = { x: 352, y: 125, w: 1352, h: 948 };
+
   // --- main (primary) display work area, converted to AX top-left coords ---
   var screens = $.NSScreen.screens;
   if (screens.count === 0) return;
@@ -32,6 +38,14 @@ function run() {
   }
   var n = wins.length;
   if (n === 0) return;
+
+  // One window: restore the reference geometry, don't tile or maximize.
+  if (n === 1) {
+    var only = wins[0].w;
+    only.size = [SOLO.w, SOLO.h];          // size before position: position write is then authoritative
+    only.position = [SOLO.x, SOLO.y];
+    return;
+  }
 
   // Stable order: sort by current top, then left (reading order), not z-order.
   // Makes tiling idempotent: each window keeps its cell across runs, so nothing jumps.
