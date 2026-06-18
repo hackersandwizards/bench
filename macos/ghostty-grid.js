@@ -6,8 +6,9 @@ function run() {
   var GAP = 8;        // edge and inter-window gap, matches Moom
   var APP = 'Ghostty';
 
-  // Lone-window spot. Size stays as captured. Only the center is scaled to the
-  // current work area (refW x refH), so it lands the same on any screen.
+  // Lone-window spot. Center is scaled to the current work area (refW x refH), so
+  // it lands in the same relative place on any screen. Size stays as captured, but
+  // shrinks to fit a work area smaller than the window (never grows past capture).
   // Re-capture: read .position()/.size(), subtract workX/workY, set refW/refH to the work size.
   var SOLO = { x: 924, y: 206, w: 1352, h: 948, refW: 3200, refH: 1770 };
 
@@ -24,29 +25,33 @@ function run() {
 
   // Bulk reads: one Apple Event per property, not one per window.
   var se = Application('System Events');
-  if (!se.processes[APP].exists()) return;
   var proc = se.processes[APP];
+  if (!proc.exists()) return;
   var refs = proc.windows();
   var subroles = proc.windows.subrole();
-  var positions = proc.windows.position();
-  var wins = [];
+  var std = [];                              // indices of standard (tileable) windows
   for (var i = 0; i < refs.length; i++) {
-    if (String(subroles[i]) === 'AXStandardWindow') {
-      wins.push({ w: refs[i], x: positions[i][0], y: positions[i][1] });
-    }
+    if (String(subroles[i]) === 'AXStandardWindow') std.push(i);
   }
-  var n = wins.length;
+  var n = std.length;
   if (n === 0) return;
 
   if (n === 1) {
-    var cx = workX + (SOLO.x + SOLO.w / 2) / SOLO.refW * workW;   // window center, scaled
+    var s = Math.min(1, workW / SOLO.refW, workH / SOLO.refH);    // shrink to fit, never grow
+    var soloW = Math.round(SOLO.w * s), soloH = Math.round(SOLO.h * s);
+    var cx = workX + (SOLO.x + SOLO.w / 2) / SOLO.refW * workW;   // captured center, scaled to work area
     var cy = workY + (SOLO.y + SOLO.h / 2) / SOLO.refH * workH;
-    var only = wins[0].w;
-    only.position = [Math.round(cx - SOLO.w / 2),                 // position before size, see the loop
-                     Math.round(cy - SOLO.h / 2)];
-    only.size = [SOLO.w, SOLO.h];
+    var only = refs[std[0]];
+    only.position = [Math.round(cx - soloW / 2),                 // position before size, see the loop
+                     Math.round(cy - soloH / 2)];
+    only.size = [soloW, soloH];
     return;
   }
+
+  // Grid (2+ windows). Positions feed only the stable sort below, so read them
+  // here — the lone-window path above skips this Apple Event.
+  var positions = proc.windows.position();
+  var wins = std.map(function (i) { return { w: refs[i], x: positions[i][0], y: positions[i][1] }; });
 
   // Sort by top then left so each window keeps its cell across runs (idempotent).
   wins.sort(function (a, b) { return (a.y - b.y) || (a.x - b.x); });
