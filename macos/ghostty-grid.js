@@ -6,10 +6,9 @@ function run() {
   var GAP = 8;        // edge and inter-window gap, matches Moom
   var APP = 'Ghostty';
 
-  // Lone-window spot. Size is fixed as captured. Only the center is scaled to the
-  // current work area (refW x refH), so it lands in the same relative place on any
-  // screen. Re-capture on a hand-placed window:
-  //   read .position()/.size(), subtract workX/workY from the position, set refW/refH to the work size.
+  // Lone-window spot. Fixed size, center scaled to the current work area (refW x refH),
+  // so it lands the same on any screen.
+  // Re-capture: read .position()/.size(), subtract workX/workY, set refW/refH to the work size.
   var SOLO = { x: 352, y: 86, w: 1352, h: 948, refW: 2056, refH: 1290 };
 
   // Primary display work area, flipped from AppKit bottom-left to AX top-left.
