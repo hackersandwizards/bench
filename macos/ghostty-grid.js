@@ -6,11 +6,11 @@ function run() {
   var GAP = 8;        // edge and inter-window gap, matches Moom
   var APP = 'Ghostty';
 
-  // Lone-window spot. Center is scaled to the current work area (refW x refH), so
-  // it lands in the same relative place on any screen. Size stays as captured, but
-  // shrinks to fit a work area smaller than the window (never grows past capture).
-  // Re-capture: read .position()/.size(), subtract workX/workY, set refW/refH to the work size.
-  var SOLO = { x: 924, y: 206, w: 1352, h: 948, refW: 3200, refH: 1770 };
+  // Lone-window spot. Size is fixed as captured. Only the center is scaled to the
+  // current work area (refW x refH), so it lands in the same relative place on any
+  // screen. Re-capture on a hand-placed window:
+  //   read .position()/.size(), subtract workX/workY from the position, set refW/refH to the work size.
+  var SOLO = { x: 352, y: 86, w: 1352, h: 948, refW: 2056, refH: 1290 };
 
   // Primary display work area, flipped from AppKit bottom-left to AX top-left.
   var screens = $.NSScreen.screens;
@@ -37,14 +37,12 @@ function run() {
   if (n === 0) return;
 
   if (n === 1) {
-    var s = Math.min(1, workW / SOLO.refW, workH / SOLO.refH);    // shrink to fit, never grow
-    var soloW = Math.round(SOLO.w * s), soloH = Math.round(SOLO.h * s);
     var cx = workX + (SOLO.x + SOLO.w / 2) / SOLO.refW * workW;   // captured center, scaled to work area
     var cy = workY + (SOLO.y + SOLO.h / 2) / SOLO.refH * workH;
     var only = refs[std[0]];
-    only.position = [Math.round(cx - soloW / 2),                 // position before size, see the loop
-                     Math.round(cy - soloH / 2)];
-    only.size = [soloW, soloH];
+    only.position = [Math.round(cx - SOLO.w / 2),                 // position before size, see the loop
+                     Math.round(cy - SOLO.h / 2)];
+    only.size = [SOLO.w, SOLO.h];
     return;
   }
 
