@@ -1,3 +1,4 @@
+tap "asmvik/formulae" # maintained skhd fork; koekeishiya/skhd upstream is unmaintained
 tap "hashicorp/tap"
 tap "jundot/omlx", "https://github.com/jundot/omlx"
 tap "mongodb/brew"
@@ -201,6 +202,8 @@ brew "zlib"
 brew "zoxide"
 # UNIX shell (command interpreter)
 brew "zsh"
+# Simple hotkey-daemon for macOS
+brew "asmvik/formulae/skhd"
 # Terraform
 brew "hashicorp/tap/terraform"
 # LLM inference server optimized for Apple Silicon
