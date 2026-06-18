@@ -6,9 +6,10 @@ function run() {
   var GAP = 8;        // edge and inter-window gap, matches Moom
   var APP = 'Ghostty';
 
-  // Lone-window geometry. Re-capture a hand-placed window with:
-  //   osascript -l JavaScript -e 'Application("System Events").processes["Ghostty"].windows.position()' (and .size())
-  var SOLO = { x: 352, y: 125, w: 1352, h: 948 };
+  // Lone-window spot. Size stays as captured. Only the center is scaled to the
+  // current work area (refW x refH), so it lands the same on any screen.
+  // Re-capture: read .position()/.size(), subtract workX/workY, set refW/refH to the work size.
+  var SOLO = { x: 924, y: 206, w: 1352, h: 948, refW: 3200, refH: 1770 };
 
   // Primary display work area, flipped from AppKit bottom-left to AX top-left.
   var screens = $.NSScreen.screens;
@@ -38,8 +39,11 @@ function run() {
   if (n === 0) return;
 
   if (n === 1) {
+    var cx = workX + (SOLO.x + SOLO.w / 2) / SOLO.refW * workW;   // window center, scaled
+    var cy = workY + (SOLO.y + SOLO.h / 2) / SOLO.refH * workH;
     var only = wins[0].w;
-    only.position = [SOLO.x, SOLO.y];      // position before size, see the loop
+    only.position = [Math.round(cx - SOLO.w / 2),                 // position before size, see the loop
+                     Math.round(cy - SOLO.h / 2)];
     only.size = [SOLO.w, SOLO.h];
     return;
   }
