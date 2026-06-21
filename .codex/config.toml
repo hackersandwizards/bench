@@ -1,3 +1,5 @@
+model = "gpt-5.5"
+model_reasoning_effort = "high"
 project_doc_fallback_filenames = ["CLAUDE.md"]
 
 [shell_environment_policy]
