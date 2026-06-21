@@ -35,3 +35,7 @@ docs/                 # Package snapshots, replayed by install.sh (offline-reada
 - Internal paths use `$ZSH_SETTINGS_DIR` (set by `init.zsh` self-discovery, no hardcoded install location)
 - Global npm/bun packages preferred over system installs
 - `/opt/homebrew` hardcoded, Apple Silicon only (Intel Macs not supported)
+
+## Behavioral rules
+
+Project rules live in `.claude/rules/*.md` (relative to this file). Files with no YAML frontmatter are always-on: read and apply them this session. Files with a `paths:` frontmatter list apply only when editing files matching those globs. Claude loads these natively and excludes the global `~/.claude/rules` here via `claudeMdExcludes`. Codex and pi must read `.claude/rules/` themselves and ignore the global set. These project rules supersede it.
