@@ -1,6 +1,47 @@
 #!/usr/bin/osascript -l JavaScript
-// Tile all Ghostty windows into a grid on the primary display.
+// Tile visible Ghostty windows into a grid on the primary display.
 ObjC.import('AppKit');
+ObjC.import('Foundation');
+
+function sleep(seconds) {
+  $.NSThread.sleepForTimeInterval(seconds);
+}
+
+function attr(win, name, fallback) {
+  try {
+    return win.attributes.byName(name).value();
+  } catch (_) {
+    return fallback;
+  }
+}
+
+function sameFrame(win, x, y, w, h) {
+  var p = win.position();
+  var s = win.size();
+  return Math.abs(p[0] - x) <= 2 &&
+         Math.abs(p[1] - y) <= 2 &&
+         Math.abs(s[0] - w) <= 2 &&
+         Math.abs(s[1] - h) <= 2;
+}
+
+function setFrame(win, x, y, w, h) {
+  var lastError = null;
+  for (var attempt = 0; attempt < 3; attempt++) {
+    try {
+      // Position before size. macOS clamps a size write to keep the window
+      // on-screen from its current spot, but never clamps a position write.
+      win.position = [x, y];
+      win.size = [w, h];
+      sleep(0.06);
+      if (sameFrame(win, x, y, w, h)) return;
+    } catch (e) {
+      lastError = e;
+    }
+    sleep(0.06);
+  }
+  throw new Error('Ghostty window did not settle at requested frame' +
+                  (lastError ? ': ' + lastError : ''));
+}
 
 function run() {
   var GAP = 8;        // edge and inter-window gap, matches Moom
@@ -22,33 +63,33 @@ function run() {
   var workW = vf.size.width;
   var workH = vf.size.height;
 
-  // Bulk reads: one Apple Event per property, not one per window.
   var se = Application('System Events');
   var proc = se.processes[APP];
   if (!proc.exists()) return;
-  var refs = proc.windows();
-  var subroles = proc.windows.subrole();
-  var std = [];                              // indices of standard (tileable) windows
-  for (var i = 0; i < refs.length; i++) {
-    if (String(subroles[i]) === 'AXStandardWindow') std.push(i);
+  var wins = [];
+  for (var i = 0, count = proc.windows().length; i < count; i++) {
+    try {
+      var win = proc.windows.at(i);
+      if (String(win.subrole()) !== 'AXStandardWindow') continue;
+      if (attr(win, 'AXMinimized', false)) continue;
+      if (attr(win, 'AXFullScreen', false)) continue;
+
+      var pos = win.position();
+      wins.push({ w: win, x: pos[0], y: pos[1] });
+    } catch (_) {
+      // Window vanished or AX refused one read; tile the remaining windows.
+    }
   }
-  var n = std.length;
+  var n = wins.length;
   if (n === 0) return;
 
   if (n === 1) {
     var cx = workX + (SOLO.x + SOLO.w / 2) / SOLO.refW * workW;   // captured center, scaled to work area
     var cy = workY + (SOLO.y + SOLO.h / 2) / SOLO.refH * workH;
-    var only = refs[std[0]];
-    only.position = [Math.round(cx - SOLO.w / 2),                 // position before size, see the loop
-                     Math.round(cy - SOLO.h / 2)];
-    only.size = [SOLO.w, SOLO.h];
+    setFrame(wins[0].w, Math.round(cx - SOLO.w / 2),
+             Math.round(cy - SOLO.h / 2), SOLO.w, SOLO.h);
     return;
   }
-
-  // Grid (2+ windows). Positions feed only the stable sort below, so read them
-  // here — the lone-window path above skips this Apple Event.
-  var positions = proc.windows.position();
-  var wins = std.map(function (i) { return { w: refs[i], x: positions[i][0], y: positions[i][1] }; });
 
   // Sort by top then left so each window keeps its cell across runs (idempotent).
   wins.sort(function (a, b) { return (a.y - b.y) || (a.x - b.x); });
@@ -58,14 +99,11 @@ function run() {
   var cellW = Math.round((workW - GAP * (cols + 1)) / cols);
   var cellH = Math.round((workH - GAP * (rows + 1)) / rows);
 
-  // Position before size. macOS clamps a size write to keep the window on-screen
-  // from its current spot, but never clamps a position write. Move first, then
-  // the full cell fits and the size lands in one pass. Size-first needs two runs.
   for (var j = 0; j < n; j++) {
     var col = j % cols, row = Math.floor(j / cols);
-    var w = wins[j].w;
-    w.position = [Math.round(workX + GAP + col * (cellW + GAP)),
-                  Math.round(workY + GAP + row * (cellH + GAP))];
-    w.size = [cellW, cellH];
+    setFrame(wins[j].w,
+             Math.round(workX + GAP + col * (cellW + GAP)),
+             Math.round(workY + GAP + row * (cellH + GAP)),
+             cellW, cellH);
   }
 }
