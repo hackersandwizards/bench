@@ -7,12 +7,8 @@ function sleep(seconds) {
   $.NSThread.sleepForTimeInterval(seconds);
 }
 
-function attr(win, name, fallback) {
-  try {
-    return win.attributes.byName(name).value();
-  } catch (_) {
-    return fallback;
-  }
+function clamp(n, min, max) {
+  return Math.max(min, Math.min(max, n));
 }
 
 function sameFrame(win, x, y, w, h) {
@@ -25,22 +21,21 @@ function sameFrame(win, x, y, w, h) {
 }
 
 function setFrame(win, x, y, w, h) {
-  var lastError = null;
   for (var attempt = 0; attempt < 3; attempt++) {
     try {
       // Position before size. macOS clamps a size write to keep the window
       // on-screen from its current spot, but never clamps a position write.
       win.position = [x, y];
       win.size = [w, h];
-      sleep(0.06);
-      if (sameFrame(win, x, y, w, h)) return;
-    } catch (e) {
-      lastError = e;
+    } catch (_) {
+      // Retry below; AX writes can fail while windows are settling.
     }
     sleep(0.06);
+    try {
+      if (sameFrame(win, x, y, w, h)) return true;
+    } catch (_) {}
   }
-  throw new Error('Ghostty window did not settle at requested frame' +
-                  (lastError ? ': ' + lastError : ''));
+  return false;
 }
 
 function run() {
@@ -71,8 +66,8 @@ function run() {
     try {
       var win = proc.windows.at(i);
       if (String(win.subrole()) !== 'AXStandardWindow') continue;
-      if (attr(win, 'AXMinimized', false)) continue;
-      if (attr(win, 'AXFullScreen', false)) continue;
+      if (win.attributes.byName('AXMinimized').value()) continue;
+      if (win.attributes.byName('AXFullScreen').value()) continue;
 
       var pos = win.position();
       wins.push({ w: win, x: pos[0], y: pos[1] });
@@ -86,8 +81,14 @@ function run() {
   if (n === 1) {
     var cx = workX + (SOLO.x + SOLO.w / 2) / SOLO.refW * workW;   // captured center, scaled to work area
     var cy = workY + (SOLO.y + SOLO.h / 2) / SOLO.refH * workH;
-    setFrame(wins[0].w, Math.round(cx - SOLO.w / 2),
-             Math.round(cy - SOLO.h / 2), SOLO.w, SOLO.h);
+    var soloW = Math.min(SOLO.w, workW - GAP * 2);
+    var soloH = Math.min(SOLO.h, workH - GAP * 2);
+    if (!setFrame(wins[0].w,
+                  Math.round(clamp(cx - soloW / 2, workX + GAP, workX + workW - soloW - GAP)),
+                  Math.round(clamp(cy - soloH / 2, workY + GAP, workY + workH - soloH - GAP)),
+                  soloW, soloH)) {
+      throw new Error('Ghostty window did not settle');
+    }
     return;
   }
 
@@ -96,14 +97,18 @@ function run() {
 
   var cols = Math.ceil(Math.sqrt(n));
   var rows = Math.ceil(n / cols);
-  var cellW = Math.round((workW - GAP * (cols + 1)) / cols);
-  var cellH = Math.round((workH - GAP * (rows + 1)) / rows);
+  var cellW = Math.floor((workW - GAP * (cols + 1)) / cols);
+  var cellH = Math.floor((workH - GAP * (rows + 1)) / rows);
 
+  var failures = 0;
   for (var j = 0; j < n; j++) {
     var col = j % cols, row = Math.floor(j / cols);
-    setFrame(wins[j].w,
-             Math.round(workX + GAP + col * (cellW + GAP)),
-             Math.round(workY + GAP + row * (cellH + GAP)),
-             cellW, cellH);
+    if (!setFrame(wins[j].w,
+                  Math.round(workX + GAP + col * (cellW + GAP)),
+                  Math.round(workY + GAP + row * (cellH + GAP)),
+                  cellW, cellH)) {
+      failures++;
+    }
   }
+  if (failures > 0) throw new Error(failures + ' Ghostty window(s) did not settle');
 }
