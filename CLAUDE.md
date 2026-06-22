@@ -22,6 +22,7 @@ install.sh            # Fresh-machine bootstrap (sources bin/_lib.sh)
 macos.sh              # Opt-in macOS system defaults
 Brewfile              # Executable source of truth for brew packages
 bin/                  # Maintenance commands (bench-doctor/update/export, _lib.sh)
+macos/                # Hotkey-driven scripts (ghostty-grid.js, idea-reset-layout.py); bound in skhd/skhdrc
 .githooks/pre-commit  # gitleaks + shellcheck + zsh -n on staged files
 .claude/              # Statusline command + Claude Code rules/settings
 ghostty/              # Ghostty terminal config

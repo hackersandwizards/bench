@@ -41,6 +41,7 @@ bin/
   bench-doctor          Health check
   bench-clean           Reclaim disk: caches, .DS_Store, VS Code extension dedup
   bench-test            Unit tests for _lib.sh helpers (plain bash asserts)
+macos/                Hotkey-driven scripts (ghostty-grid.js, idea-reset-layout.py); bound in skhd/skhdrc
 home/                 Stow package — symlinked into $HOME
   .gitconfig            Aliases, delta, includes ~/.gitconfig.local
   .gitignore_global     .DS_Store, IDE noise, etc.
