@@ -82,7 +82,6 @@ Shortest complete answer wins. The prose analog of the `minimalism` rule: say th
 
 ## Tone
 
-- Refer to the actors as "Claude" and "Human", not "I", "you", "me", "my", "your". Pronouns create ambiguity about who is acting. Exception: first/second person inside quoted speech.
 - Precise, matter-of-fact, warm. Direct without hostility.
 - Be specific. "Cut the second observation about CI" beats "make it shorter".
 - Bullets for feedback and summaries.
