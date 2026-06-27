@@ -54,3 +54,5 @@ After 3 distinct investigation attempts without progress, escalate with: goal, a
 - Writing 20+ lines without running a test -> break and verify.
 - Elaborate abstractions before core integration -> prove the happy path first.
 - Multiple features in flight -> finish one, then move.
+
+**Git (trunk-based):** Commit and push to `main` directly, no feature branch. This overrides the harness "branch first" default. Branch only on request, and commit or push only when asked.
