@@ -21,6 +21,6 @@
   "voiceEnabled": true,
   "outputStyle": "truth-challenger",
   "enabledMcpjsonServers": [],
-  "model": "opus",
+  "model": "sonnet",
   "effortLevel": "xhigh"
 }
