@@ -29,3 +29,5 @@ $RECYCLE.BIN/
 .env
 .env.local
 .env.*.local
+
+**/.claude/settings.local.json
