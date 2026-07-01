@@ -15,7 +15,8 @@
     "defaultMode": "bypassPermissions"
   },
   "tui": "fullscreen",
-  "autoDreamEnabled": true,
+  "autoMemoryEnabled": false,
+  "autoDreamEnabled": false,
   "skipDangerousModePermissionPrompt": true,
   "skipAutoPermissionPrompt": true,
   "voiceEnabled": true,
