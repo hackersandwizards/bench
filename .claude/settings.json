@@ -22,5 +22,5 @@
   "outputStyle": "truth-challenger",
   "enabledMcpjsonServers": [],
   "model": "sonnet",
-  "effortLevel": "xhigh"
+  "effortLevel": "medium"
 }
