@@ -43,15 +43,18 @@ def favorites_bar(root):
 def export(plist_path):
     bar = favorites_bar(load(plist_path))
     for child in bar.get("Children", []):
-        if child.get("WebBookmarkType") != "WebBookmarkTypeLeaf":
+        url = child.get("URLString")
+        if child.get("WebBookmarkType") != "WebBookmarkTypeLeaf" or not url:
             continue
         title = child.get("URIDictionary", {}).get("title", "")
         # minimal: tabs/newlines in titles become spaces (keeps one line per bookmark)
         for ch in "\t\n\r":
             title = title.replace(ch, " ")
-        print(f"{title}\t{child['URLString']}")
+        print(f"{title}\t{url}")
 
 
+# Dedupe scans the whole bar subtree while export stays top-level: a favorite
+# the user filed into a folder within the bar must not be re-added on merge.
 def subtree_urls(node):
     urls = set()
     for child in node.get("Children", []):
@@ -62,9 +65,8 @@ def subtree_urls(node):
 
 
 def merge(snapshot_path, plist_path):
-    if plist_path == DEFAULT_PLIST and subprocess.run(
-        ["pgrep", "-xq", "Safari"], check=False
-    ).returncode == 0:
+    is_live_plist = plist_path.expanduser().resolve() == DEFAULT_PLIST.resolve()
+    if is_live_plist and subprocess.run(["pgrep", "-xq", "Safari"]).returncode == 0:
         sys.exit("Safari is running — quit it first so the plist write sticks.")
 
     entries = []
@@ -99,15 +101,17 @@ def merge(snapshot_path, plist_path):
         print("nothing to add")
         return
 
-    bar.setdefault("Children", [])[:0] = new
+    bar["Children"] = new + bar.get("Children", [])
     tmp = f"{plist_path}.tmp"
     try:
         shutil.copy2(plist_path, f"{plist_path}.backup-{int(time.time())}")
         with open(tmp, "wb") as f:
             plistlib.dump(root, f, fmt=plistlib.FMT_BINARY)
         os.replace(tmp, plist_path)
-    except PermissionError:
-        sys.exit(FDA_MSG)
+    except OSError as e:
+        # load() already proved read access, so this is not a Full Disk Access
+        # problem — report the real error (locked file, unwritable dir, ...).
+        sys.exit(f"write failed: {e}")
     print(f"added {len(new)}")
 
 

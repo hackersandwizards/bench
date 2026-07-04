@@ -16,8 +16,10 @@ ask() {
   [[ "$reply" =~ ^[Yy]$ ]]
 }
 
-# Self-numbering step headers — adding or removing a step never renumbers the rest.
-STEP_TOTAL=$(grep -c '^istep ' "$0")
+# Self-numbering step headers — adding or removing a step never renumbers the
+# rest. Grep the file via REPO_ROOT, not $0: after the cd above a relative $0
+# no longer resolves. bench-test asserts every istep call sits at column 0.
+STEP_TOTAL=$(grep -c '^istep ' "$REPO_ROOT/install.sh")
 STEP_N=0
 istep() { step "Step $((++STEP_N))/$STEP_TOTAL: $1"; }
 
@@ -66,7 +68,7 @@ replay_ecosystem() {
   fi
 }
 
-# ---------- 1. Brewfile ----------
+# ---------- Brewfile ----------
 istep "Install Homebrew packages from Brewfile"
 if ! have brew; then
   if ask "Homebrew not installed. Install it now?"; then
@@ -105,10 +107,10 @@ else
   skip "Skipped Brewfile install"
 fi
 
-# ---------- 2. Stow symlinks ----------
+# ---------- Stow symlinks ----------
 istep "Symlink home/ via Stow"
 if ! have stow; then
-  warn "stow not installed — run step 1 first or 'brew install stow'"
+  warn "stow not installed — run the Brewfile step first or 'brew install stow'"
 elif ask "Symlink dotfiles in home/ to \$HOME via stow?"; then
   for rel in "${STOW_FILES[@]}"; do
     backup "$HOME/$rel"
@@ -121,7 +123,7 @@ else
   skip "Skipped stow"
 fi
 
-# ---------- 3. Personal git identity ----------
+# ---------- Personal git identity ----------
 istep "Personal git identity (~/.gitconfig.local)"
 if [[ -f "$HOME/.gitconfig.local" ]]; then
   ok "$HOME/.gitconfig.local already exists, skipping"
@@ -138,7 +140,7 @@ else
   skip "Skipped — you'll need ~/.gitconfig.local for [user] block to work"
 fi
 
-# ---------- 4. Repo-local git hooks ----------
+# ---------- Repo-local git hooks ----------
 istep "Activate repo-local git hooks (gitleaks + shellcheck)"
 if [[ "$(hooks_path)" == ".githooks" ]]; then
   ok "core.hooksPath already set to .githooks"
@@ -149,7 +151,7 @@ else
   skip "Skipped hook activation"
 fi
 
-# ---------- 5. Source init.zsh from ~/.zshrc ----------
+# ---------- Source init.zsh from ~/.zshrc ----------
 istep "Source init.zsh from ~/.zshrc"
 if grep -qF "$REPO_ROOT/init.zsh" "$HOME/.zshrc" 2>/dev/null; then
   ok "init.zsh already sourced in ~/.zshrc"
@@ -160,7 +162,7 @@ else
   skip "Skipped ~/.zshrc append"
 fi
 
-# ---------- 6. Ghostty config ----------
+# ---------- Ghostty config ----------
 istep "Ghostty config symlink"
 mkdir -p "$HOME/.config/ghostty"
 ghostty_target="$HOME/.config/ghostty/config.ghostty"
@@ -176,10 +178,10 @@ else
   skip "Skipped Ghostty"
 fi
 
-# ---------- 7. atuin history migration ----------
+# ---------- atuin history migration ----------
 istep "atuin history import"
 if ! have atuin; then
-  warn "atuin not installed — run step 1 (Brewfile) first"
+  warn "atuin not installed — run the Brewfile step first"
 elif [[ -f "$HOME/.local/share/atuin/history.db" ]]; then
   ok "atuin database already exists — skipping import"
 elif ask "Import existing ~/.zsh_history into atuin?"; then
@@ -189,14 +191,14 @@ else
   skip "Skipped — run 'atuin import auto' manually later"
 fi
 
-# ---------- 8. Antidote pre-warm ----------
+# ---------- Antidote pre-warm ----------
 # Generate plugins.zsh + plugins-post.zsh ahead of first interactive shell so
 # the user doesn't pay the cold-cache cost (~5–10s of git clones + bundle
 # compile) on first login. Mirrors init.zsh:_antidote_bundle exactly.
 # bench-update invalidates these caches by deleting them; this is the inverse.
 istep "Pre-warm antidote plugin bundles"
 if [[ ! -f "$ANTIDOTE_SH" ]]; then
-  warn "antidote not at $ANTIDOTE_SH — run step 1 (Brewfile) first"
+  warn "antidote not at $ANTIDOTE_SH — run the Brewfile step first"
 elif [[ -s "$REPO_ROOT/plugins.zsh" && -s "$REPO_ROOT/plugins-post.zsh" \
         && "$REPO_ROOT/plugins.zsh" -nt "$REPO_ROOT/plugins.txt" \
         && "$REPO_ROOT/plugins-post.zsh" -nt "$REPO_ROOT/plugins-post.txt" ]]; then
@@ -210,14 +212,14 @@ else
   skip "Skipped antidote pre-warm"
 fi
 
-# ---------- 9. chsh to brew zsh ----------
+# ---------- chsh to brew zsh ----------
 # Apple ships zsh in /bin/zsh; brew ships its own at /opt/homebrew/bin/zsh.
 # Both usually match major version, but switching ensures future zsh updates
 # land via brew on the user's cadence rather than tied to macOS releases.
 istep "Switch login shell to brew zsh"
 BREW_ZSH=/opt/homebrew/bin/zsh
 if [[ ! -x "$BREW_ZSH" ]]; then
-  warn "$BREW_ZSH not found — run step 1 (Brewfile) first"
+  warn "$BREW_ZSH not found — run the Brewfile step first"
 elif [[ "$SHELL" == "$BREW_ZSH" ]]; then
   ok "Login shell already $BREW_ZSH"
 elif ask "Switch login shell from $SHELL to $BREW_ZSH?"; then
@@ -230,7 +232,7 @@ else
   skip "Skipped chsh"
 fi
 
-# ---------- 10. Touch ID for sudo ----------
+# ---------- Touch ID for sudo ----------
 istep "Enable Touch ID for sudo"
 if [[ -f /etc/pam.d/sudo_local ]] && grep -qE '^auth\s+sufficient\s+pam_tid\.so' /etc/pam.d/sudo_local; then
   ok "Touch ID for sudo already enabled"
@@ -244,7 +246,7 @@ else
   skip "Skipped Touch ID for sudo"
 fi
 
-# ---------- 11. Language-ecosystem global CLIs ----------
+# ---------- Language-ecosystem global CLIs ----------
 # Replay the package snapshots bench-export writes to docs/. Each manager is
 # asked to install every snapshotted package; already-present ones resolve
 # quickly, and a package that fails is reported without aborting the rest.
@@ -258,7 +260,7 @@ if ask "Install uv / npm / bun / cargo / gem / pip global CLIs from docs/ snapsh
   # it tracks upgrades instead of pinning python@3.14.
   export PATH="/opt/homebrew/opt/ruby/bin:/opt/homebrew/opt/python3/libexec/bin:$PATH"
   # All six managers (uv, npm, bun, cargo, gem, pip) are installed by brew bundle
-  # in step 1; the replay only needs them on PATH, which the keg-only fix above
+  # in the Brewfile step; the replay only needs them on PATH — the keg-only fix above
   # ensures for gem/pip (uv, npm, bun, cargo are linked into /opt/homebrew/bin).
   replay_ecosystem uv    uv.txt    parse_uv    uv tool install
   replay_ecosystem npm   npms.txt  parse_node  npm install -g
@@ -270,7 +272,7 @@ else
   skip "Skipped language-ecosystem globals"
 fi
 
-# ---------- 12. SDKMAN + JVM-ecosystem SDKs ----------
+# ---------- SDKMAN + JVM-ecosystem SDKs ----------
 # SDKMAN_INIT and source_sdkman live in _lib.sh — `sdk` is a shell function, not
 # a binary, so its init must be sourced before `sdk install` works.
 istep "Install SDKMAN and JVM-ecosystem SDKs"
@@ -296,7 +298,7 @@ else
   fi
 fi
 
-# ---------- 13. Safari favorites bar ----------
+# ---------- Safari favorites bar ----------
 # Merge-only: prepends snapshot entries missing from the favorites bar, never
 # deletes or reorders existing ones. bin/safari-favorites owns the guarantees
 # (Safari-quit re-check, Full Disk Access message, backup, atomic write).

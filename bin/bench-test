@@ -111,9 +111,16 @@ printf 'a\thttps://a/\nb\thttps://b/\nc\thttps://c/\n' > "$tdir/snap.txt"
 assert_ok "merge runs against fixture" "$sf" merge "$tdir/snap.txt" "$tdir/b.plist"
 merged=$'a\thttps://a/\nb\thttps://b/'
 assert_eq "prepends only missing URLs (subtree dedupe)" "$merged" "$("$sf" export "$tdir/b.plist")"
-"$sf" merge "$tdir/snap.txt" "$tdir/b.plist" >/dev/null 2>&1
+assert_ok "idempotent merge exits ok" "$sf" merge "$tdir/snap.txt" "$tdir/b.plist"
 assert_eq "idempotent — re-run adds nothing" "$merged" "$("$sf" export "$tdir/b.plist")"
 rm -rf "$tdir"
+
+step "install.sh istep self-count"
+# STEP_TOTAL greps for '^istep ' — an indented call would increment STEP_N
+# without being counted, printing "Step 14/13". Fails here first instead.
+assert_eq "istep calls all at column 0 (self-count stays exact)" \
+  "$(grep -cE '^[[:space:]]*istep ' "$REPO_ROOT/install.sh")" \
+  "$(grep -c '^istep ' "$REPO_ROOT/install.sh")"
 
 step "$passed passed, $failed failed"
 (( failed == 0 ))

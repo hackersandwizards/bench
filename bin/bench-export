@@ -13,16 +13,20 @@ mkdir -p "$DOCS"
 
 # Run "$@" capturing stdout to $1; only overwrite the destination on success
 # so a failed command leaves the previous snapshot intact (no empty files).
+# On failure the captured stderr is shown — some dumpers (safari-favorites)
+# put the remediation there, and a bare "failed" would hide it.
 dump_to() {
   local out="$1"; shift
   local tmp="$out.tmp"
-  if "$@" > "$tmp" 2>/dev/null; then
+  if "$@" > "$tmp" 2>"$tmp.err"; then
     mv "$tmp" "$out"
     ok "${out##*/}"
   else
     rm -f "$tmp"
     warn "${out##*/} failed"
+    [[ -s "$tmp.err" ]] && tail -n 3 "$tmp.err" | sed 's/^/    /'
   fi
+  rm -f "$tmp.err"
 }
 
 # --- Brewfile drift check (never auto-overwrite: cask/mas entries are aspirational
