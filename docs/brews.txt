@@ -112,6 +112,7 @@ libngtcp2
 libomp
 libpng
 libpq
+libpsl
 libsodium
 libssh2
 libtasn1
@@ -140,6 +141,7 @@ lzo
 m4
 mas
 merve
+mole
 mongodb-community
 mongodb-database-tools
 mongosh
@@ -198,10 +200,12 @@ ruby
 rust
 rustup
 screen
-sdl2
+sdl2-compat
+sdl3
 shellcheck
 simdjson
 simdutf
+skhd
 sqlite
 sslscan
 starship
@@ -240,6 +244,3 @@ zlib-ng-compat
 zoxide
 zsh
 zstd
-antigravity-cli
-crossover
-orbstack

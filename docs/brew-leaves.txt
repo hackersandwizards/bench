@@ -1,4 +1,5 @@
 antidote
+asmvik/formulae/skhd
 atuin
 bat
 bfs
@@ -50,6 +51,7 @@ lazygit
 lefthook
 less
 mas
+mole
 mongodb/brew/mongodb-community
 mysql
 nano
