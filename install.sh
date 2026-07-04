@@ -101,6 +101,13 @@ if have brew && ! brew_bottles_supported; then
   brew_unsupported_notice
   skip "Skipped Brewfile install — bottles unavailable until Homebrew ships support"
 elif have brew && ask "Run 'brew bundle' now?"; then
+  # Cask pkg installers call sudo over and over, and macOS forgets the
+  # credential after 5 idle minutes — a long bundle re-prompts constantly.
+  # Ask once, then refresh the timestamp in the background until this
+  # script exits (sudo -n never prompts; the loop dies with the script).
+  if sudo -v; then
+    ( while kill -0 $$ 2>/dev/null; do sudo -n -v 2>/dev/null; sleep 50; done ) &
+  fi
   # static.adguard.com drops TLS handshakes on some routes (RU CDN edge), so
   # the adguard cask download hangs. Pre-seed brew's cache from AdGuard's
   # adtidy.org mirror — same file, and brew still verifies the cask's sha256.
