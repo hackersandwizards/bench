@@ -101,6 +101,22 @@ if have brew && ! brew_bottles_supported; then
   brew_unsupported_notice
   skip "Skipped Brewfile install — bottles unavailable until Homebrew ships support"
 elif have brew && ask "Run 'brew bundle' now?"; then
+  # static.adguard.com silently drops TLS handshakes carrying its own SNI on
+  # some routes (CDN edge in a RU network), so the adguard cask download hangs
+  # until timeout. Pre-seed brew's cache from AdGuard's adtidy.org mirror —
+  # same host, same file, and brew still verifies the cask's sha256. The
+  # version-tagged filename comes from brew's cache path, so no JSON parsing.
+  adguard_cache=$(brew --cache --cask adguard 2>/dev/null) || adguard_cache=""
+  if [[ -n "$adguard_cache" && ! -f "$adguard_cache" ]]; then
+    if curl -fLo "$adguard_cache.mirror" \
+        "https://static.adtidy.org/mac/release/${adguard_cache##*--}" \
+        && mv "$adguard_cache.mirror" "$adguard_cache"; then
+      ok "Pre-seeded adguard download from adtidy.org mirror"
+    else
+      rm -f "$adguard_cache.mirror"
+      warn "adguard mirror download failed — brew bundle will retry the primary CDN"
+    fi
+  fi
   brew bundle --file="$REPO_ROOT/Brewfile"
   ok "Brewfile installed"
 else
