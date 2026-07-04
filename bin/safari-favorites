@@ -1,0 +1,126 @@
+#!/usr/bin/env python3
+"""Snapshot and merge Safari's favorites bar (top-level leaves only).
+
+  safari-favorites export [plist]            print title<TAB>url per favorite
+  safari-favorites merge <snapshot> [plist]  prepend snapshot entries missing
+                                             from the favorites bar
+
+Default plist: ~/Library/Safari/Bookmarks.plist (needs Full Disk Access).
+"""
+import os
+import plistlib
+import shutil
+import subprocess
+import sys
+import time
+import uuid
+from pathlib import Path
+
+DEFAULT_PLIST = Path.home() / "Library/Safari/Bookmarks.plist"
+
+
+def load(path):
+    try:
+        with open(path, "rb") as f:
+            return plistlib.load(f)
+    except PermissionError:
+        sys.exit(
+            "No Full Disk Access: System Settings → Privacy & Security → "
+            "Full Disk Access → enable your terminal, then re-run."
+        )
+    except FileNotFoundError:
+        sys.exit(f"{path} missing — launch Safari once, quit it, then re-run.")
+
+
+def favorites_bar(root):
+    for child in root.get("Children", []):
+        if child.get("Title") == "BookmarksBar":
+            return child
+    sys.exit("No BookmarksBar folder in plist — unexpected Safari bookmarks format.")
+
+
+def export(plist_path):
+    bar = favorites_bar(load(plist_path))
+    for child in bar.get("Children", []):
+        if child.get("WebBookmarkType") != "WebBookmarkTypeLeaf":
+            continue
+        title = child.get("URIDictionary", {}).get("title", "")
+        # minimal: tabs/newlines in titles become spaces (keeps one line per bookmark)
+        for ch in "\t\n\r":
+            title = title.replace(ch, " ")
+        print(f"{title}\t{child['URLString']}")
+
+
+def subtree_urls(node):
+    urls = set()
+    for child in node.get("Children", []):
+        if "URLString" in child:
+            urls.add(child["URLString"])
+        urls |= subtree_urls(child)
+    return urls
+
+
+def merge(snapshot_path, plist_path):
+    if plist_path == DEFAULT_PLIST and subprocess.run(
+        ["pgrep", "-xq", "Safari"], check=False
+    ).returncode == 0:
+        sys.exit("Safari is running — quit it first so the plist write sticks.")
+
+    entries = []
+    with open(snapshot_path, encoding="utf-8") as f:
+        for line in f:
+            line = line.rstrip("\n")
+            if not line:
+                continue
+            title, sep, url = line.rpartition("\t")
+            if not sep or not url:
+                print(f"skipping malformed line: {line!r}", file=sys.stderr)
+                continue
+            entries.append((title, url))
+
+    root = load(plist_path)
+    bar = favorites_bar(root)
+    existing = subtree_urls(bar)
+    new = []
+    for title, url in entries:
+        if url in existing:
+            continue
+        existing.add(url)
+        new.append(
+            {
+                "WebBookmarkType": "WebBookmarkTypeLeaf",
+                "WebBookmarkUUID": str(uuid.uuid4()).upper(),
+                "URLString": url,
+                "URIDictionary": {"title": title},
+            }
+        )
+    if not new:
+        print("nothing to add")
+        return
+
+    bar.setdefault("Children", [])[:0] = new
+    shutil.copy2(plist_path, f"{plist_path}.backup-{int(time.time())}")
+    tmp = f"{plist_path}.tmp"
+    try:
+        with open(tmp, "wb") as f:
+            plistlib.dump(root, f, fmt=plistlib.FMT_BINARY)
+        os.replace(tmp, plist_path)
+    except PermissionError:
+        sys.exit(
+            "No Full Disk Access: System Settings → Privacy & Security → "
+            "Full Disk Access → enable your terminal, then re-run."
+        )
+    print(f"added {len(new)}")
+
+
+def main(argv):
+    if len(argv) >= 2 and argv[1] == "export":
+        export(Path(argv[2]) if len(argv) > 2 else DEFAULT_PLIST)
+    elif len(argv) >= 3 and argv[1] == "merge":
+        merge(argv[2], Path(argv[3]) if len(argv) > 3 else DEFAULT_PLIST)
+    else:
+        sys.exit(__doc__.strip())
+
+
+if __name__ == "__main__":
+    main(sys.argv)

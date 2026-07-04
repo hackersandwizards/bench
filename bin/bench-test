@@ -93,5 +93,27 @@ macos_ver="";     assert_ok   "fail-open (supported) when the version is unknown
 unset -f brew sw_vers
 rm -rf "$brewdir"
 
+step "safari-favorites merge"
+sf="$REPO_ROOT/bin/safari-favorites"
+tdir=$(mktemp -d)
+python3 - "$tdir/b.plist" <<'PY'
+import plistlib, sys
+leaf = lambda t, u: {"WebBookmarkType": "WebBookmarkTypeLeaf", "WebBookmarkUUID": "X",
+                     "URLString": u, "URIDictionary": {"title": t}}
+bar = {"Title": "BookmarksBar", "WebBookmarkType": "WebBookmarkTypeList", "WebBookmarkUUID": "Y",
+       "Children": [leaf("b", "https://b/"),
+                    {"Title": "f", "WebBookmarkType": "WebBookmarkTypeList", "WebBookmarkUUID": "Z",
+                     "Children": [leaf("c", "https://c/")]}]}
+plistlib.dump({"Children": [bar], "WebBookmarkFileVersion": 1},
+              open(sys.argv[1], "wb"), fmt=plistlib.FMT_BINARY)
+PY
+printf 'a\thttps://a/\nb\thttps://b/\nc\thttps://c/\n' > "$tdir/snap.txt"
+assert_ok "merge runs against fixture" "$sf" merge "$tdir/snap.txt" "$tdir/b.plist"
+merged=$'a\thttps://a/\nb\thttps://b/'
+assert_eq "prepends only missing URLs (subtree dedupe)" "$merged" "$("$sf" export "$tdir/b.plist")"
+"$sf" merge "$tdir/snap.txt" "$tdir/b.plist" >/dev/null 2>&1
+assert_eq "idempotent — re-run adds nothing" "$merged" "$("$sf" export "$tdir/b.plist")"
+rm -rf "$tdir"
+
 step "$passed passed, $failed failed"
 (( failed == 0 ))

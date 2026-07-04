@@ -52,6 +52,7 @@ if [[ -f "$REPO_ROOT/secrets.zsh" ]]; then
 else
   warn "secrets.zsh missing (optional)"
 fi
+check "docs/safari-favorites.txt" test -s "$REPO_ROOT/docs/safari-favorites.txt"
 
 echo
 echo "=== Git auth ==="

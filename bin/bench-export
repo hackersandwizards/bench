@@ -63,6 +63,7 @@ have npm   && dump_to "$DOCS/npms.txt"  npm list -g --depth=0      &
 have cargo && dump_to "$DOCS/cargo.txt" cargo install --list       &
 have sdk   && dump_to "$DOCS/sdks.txt"  sdk_run current            &
 have mix   && dump_to "$DOCS/mix.txt"   mix archive                &
+dump_to "$DOCS/safari-favorites.txt" "$REPO_ROOT/bin/safari-favorites" export &
 wait
 [[ -f "$HOME/.gradle/gradle.properties" ]] \
   && cp "$HOME/.gradle/gradle.properties" "$DOCS/gradle.properties" \

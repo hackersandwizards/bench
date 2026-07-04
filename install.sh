@@ -62,7 +62,7 @@ replay_ecosystem() {
 }
 
 # ---------- 1. Brewfile ----------
-step "Step 1/12: Install Homebrew packages from Brewfile"
+step "Step 1/13: Install Homebrew packages from Brewfile"
 if ! have brew; then
   if ask "Homebrew not installed. Install it now?"; then
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -101,7 +101,7 @@ else
 fi
 
 # ---------- 2. Stow symlinks ----------
-step "Step 2/12: Symlink home/ via Stow"
+step "Step 2/13: Symlink home/ via Stow"
 if ! have stow; then
   warn "stow not installed — run step 1 first or 'brew install stow'"
 elif ask "Symlink dotfiles in home/ to \$HOME via stow?"; then
@@ -117,7 +117,7 @@ else
 fi
 
 # ---------- 3. Personal git identity ----------
-step "Step 3/12: Personal git identity (~/.gitconfig.local)"
+step "Step 3/13: Personal git identity (~/.gitconfig.local)"
 if [[ -f "$HOME/.gitconfig.local" ]]; then
   ok "$HOME/.gitconfig.local already exists, skipping"
 elif ask "Create ~/.gitconfig.local with [user] block?"; then
@@ -134,7 +134,7 @@ else
 fi
 
 # ---------- 4. Repo-local git hooks ----------
-step "Step 4/12: Activate repo-local git hooks (gitleaks + shellcheck)"
+step "Step 4/13: Activate repo-local git hooks (gitleaks + shellcheck)"
 if [[ "$(hooks_path)" == ".githooks" ]]; then
   ok "core.hooksPath already set to .githooks"
 elif ask "Set core.hooksPath = .githooks for this repo?"; then
@@ -145,7 +145,7 @@ else
 fi
 
 # ---------- 5. Source init.zsh from ~/.zshrc ----------
-step "Step 5/12: Source init.zsh from ~/.zshrc"
+step "Step 5/13: Source init.zsh from ~/.zshrc"
 if grep -qF "$REPO_ROOT/init.zsh" "$HOME/.zshrc" 2>/dev/null; then
   ok "init.zsh already sourced in ~/.zshrc"
 elif ask "Append source line to ~/.zshrc?"; then
@@ -156,7 +156,7 @@ else
 fi
 
 # ---------- 6. Ghostty config ----------
-step "Step 6/12: Ghostty config symlink"
+step "Step 6/13: Ghostty config symlink"
 mkdir -p "$HOME/.config/ghostty"
 ghostty_target="$HOME/.config/ghostty/config.ghostty"
 if [[ -L "$ghostty_target" ]]; then
@@ -172,7 +172,7 @@ else
 fi
 
 # ---------- 7. atuin history migration ----------
-step "Step 7/12: atuin history import"
+step "Step 7/13: atuin history import"
 if ! have atuin; then
   warn "atuin not installed — run step 1 (Brewfile) first"
 elif [[ -f "$HOME/.local/share/atuin/history.db" ]]; then
@@ -189,7 +189,7 @@ fi
 # the user doesn't pay the cold-cache cost (~5–10s of git clones + bundle
 # compile) on first login. Mirrors init.zsh:_antidote_bundle exactly.
 # bench-update invalidates these caches by deleting them; this is the inverse.
-step "Step 8/12: Pre-warm antidote plugin bundles"
+step "Step 8/13: Pre-warm antidote plugin bundles"
 if [[ ! -f "$ANTIDOTE_SH" ]]; then
   warn "antidote not at $ANTIDOTE_SH — run step 1 (Brewfile) first"
 elif [[ -s "$REPO_ROOT/plugins.zsh" && -s "$REPO_ROOT/plugins-post.zsh" \
@@ -209,7 +209,7 @@ fi
 # Apple ships zsh in /bin/zsh; brew ships its own at /opt/homebrew/bin/zsh.
 # Both usually match major version, but switching ensures future zsh updates
 # land via brew on the user's cadence rather than tied to macOS releases.
-step "Step 9/12: Switch login shell to brew zsh"
+step "Step 9/13: Switch login shell to brew zsh"
 BREW_ZSH=/opt/homebrew/bin/zsh
 if [[ ! -x "$BREW_ZSH" ]]; then
   warn "$BREW_ZSH not found — run step 1 (Brewfile) first"
@@ -226,7 +226,7 @@ else
 fi
 
 # ---------- 10. Touch ID for sudo ----------
-step "Step 10/12: Enable Touch ID for sudo"
+step "Step 10/13: Enable Touch ID for sudo"
 if [[ -f /etc/pam.d/sudo_local ]] && grep -qE '^auth\s+sufficient\s+pam_tid\.so' /etc/pam.d/sudo_local; then
   ok "Touch ID for sudo already enabled"
 elif [[ ! -f /etc/pam.d/sudo_local.template ]]; then
@@ -243,7 +243,7 @@ fi
 # Replay the package snapshots bench-export writes to docs/. Each manager is
 # asked to install every snapshotted package; already-present ones resolve
 # quickly, and a package that fails is reported without aborting the rest.
-step "Step 11/12: Install language-ecosystem global CLIs (uv, npm, bun, cargo, gem, pip)"
+step "Step 11/13: Install language-ecosystem global CLIs (uv, npm, bun, cargo, gem, pip)"
 if ask "Install uv / npm / bun / cargo / gem / pip global CLIs from docs/ snapshots?"; then
   # brew ruby and python are keg-only, so their gem/pip aren't on PATH until
   # exports.zsh runs — which it hasn't on a fresh machine. Without this the replay
@@ -268,7 +268,7 @@ fi
 # ---------- 12. SDKMAN + JVM-ecosystem SDKs ----------
 # SDKMAN_INIT and source_sdkman live in _lib.sh — `sdk` is a shell function, not
 # a binary, so its init must be sourced before `sdk install` works.
-step "Step 12/12: Install SDKMAN and JVM-ecosystem SDKs"
+step "Step 12/13: Install SDKMAN and JVM-ecosystem SDKs"
 if [[ ! -s "$SDKMAN_INIT" ]] && ask "SDKMAN not installed. Install it now?"; then
   curl -fsSL "https://get.sdkman.io" | bash
 fi
@@ -289,6 +289,30 @@ else
   else
     skip "Skipped JVM SDK install"
   fi
+fi
+
+# ---------- 13. Safari favorites bar ----------
+# Merge-only: prepends snapshot entries missing from the favorites bar, never
+# deletes or reorders existing ones. bin/safari-favorites owns the guarantees
+# (Safari-quit re-check, Full Disk Access message, backup, atomic write).
+step "Step 13/13: Merge Safari favorites from docs/safari-favorites.txt"
+fav_doc="$REPO_ROOT/docs/safari-favorites.txt"
+if [[ ! -s "$fav_doc" ]]; then
+  skip "docs/safari-favorites.txt missing/empty — run bench-export on the old machine"
+elif ask "Prepend missing snapshot favorites into Safari's favorites bar?"; then
+  if pgrep -xq Safari; then
+    if ask "Safari must be quit for the write to stick. Quit it now?"; then
+      osascript -e 'quit app "Safari"'
+      sleep 2
+    fi
+  fi
+  if "$REPO_ROOT/bin/safari-favorites" merge "$fav_doc"; then
+    ok "Safari favorites merged"
+  else
+    warn "Safari favorites merge failed (see message above) — fix and re-run install.sh"
+  fi
+else
+  skip "Skipped Safari favorites"
 fi
 
 # ---------- Secure secrets.zsh ----------

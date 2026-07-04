@@ -1,0 +1,17 @@
+mail	https://mail.google.com/mail/u/0/#inbox
+meet	https://meet.google.com/landing
+slack	https://hackersandwizards.slack.com/
+linkedin	https://www.linkedin.com/feed/
+todoist	https://app.todoist.com/app/inbox
+reclaim	https://app.reclaim.ai/planner
+calendar	https://calendar.notion.so/
+toggl	https://track.toggl.com/timer
+finom	https://app.finom.co/
+qonto	https://app.qonto.com/
+notion	https://www.notion.so/
+fathom	https://fathom.video/home
+perplexity	https://www.perplexity.ai/
+claude	https://claude.ai/project/019946f0-008e-70e1-b090-83ec4fbbd036
+chatgpt	https://chatgpt.com/
+gemini	https://gemini.google.com/app
+trakt	https://app.trakt.tv/users/benestem/progress
