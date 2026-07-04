@@ -101,14 +101,19 @@ if have brew && ! brew_bottles_supported; then
   brew_unsupported_notice
   skip "Skipped Brewfile install — bottles unavailable until Homebrew ships support"
 elif have brew && ask "Run 'brew bundle' now?"; then
-  # static.adguard.com silently drops TLS handshakes carrying its own SNI on
-  # some routes (CDN edge in a RU network), so the adguard cask download hangs
-  # until timeout. Pre-seed brew's cache from AdGuard's adtidy.org mirror —
-  # same host, same file, and brew still verifies the cask's sha256. The
-  # version-tagged filename comes from brew's cache path, so no JSON parsing.
-  adguard_cache=$(brew --cache --cask adguard 2>/dev/null) || adguard_cache=""
-  if [[ -n "$adguard_cache" && ! -f "$adguard_cache" ]]; then
-    if curl -fLo "$adguard_cache.mirror" \
+  # static.adguard.com drops TLS handshakes on some routes (RU CDN edge), so
+  # the adguard cask download hangs. Pre-seed brew's cache from AdGuard's
+  # adtidy.org mirror — same file, and brew still verifies the cask's sha256.
+  # Download lands in a temp file so a Ctrl-C can't poison the cache. Only
+  # install needs this: `brew upgrade` skips auto_updates casks like adguard.
+  # minimal: one hardcoded cask; generalize to a mirror map if a second cask
+  # hits this, drop when the route heals.
+  if grep -q '^cask "adguard"' "$REPO_ROOT/Brewfile" \
+      && adguard_cache=$(brew --cache --cask adguard 2>/dev/null) \
+      && [[ "$adguard_cache" == *--* && ! -f "$adguard_cache" ]]; then
+    mkdir -p "${adguard_cache%/*}"
+    if curl -fLo "$adguard_cache.mirror" --connect-timeout 5 --retry 2 \
+        --speed-limit 10240 --speed-time 30 \
         "https://static.adtidy.org/mac/release/${adguard_cache##*--}" \
         && mv "$adguard_cache.mirror" "$adguard_cache"; then
       ok "Pre-seeded adguard download from adtidy.org mirror"

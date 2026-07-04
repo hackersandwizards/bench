@@ -19,6 +19,8 @@ cd ~/opt/zsh-settings
 
 The wizard handles each step opt-in: `brew bundle`, Stow symlinks, `~/.gitconfig.local` generation, repo-local git hooks, `~/.zshrc` source line, Ghostty config symlink, language-ecosystem globals (uv/npm/bun/cargo/gem/pip), SDKMAN + JVM SDKs.
 
+static.adguard.com drops TLS handshakes on some routes, so the adguard cask download hangs. The wizard's `brew bundle` step works around it and pre-seeds brew's cache from AdGuard's adtidy.org mirror. A manual `brew bundle` run skips that workaround.
+
 ## File structure
 
 ```
