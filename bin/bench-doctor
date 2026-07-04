@@ -92,10 +92,8 @@ done
 echo
 echo "=== Startup ==="
 zsh -i -c exit >/dev/null 2>&1   # warm-up: absorb any stale-cache regeneration
-# Health: a clean interactive shell prints nothing on stderr. Capturing it here
-# turns a silent startup error (like fzf's "can't change option: zle") into a
-# visible warning instead of noise the user never connects to a cause. Runs on
-# any interpreter — unlike the timing below, it needs no $EPOCHREALTIME.
+# A clean interactive shell prints nothing on stderr; capture it so a silent
+# startup error (like fzf's "can't change option: zle") surfaces as a warning.
 startup_err=$(zsh -i -c exit 2>&1 >/dev/null)
 if [[ -z "$startup_err" ]]; then
   ok "interactive startup clean (no stderr)"
@@ -103,14 +101,11 @@ else
   warn "interactive startup emits stderr:"
   printf '%s\n' "$startup_err" | indent
 fi
-# bash 5+ exposes $EPOCHREALTIME (microsecond float, no fork). Strip the dot to
-# get an integer microseconds count, then divide. It is empty under bash 3.2
-# (macOS's /bin/bash) — guard it so a wrong interpreter reports honestly instead
-# of a false 0ms. `env bash` normally resolves to brew's bash 5.x.
+# $EPOCHREALTIME is empty under bash 3.2 (macOS's /bin/bash). Guard it so a
+# wrong interpreter reports honestly instead of a false 0ms.
 if [[ -n "${EPOCHREALTIME:-}" ]]; then
-  # Report the best of three runs. A single sample swings 40%+ with system load —
-  # a cold run here measured 135ms against a 91ms steady state — and the minimum
-  # is the cleanest, least-contended figure, so the number stays reproducible.
+  # Best of three: a single sample swings 40%+ with system load, and the minimum
+  # is the least-contended figure, so the reported number stays reproducible.
   best=""
   for _ in 1 2 3; do
     start=${EPOCHREALTIME/./}

@@ -33,8 +33,8 @@ have uv   && run "uv tools" uv tool upgrade --all
 have uv   && run "uv cache prune" env UV_LOCK_TIMEOUT=10 uv cache prune
 
 _pip_managed_names() {
-  # Names of pip-managed installs (have a RECORD file).
-  # Brew-installed packages skip RECORD, so this filters them out.
+  # pip-managed installs have a RECORD file; brew-installed ones don't, so this
+  # filters brew's packages out.
   python3 -c 'import importlib.metadata as m
 print("\n".join(d.metadata["Name"] for d in m.distributions() if d.read_text("RECORD")))' 2>/dev/null
 }

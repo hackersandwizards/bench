@@ -124,10 +124,9 @@ defaults write com.apple.ActivityMonitor SortDirection -int 0
 
 # ============================================================================
 # Desktop wallpaper
-# Sets the image on every active space. Placement (Fill Screen) and
-# "Show on all Spaces" are preserved from existing user prefs — no public
-# Tahoe API to force them. Image matches display res (5120x2880), so all
-# placement modes render identically on this hardware.
+# Placement (Fill Screen) and "Show on all Spaces" are preserved from user
+# prefs (no public Tahoe API forces them). Image matches display res
+# (5120x2880), so all placement modes render identically on this hardware.
 # ============================================================================
 WALLPAPER="$REPO_ROOT/assets/wallpaper.png"
 if [[ -f "$WALLPAPER" ]]; then

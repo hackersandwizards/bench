@@ -47,8 +47,7 @@ elif have brew; then
   fi
 fi
 
-# Source SDKMAN (see _lib.sh) so the `sdk current` snapshot below can see it —
-# `sdk` is a shell function, so `have sdk` is false until its init is sourced.
+# Source SDKMAN so the `sdk current` snapshot below can see the function (see _lib.sh).
 source_sdkman || true
 
 # --- docs/ snapshots (replayed by install.sh, offline-readable) ---

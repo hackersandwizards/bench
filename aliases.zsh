@@ -27,8 +27,8 @@ alias j=just
 alias ez='vim "$ZSH_SETTINGS_DIR/init.zsh"'
 
 # --- Pipe globals ---
-# Color-preserving: CG/CL/CH/CT force --color=always on the left side of the pipe.
-# Plain: G/L/H/T work universally (including brew, kubectl, etc.).
+# C-prefixed variants inject --color=always before the pipe, for tools that
+# only colorize on a tty (brew, kubectl, …).
 alias -g G='| grep --color=always'
 alias -g CG='--color=always | grep --color=always'
 alias -g L='| less'
@@ -56,10 +56,10 @@ alias nproc=gnproc
 alias shuf=gshuf
 alias sha256sum=gsha256sum
 
-# --- Reclaim disk (delegates to bin/bench-clean: caches, .DS_Store, VS Code dedup) ---
+# --- Reclaim disk ---
 alias cleanup=bench-clean
 
-# --- Upgrade all (delegates to bin/bench-update) ---
+# --- Upgrade all ---
 alias ua=bench-update
 
 # --- npm ---

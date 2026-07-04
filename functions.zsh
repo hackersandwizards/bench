@@ -1,4 +1,4 @@
-# --- Color-aware diff (delta when interactive and installed, plain otherwise) ---
+# --- Color-aware diff ---
 diff() {
   if [[ -t 1 ]] && (( $+commands[delta] )); then delta "$@"
   else                                            command diff "$@"

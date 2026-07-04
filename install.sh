@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # Interactive bootstrap for zsh-settings. Re-runnable, idempotent.
-# Each step is opt-in via a Y/n prompt.
 set -u
 
 # shellcheck source-path=SCRIPTDIR/bin
@@ -55,8 +54,6 @@ replay_globals() {
 # parse_* docs/ snapshot parsers live in _lib.sh (sourced above) so they are
 # sourceable and unit-tested by bench-test; replay_ecosystem calls them by name.
 
-# Guard, parse and replay one ecosystem's docs/ snapshot; skip cleanly when the
-# tool is absent or its snapshot is empty.
 #   replay_ecosystem <tool> <docs-basename> <parser-fn> <install-cmd…>
 replay_ecosystem() {
   local tool="$1" file="$2" parser="$3"; shift 3
@@ -79,14 +76,10 @@ if ! have brew; then
     skip "Skipped — Homebrew required for remaining steps"
   fi
 fi
-# Trust the non-official taps the Brewfile declares, independent of whether
-# `brew bundle` runs. HOMEBREW_REQUIRE_TAP_TRUST=1 (exports.zsh; default in
-# Homebrew 6.0/5.2) makes brew skip untrusted taps' formulae — so `ua` and every
-# brew command warn on each non-official tap unless trust is set even when bundle
-# is skipped (macOS too new for bottles) or declined. Parsed from the Brewfile's
-# own `tap` lines — single source of truth, so a tap added there is trusted on
-# the next install with no extra step. brew trust is idempotent and records trust
-# even before the tap is tapped.
+# HOMEBREW_REQUIRE_TAP_TRUST=1 (exports.zsh; default in Homebrew 6.0/5.2) makes
+# brew warn on untrusted taps, so trust them even when bundle is skipped or
+# declined. Parsed from the Brewfile's own `tap` lines, the single source of truth.
+# brew trust is idempotent and works before the tap is tapped.
 if have brew; then
   awk -F'"' '/^tap /{print $2}' "$REPO_ROOT/Brewfile" | while read -r tap; do
     [[ -n "$tap" ]] || continue
@@ -102,18 +95,18 @@ if have brew && ! brew_bottles_supported; then
   skip "Skipped Brewfile install — bottles unavailable until Homebrew ships support"
 elif have brew && ask "Run 'brew bundle' now?"; then
   # Cask pkg installers call sudo over and over, and macOS forgets the
-  # credential after 5 idle minutes — a long bundle re-prompts constantly.
+  # credential after 5 idle minutes, so a long bundle re-prompts constantly.
   # Ask once, then refresh the timestamp in the background until this
-  # script exits (sudo -n never prompts; the loop dies with the script).
+  # script exits (sudo -n never prompts, and the loop dies with the script).
   if sudo -v; then
     ( while kill -0 $$ 2>/dev/null; do sudo -n -v 2>/dev/null; sleep 50; done ) &
   fi
   # static.adguard.com drops TLS handshakes on some routes (RU CDN edge), so
   # the adguard cask download hangs. Pre-seed brew's cache from AdGuard's
-  # adtidy.org mirror — same file, and brew still verifies the cask's sha256.
+  # adtidy.org mirror. Same file, and brew still verifies the cask's sha256.
   # Download lands in a temp file so a Ctrl-C can't poison the cache. Only
   # install needs this: `brew upgrade` skips auto_updates casks like adguard.
-  # minimal: one hardcoded cask; generalize to a mirror map if a second cask
+  # minimal: one hardcoded cask, generalize to a mirror map if a second cask
   # hits this, drop when the route heals.
   if grep -q '^cask "adguard"' "$REPO_ROOT/Brewfile" \
       && adguard_cache=$(brew --cache --cask adguard 2>/dev/null) \
@@ -126,7 +119,7 @@ elif have brew && ask "Run 'brew bundle' now?"; then
       ok "Pre-seeded adguard download from adtidy.org mirror"
     else
       rm -f "$adguard_cache.mirror"
-      warn "adguard mirror download failed — brew bundle will retry the primary CDN"
+      warn "adguard mirror download failed, brew bundle will retry the primary CDN"
     fi
   fi
   brew bundle --file="$REPO_ROOT/Brewfile"
@@ -207,8 +200,7 @@ else
 fi
 
 # ---------- skhd hotkey daemon ----------
-# Symlink skhdrc and register the launchd service so the macos/ hotkey scripts
-# (Ghostty grid, IDEA layout reset) work without manual wiring.
+# Wires up the macos/ hotkey scripts (Ghostty grid, IDEA layout reset).
 istep "skhd hotkeys (symlink + service)"
 skhd_target="$HOME/.config/skhd/skhdrc"
 skhd_plist="$HOME/Library/LaunchAgents/com.koekeishiya.skhd.plist"
@@ -335,9 +327,8 @@ else
 fi
 
 # ---------- Language-ecosystem global CLIs ----------
-# Replay the package snapshots bench-export writes to docs/. Each manager is
-# asked to install every snapshotted package; already-present ones resolve
-# quickly, and a package that fails is reported without aborting the rest.
+# Replay the package snapshots bench-export writes to docs/ (per-package
+# failure handling lives in replay_globals above).
 istep "Install language-ecosystem global CLIs (uv, npm, bun, cargo, gem, pip)"
 if ask "Install uv / npm / bun / cargo / gem / pip global CLIs from docs/ snapshots?"; then
   # brew ruby and python are keg-only, so their gem/pip aren't on PATH until
@@ -347,9 +338,8 @@ if ask "Install uv / npm / bun / cargo / gem / pip global CLIs from docs/ snapsh
   # python3 is brew's alias for the current default python — version-agnostic, so
   # it tracks upgrades instead of pinning python@3.14.
   export PATH="/opt/homebrew/opt/ruby/bin:/opt/homebrew/opt/python3/libexec/bin:$PATH"
-  # All six managers (uv, npm, bun, cargo, gem, pip) are installed by brew bundle
-  # in the Brewfile step; the replay only needs them on PATH — the keg-only fix above
-  # ensures for gem/pip (uv, npm, bun, cargo are linked into /opt/homebrew/bin).
+  # The six managers come from brew bundle, not installed here. The replay only
+  # needs them on PATH: gem/pip via the keg-only fix, the rest linked in bin.
   replay_ecosystem uv    uv.txt    parse_uv    uv tool install
   replay_ecosystem npm   npms.txt  parse_node  npm install -g
   replay_ecosystem bun   buns.txt  parse_node  bun add -g

@@ -1,9 +1,8 @@
-# --- Profiling toggle (set ZSH_PROFILE=1 before sourcing to enable) ---
+# --- Profiling toggle ---
 [[ -n "$ZSH_PROFILE" ]] && zmodload zsh/zprof
 
 # --- zsh options ---
 # EXTENDED_GLOB: required for (#q...) glob qualifiers used below.
-# AUTO_CD / AUTO_PUSHD / PUSHD_IGNORE_DUPS: bare directory cd's, with a dedup'd dir stack.
 # HIST_*: keep raw ~/.zsh_history clean even though atuin handles search.
 setopt EXTENDED_GLOB AUTO_CD AUTO_PUSHD PUSHD_IGNORE_DUPS \
        HIST_IGNORE_DUPS HIST_REDUCE_BLANKS HIST_VERIFY
@@ -17,9 +16,8 @@ export ZSH_SETTINGS_DIR="${${(%):-%N}:A:h}"
 # --- Exports (PATH must be set before tools that depend on it) ---
 source "$ZSH_SETTINGS_DIR/exports.zsh"
 
-# --- Init-output cache: source $1's `init zsh` output from disk; regenerate
-#     when the binary is newer than the cached file. Zero forks on cache hit
-#     ($commands is a zsh builtin associative array). ---
+# --- Init-output cache: source cached `init zsh` output, regenerating when the
+#     binary is newer. Cache hit forks nothing ($commands is a zsh builtin). ---
 _init_cache() {
   local bin="$1"; shift
   local out="$HOME/.cache/zsh/$bin.zsh"
@@ -34,7 +32,7 @@ _init_cache() {
 export STARSHIP_CONFIG="$ZSH_SETTINGS_DIR/starship.toml"
 _init_cache starship init zsh
 
-# --- Antidote (static bundles regenerated when source txt changes) ---
+# --- Antidote (static bundle loading) ---
 _antidote_bundle() {
   local txt="$ZSH_SETTINGS_DIR/$1.txt" out="$ZSH_SETTINGS_DIR/$1.zsh"
   if [[ ! -f "$out" || "$txt" -nt "$out" ]]; then
@@ -81,11 +79,9 @@ fi
 
 # --- fzf-tab + history-substring-search (must load after compinit) ---
 _antidote_bundle plugins-post
-# Re-assert the history keybindings last, after every tool that grabs them.
-# Up/Down: prefix-filtered history walk — the "previous command starting with
-# `git p`" reflex. Ctrl-R: atuin's fuzzy search (fzf's key-bindings.zsh, sourced
-# above, binds Ctrl-R to its own widget — atuin would lose it without this). fzf
-# keeps Ctrl-T + Alt-C, which is why only those have FZF_*_OPTS in fzf.zsh.
+# Re-assert history keybindings last: fzf's key-bindings.zsh (sourced above)
+# grabs Ctrl-R and would shadow atuin-search without this. fzf keeps Ctrl-T +
+# Alt-C, hence only those have FZF_*_OPTS in fzf.zsh.
 bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
 bindkey '^R' atuin-search
@@ -120,12 +116,10 @@ function sdk() {
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
-# --- Deferred completions (lazy-loaded on first invocation, ~10ms saved at startup) ---
-# Trade-off: tab-complete on `gcloud`/`entire` is silent until the command has been
-# run once per session — then completions register and behave normally. Direct
-# invocations always work — they hit the stub, which sources, unsets itself, and
-# execs the binary. (bun is installed via brew, so its _bun completion loads from
-# site-functions through compinit — no stub needed.)
+# --- Deferred completions (lazy-loaded, ~10ms saved at startup) ---
+# Trade-off: tab-complete on gcloud/entire is silent until the command is run
+# once per session, direct invocations always work. (bun needs no stub, brew
+# ships _bun via site-functions/compinit.)
 function gcloud() {
   unfunction gcloud
   source "/opt/homebrew/share/google-cloud-sdk/completion.zsh.inc"
@@ -140,5 +134,5 @@ function entire() {
 # direnv adds a chpwd hook — must be registered eagerly to fire on every cd.
 _init_cache direnv hook zsh
 
-# --- Profiling report (only emitted if ZSH_PROFILE=1) ---
+# --- Profiling report ---
 [[ -n "$ZSH_PROFILE" ]] && zprof

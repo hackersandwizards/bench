@@ -79,7 +79,7 @@ function run() {
   if (n === 0) return;
 
   if (n === 1) {
-    var cx = workX + (SOLO.x + SOLO.w / 2) / SOLO.refW * workW;   // captured center, scaled to work area
+    var cx = workX + (SOLO.x + SOLO.w / 2) / SOLO.refW * workW;
     var cy = workY + (SOLO.y + SOLO.h / 2) / SOLO.refH * workH;
     var soloW = Math.min(SOLO.w, workW - GAP * 2);
     var soloH = Math.min(SOLO.h, workH - GAP * 2);

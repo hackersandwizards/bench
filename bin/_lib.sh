@@ -10,13 +10,11 @@ skip() { printf '\033[2m·\033[0m %s\n' "$1"; }
 have() { command -v "$1" >/dev/null 2>&1; }
 indent() { sed 's/^/    /'; }  # detail lines under an ok/warn/fail
 
-# Run "$@" silently; ok on success, fail on non-zero. Used by bench-doctor.
 check() {
   local label="$1"; shift
   if "$@" >/dev/null 2>&1; then ok "$label"; else fail "$label"; fi
 }
 
-# Print step header, run "$@", ok or warn (continuing on failure). Used by bench-update.
 run() {
   local label="$1"; shift
   step "$label"
@@ -55,7 +53,6 @@ brew_bottles_supported() {
   (( major <= newest ))
 }
 
-# One-line explanation for why brew steps were skipped on an unsupported macOS.
 brew_unsupported_notice() {
   local major; major="$(sw_vers -productVersion 2>/dev/null)"; major="${major%%.*}"
   warn "Homebrew has no bottles for macOS $major yet (newest: $(brew_newest_macos)) — skipping brew steps"
@@ -76,10 +73,9 @@ ANTIDOTE_SH="/opt/homebrew/opt/antidote/share/antidote/antidote.zsh"
 SDKMAN_INIT="$HOME/.sdkman/bin/sdkman-init.sh"
 SDKMAN_CONFIG="$HOME/.sdkman/etc/config"
 
-# Source SDKMAN's init so the `sdk` shell function exists (it is not a binary,
-# so `have sdk` is false until this runs). The init script references unset
-# vars, so `set +u` wraps it; `set -u` after re-enables nounset — both callers
-# run under `set -u` and depend on it staying on. Returns 1 when SDKMAN is absent.
+# Source SDKMAN's init so the `sdk` shell function exists. It is not a binary,
+# so `have sdk` is false until this runs. The init reads unset vars, so `set +u`
+# wraps it. Returns 1 when SDKMAN is absent.
 source_sdkman() {
   [[ -s "$SDKMAN_INIT" ]] || return 1
   set +u
@@ -88,10 +84,9 @@ source_sdkman() {
   set -u
 }
 
-# Run the `sdk` function with nounset relaxed and restore it after. SDKMAN reads
-# $2 (and other unset vars) unconditionally — `sdk selfupdate` aborts with
-# "$2: unbound variable" under `set -u`, which all bench-* scripts enable.
-# Requires source_sdkman to have run first. Returns sdk's own exit code.
+# SDKMAN reads $2 and other unset vars unconditionally. `sdk selfupdate` aborts
+# with "$2: unbound variable" under `set -u` (which all bench-* scripts enable),
+# so relax nounset around it. Requires source_sdkman first.
 sdk_run() {
   set +u
   sdk "$@"
@@ -100,10 +95,8 @@ sdk_run() {
   return "$rc"
 }
 
-# Idempotently set KEY=VALUE in SDKMAN's etc/config (the file holding prompt and
-# auto-answer settings). Rewrites an existing KEY= line or appends a new one.
-# No-op when SDKMAN is absent. Edits via a temp file (no `sed -i`) so it works
-# under both BSD and GNU sed; `cat >` preserves the config's perms and inode.
+# Idempotently set KEY=VALUE in SDKMAN's etc/config. Edits via a temp file (no
+# `sed -i`) to work under both BSD and GNU sed. `cat >` preserves perms and inode.
 sdkman_set_config() {
   local key="$1" value="$2" tmp
   [[ -f "$SDKMAN_CONFIG" ]] || return 1
@@ -128,10 +121,9 @@ STOW_FILES=(
   ".ssh/config"
 )
 
-# Checklist lines of $1 (one filename per line) not found in directory $2.
-# Shared by install.sh's fonts step and bench-doctor so the two reports can't
-# drift. minimal: non-recursive ls, matching how bench-export writes
-# docs/fonts.txt (basenames only) — fonts in subfolders of $2 are invisible.
+# Checklist lines of $1 absent from directory $2. Shared by install.sh's fonts
+# step and bench-doctor so the two reports can't drift. minimal: non-recursive
+# ls, matching bench-export's docs/fonts.txt (basenames), so subfolders are invisible.
 # shellcheck disable=SC2012
 missing_fonts() { comm -23 <(sort "$1") <(ls "$2" 2>/dev/null | sort); }
 
@@ -145,6 +137,5 @@ parse_sdk()   { awk 'NF == 2 { print $1, $2 }' "$1"; }
 # Replay only gems carrying a user-installed version; skip Ruby's bundled gems
 # (those show a lone `default:` version).
 parse_gem()   { awk -F' *[()] *' 'NF > 1 && $2 !~ /^default:/ { print $1 }' "$1"; }
-# npm/bun global lists: take the last `name@version` field and strip the version.
-# `npm` is dropped — reinstalling the package manager is a no-op.
+# npm/bun global lists. `npm` is dropped because reinstalling the package manager is a no-op.
 parse_node()  { awk 'NF && $NF ~ /@/ { n=$NF; sub(/@[^@]*$/, "", n); if (n != "npm") print n }' "$1"; }
