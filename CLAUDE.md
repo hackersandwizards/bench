@@ -23,11 +23,13 @@ macos.sh              # Opt-in macOS system defaults
 Brewfile              # Executable source of truth for brew packages
 bin/                  # Maintenance commands (bench-doctor/update/export, _lib.sh)
 macos/                # Hotkey-driven scripts (ghostty-grid.js, idea-reset-layout.py); bound in skhd/skhdrc
+skhd/                 # skhd hotkey config, symlinked to ~/.config/skhd/skhdrc by install.sh
+fonts/                # Only fonts with verified redistribution rights (repo is public); free families come as Brewfile font casks
 .githooks/pre-commit  # gitleaks + shellcheck + zsh -n on staged files
 .claude/              # Statusline command + Claude Code rules/settings
 ghostty/              # Ghostty terminal config
 home/                 # Dotfile templates symlinked via Stow
-docs/                 # Package snapshots, replayed by install.sh (offline-readable)
+docs/                 # Package snapshots, replayed by install.sh (offline-readable); fonts.txt is a manual-restore checklist, never replayed
 ```
 
 ## Conventions

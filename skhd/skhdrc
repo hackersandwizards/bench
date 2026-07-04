@@ -1,10 +1,12 @@
 # skhd global hotkeys. https://github.com/koekeishiya/skhd
-# Symlinked to ~/.config/skhd/skhdrc
+# Symlinked to ~/.config/skhd/skhdrc by install.sh.
+# Script paths derive from that symlink's target so the repo can live anywhere
+# (no hardcoded install location); skhd runs each command through a shell.
 
 # Ctrl+Comma: tile all Ghostty windows into a dynamic grid.
 # 0x2B = ANSI comma keycode. Script: ../macos/ghostty-grid.js
-ctrl - 0x2B : osascript -l JavaScript "$HOME/opt/zsh-settings/macos/ghostty-grid.js"
+ctrl - 0x2B : osascript -l JavaScript "$(dirname "$(readlink "$HOME/.config/skhd/skhdrc")")/../macos/ghostty-grid.js"
 
 # Ctrl+Alt+I: reset IntelliJ IDEA tool-window layout. Quit IDEA first (script aborts otherwise).
 # 0x22 = ANSI 'i' keycode. Silent — no output; run the script in a terminal to see results.
-ctrl + alt - 0x22 : "$HOME/opt/zsh-settings/macos/idea-reset-layout.py"
+ctrl + alt - 0x22 : "$(dirname "$(readlink "$HOME/.config/skhd/skhdrc")")/../macos/idea-reset-layout.py"

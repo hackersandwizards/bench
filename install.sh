@@ -178,6 +178,66 @@ else
   skip "Skipped Ghostty"
 fi
 
+# ---------- skhd hotkey daemon ----------
+# Symlink skhdrc and register the launchd service so the macos/ hotkey scripts
+# (Ghostty grid, IDEA layout reset) work without manual wiring.
+istep "skhd hotkeys (symlink + service)"
+skhd_target="$HOME/.config/skhd/skhdrc"
+skhd_plist="$HOME/Library/LaunchAgents/com.koekeishiya.skhd.plist"
+if ! have skhd; then
+  warn "skhd not installed — run the Brewfile step first"
+elif [[ "$(readlink "$skhd_target" 2>/dev/null)" == "$REPO_ROOT/skhd/skhdrc" ]] && pgrep -xq skhd; then
+  ok "skhd already linked and running"
+elif ask "Symlink skhdrc and start the skhd service?"; then
+  mkdir -p "$HOME/.config/skhd"
+  backup "$skhd_target"
+  ln -sf "$REPO_ROOT/skhd/skhdrc" "$skhd_target"
+  # --restart-service aborts when the LaunchAgent was never installed;
+  # --start-service installs it when missing — branch on the plist, not pgrep.
+  if [[ -f "$skhd_plist" ]]; then skhd_cmd=--restart-service; else skhd_cmd=--start-service; fi
+  if skhd "$skhd_cmd"; then
+    ok "skhd linked and service started"
+    printf '%s\n' "First hotkey use prompts for Accessibility permission (System Settings → Privacy & Security → Accessibility)." | indent
+  else
+    warn "skhd $skhd_cmd failed — check /tmp/skhd_$USER.err.log, then re-run"
+  fi
+else
+  skip "Skipped skhd"
+fi
+
+# ---------- Fonts ----------
+# fonts/ holds only fonts with verified redistribution rights (repo is public);
+# the caskable free families come from the Brewfile. docs/fonts.txt inventories
+# the old machine's full ~/Library/Fonts — commercial/brand fonts listed there
+# must be restored manually from a backup, never committed here.
+istep "Install fonts (fonts/ + checklist from docs/fonts.txt)"
+fonts_doc="$REPO_ROOT/docs/fonts.txt"
+if ask "Copy fonts/ into ~/Library/Fonts?"; then
+  mkdir -p "$HOME/Library/Fonts"
+  # minimal: -n never overwrites a user's existing copy — repo fonts are static,
+  # so no backup dance like the config symlinks need.
+  if cp -n "$REPO_ROOT"/fonts/* "$HOME/Library/Fonts/"; then
+    ok "fonts/ installed (existing files kept)"
+  else
+    warn "fonts/ copy failed (see error above)"
+  fi
+else
+  skip "Skipped fonts"
+fi
+# Report-only checklist: runs even when the copy is declined — on a re-run the
+# missing-fonts report is the step's real value.
+if [[ -s "$fonts_doc" ]]; then
+  missing=$(missing_fonts "$fonts_doc" "$HOME/Library/Fonts")
+  if [[ -n "$missing" ]]; then
+    warn "fonts from docs/fonts.txt not installed — restore manually from a backup; first few:"
+    printf '%s\n' "$missing" | head -n 5 | indent
+  else
+    ok "all fonts from docs/fonts.txt present"
+  fi
+else
+  skip "docs/fonts.txt missing/empty — run bench-export on the old machine"
+fi
+
 # ---------- atuin history migration ----------
 istep "atuin history import"
 if ! have atuin; then

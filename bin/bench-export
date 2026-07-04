@@ -72,6 +72,19 @@ wait
 [[ -f "$HOME/.gradle/gradle.properties" ]] \
   && cp "$HOME/.gradle/gradle.properties" "$DOCS/gradle.properties" \
   && ok "gradle.properties"
+# fonts.txt is a union checklist, not a state snapshot (same rule as the
+# Brewfile drift check above): a fresh machine's sparse ~/Library/Fonts must
+# never erase the old machine's manual-restore list. Merge, don't overwrite;
+# prune entries by hand.
+# shellcheck disable=SC2012
+if { [[ -s "$DOCS/fonts.txt" ]] && cat "$DOCS/fonts.txt"; ls "$HOME/Library/Fonts"; } 2>/dev/null \
+     | sort -u > "$DOCS/fonts.txt.tmp" && [[ -s "$DOCS/fonts.txt.tmp" ]]; then
+  mv "$DOCS/fonts.txt.tmp" "$DOCS/fonts.txt"
+  ok "fonts.txt (union)"
+else
+  rm -f "$DOCS/fonts.txt.tmp"
+  warn "fonts.txt failed"
+fi
 
 # --- home/ sync: copy real $HOME files back into repo, skip Stow symlinks ---
 step "home/ sync (Symlinks → skip, real files → copy back)"

@@ -116,6 +116,16 @@ assert_ok "idempotent merge exits ok" "$sf" merge "$tdir/snap.txt" "$tdir/b.plis
 assert_eq "idempotent — re-run adds nothing" "$merged" "$("$sf" export "$tdir/b.plist")"
 rm -rf "$tdir"
 
+step "missing_fonts()"
+fdir=$(mktemp -d)
+touch "$fdir/Installed Font.ttf" "$fdir/Other.otf"
+printf 'Installed Font.ttf\nMissing Font.ttf\n' > "$fdir/checklist.txt"
+assert_eq "reports checklist entries absent from the dir (spaces survive)" \
+  "Missing Font.ttf" "$(missing_fonts "$fdir/checklist.txt" "$fdir")"
+printf 'Installed Font.ttf\n' > "$fdir/checklist.txt"
+assert_eq "empty when everything is present" "" "$(missing_fonts "$fdir/checklist.txt" "$fdir")"
+rm -rf "$fdir"
+
 step "install.sh istep self-count"
 # STEP_TOTAL greps for '^istep ' — an indented call would increment STEP_N
 # without being counted, printing "Step 14/13". Fails here first instead.

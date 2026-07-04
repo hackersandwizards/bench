@@ -40,6 +40,31 @@ for rel in "${STOW_FILES[@]}"; do
 done
 
 echo
+echo "=== Config symlinks + skhd ==="
+# readlink-compare, not -L: a dangling or foreign-repo symlink must fail.
+check "ghostty config -> repo" test "$(readlink "$HOME/.config/ghostty/config.ghostty" 2>/dev/null)" = "$REPO_ROOT/ghostty/config.ghostty"
+check "skhdrc -> repo" test "$(readlink "$HOME/.config/skhd/skhdrc" 2>/dev/null)" = "$REPO_ROOT/skhd/skhdrc"
+check "skhd running" pgrep -xq skhd
+
+echo
+echo "=== Fonts ==="
+# Ghostty's configured font (ghostty/config.ghostty); cask font-jetbrains-mono
+# and manual installs both land in ~/Library/Fonts.
+if compgen -G "$HOME/Library/Fonts/JetBrainsMono*" > /dev/null; then
+  ok "JetBrains Mono installed (Ghostty font)"
+else
+  warn "JetBrains Mono missing — Ghostty falls back (brew install --cask font-jetbrains-mono)"
+fi
+if [[ -s "$REPO_ROOT/docs/fonts.txt" ]]; then
+  n=$(missing_fonts "$REPO_ROOT/docs/fonts.txt" "$HOME/Library/Fonts" | wc -l | tr -d ' ')
+  if (( n == 0 )); then
+    ok "all fonts from docs/fonts.txt present"
+  else
+    warn "$n fonts from docs/fonts.txt missing — restore manually from a backup"
+  fi
+fi
+
+echo
 echo "=== Repo state ==="
 hp=$(hooks_path)
 if [[ "$hp" == ".githooks" ]]; then

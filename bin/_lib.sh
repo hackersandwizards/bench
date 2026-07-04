@@ -128,6 +128,13 @@ STOW_FILES=(
   ".ssh/config"
 )
 
+# Checklist lines of $1 (one filename per line) not found in directory $2.
+# Shared by install.sh's fonts step and bench-doctor so the two reports can't
+# drift. minimal: non-recursive ls, matching how bench-export writes
+# docs/fonts.txt (basenames only) — fonts in subfolders of $2 are invisible.
+# shellcheck disable=SC2012
+missing_fonts() { comm -23 <(sort "$1") <(ls "$2" 2>/dev/null | sort); }
+
 # docs/ snapshot parsers — each reads a snapshot file ($1) and emits one package
 # per line (parse_sdk emits "name version"); the output feeds install.sh's
 # replay_globals. Sourced from here so they are unit-testable (see bench-test).
