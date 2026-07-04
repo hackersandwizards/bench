@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Unit tests for the pure helpers in _lib.sh — plain bash asserts, no framework.
+# Tests for _lib.sh helpers, bin/ scripts, and repo invariants — plain bash
+# asserts, no framework.
 # Run: bench-test   (exits non-zero if any assertion fails)
 set -u
 
@@ -118,9 +119,8 @@ rm -rf "$tdir"
 step "install.sh istep self-count"
 # STEP_TOTAL greps for '^istep ' — an indented call would increment STEP_N
 # without being counted, printing "Step 14/13". Fails here first instead.
-assert_eq "istep calls all at column 0 (self-count stays exact)" \
-  "$(grep -cE '^[[:space:]]*istep ' "$REPO_ROOT/install.sh")" \
-  "$(grep -c '^istep ' "$REPO_ROOT/install.sh")"
+assert_fail "no indented istep calls (self-count stays exact)" \
+  grep -qE '^[[:space:]]+istep ' "$REPO_ROOT/install.sh"
 
 step "$passed passed, $failed failed"
 (( failed == 0 ))

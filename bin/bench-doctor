@@ -76,7 +76,7 @@ if [[ -z "$startup_err" ]]; then
   ok "interactive startup clean (no stderr)"
 else
   warn "interactive startup emits stderr:"
-  printf '%s\n' "$startup_err" | sed 's/^/    /'
+  printf '%s\n' "$startup_err" | indent
 fi
 # bash 5+ exposes $EPOCHREALTIME (microsecond float, no fork). Strip the dot to
 # get an integer microseconds count, then divide. It is empty under bash 3.2

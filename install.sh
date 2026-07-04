@@ -47,7 +47,7 @@ replay_globals() {
       ok "$label: ${fields[*]}"
     else
       warn "$label: ${fields[*]} failed"
-      [[ -n "$output" ]] && printf '%s\n' "$output" | tail -n 8 | sed 's/^/    /'
+      [[ -n "$output" ]] && printf '%s\n' "$output" | tail -n 8 | indent
     fi
   done
 }

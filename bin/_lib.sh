@@ -8,6 +8,7 @@ warn() { printf '\033[33m⚠\033[0m %s\n' "$1"; }
 fail() { printf '\033[31m✗\033[0m %s\n' "$1"; }
 skip() { printf '\033[2m·\033[0m %s\n' "$1"; }
 have() { command -v "$1" >/dev/null 2>&1; }
+indent() { sed 's/^/    /'; }  # detail lines under an ok/warn/fail
 
 # Run "$@" silently; ok on success, fail on non-zero. Used by bench-doctor.
 check() {

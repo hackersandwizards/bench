@@ -17,10 +17,6 @@ import uuid
 from pathlib import Path
 
 DEFAULT_PLIST = Path.home() / "Library/Safari/Bookmarks.plist"
-FDA_MSG = (
-    "No Full Disk Access: System Settings → Privacy & Security → "
-    "Full Disk Access → enable your terminal, then re-run."
-)
 
 
 def load(path):
@@ -28,7 +24,10 @@ def load(path):
         with open(path, "rb") as f:
             return plistlib.load(f)
     except PermissionError:
-        sys.exit(FDA_MSG)
+        sys.exit(
+            "No Full Disk Access: System Settings → Privacy & Security → "
+            "Full Disk Access → enable your terminal, then re-run."
+        )
     except FileNotFoundError:
         sys.exit(f"{path} missing — launch Safari once, quit it, then re-run.")
 

@@ -24,7 +24,7 @@ dump_to() {
   else
     rm -f "$tmp"
     warn "${out##*/} failed"
-    [[ -s "$tmp.err" ]] && tail -n 3 "$tmp.err" | sed 's/^/    /'
+    [[ -s "$tmp.err" ]] && tail -n 3 "$tmp.err" | indent
   fi
   rm -f "$tmp.err"
 }
@@ -43,7 +43,7 @@ elif have brew; then
     ok "Brewfile in sync with brew leaves"
   else
     warn "Installed leaves missing from Brewfile — add by hand:"
-    printf '%s\n' "$missing" | sed 's/^/    /'
+    printf '%s\n' "$missing" | indent
   fi
 fi
 
