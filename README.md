@@ -21,6 +21,24 @@ The wizard handles each step opt-in: `brew bundle`, Stow symlinks, `~/.gitconfig
 
 static.adguard.com drops TLS handshakes on some routes, so the adguard cask download hangs. The wizard's `brew bundle` step works around it and pre-seeds brew's cache from AdGuard's adtidy.org mirror. A manual `brew bundle` run skips that workaround.
 
+## Onboarding accounts
+
+New team member, fresh machine. Provision these before running `install.sh`. The Brewfile, `secrets.zsh`, and `home/.gitconfig` assume they exist.
+
+| Account          | Setup                                                                                          |
+|------------------|------------------------------------------------------------------------------------------------|
+| Apple Account    | Sign into the App Store first, else `brew bundle` skips the `mas` apps (Keynote, Numbers, Pages, Xcode, Moom) |
+| Google Workspace | Gmail, Calendar, Meet, Gemini, plus the `@googleworkspace/cli` and `@google/gemini-cli` globals |
+| GitHub           | Org membership. Run `gh auth login` after install (`.gitconfig` routes credentials through `gh`) |
+| GitLab           | Run `glab auth login` after install (`.gitconfig` routes credentials through `glab`)            |
+| Slack            | hackersandwizards.slack.com                                                                      |
+| Anthropic        | claude.ai, Claude desktop app, Claude Code CLI and VS Code extension                             |
+| LinkedIn         | Personal profile, linked to the hackers&wizards company page                                     |
+| Qonto            | `QONTO_API_KEY`, `QONTO_ORGANIZATION_ID`, `QONTO_THIRDPARTY_HOST` in `secrets.zsh`               |
+| Circle           | Community platform                                                                               |
+
+Optional, per person: Fathom (`FATHOM_API_KEY` in `secrets.zsh`), OpenAI (Codex CLI, ChatGPT), Cloudflare, Namecheap, AWS, Google Cloud (Workspace sign-in). JetBrains Toolbox, Cursor, Warp, CleanMyMac, DaisyDisk, CrossOver, and superwhisper bring their own licenses.
+
 ## File structure
 
 ```
