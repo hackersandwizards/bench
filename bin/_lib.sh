@@ -208,6 +208,25 @@ apply_sidebar() {
     fi
   done <<<"$1"
 }
+# docs/repos.txt ("<target-rel-$HOME> <url>", # comments) → "target url" lines.
+parse_repos() { awk 'NF == 2 && $1 !~ /^#/ { print $1, $2 }' "$1"; }
+# Clone every missing repos.txt entry. Existing clones are left untouched —
+# never pull: local work must not be touched by a converge.
+clone_repos() {
+  local target url output
+  while read -r target url; do
+    if [[ -d "$HOME/$target/.git" ]]; then
+      ok "repo: $target already cloned"
+    # GIT_TERMINAL_PROMPT=0: without gh/glab credentials git would stop and ask
+    # for a username mid-run — fail fast into the warn instead.
+    elif output=$(GIT_TERMINAL_PROMPT=0 git clone -q "$url" "$HOME/$target" 2>&1); then
+      ok "repo: $target"
+    else
+      warn "repo: cloning $target failed — check gh/glab auth, re-run"
+      [[ -n "$output" ]] && printf '%s\n' "$output" | tail -n 3 | indent
+    fi
+  done < <(parse_repos "$1")
+}
 apply_moom() {
   # Quit first: Moom rewrites its prefs on exit and would clobber the import.
   osascript -e 'quit app "Moom Classic"' 2>/dev/null || true

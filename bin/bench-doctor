@@ -138,6 +138,20 @@ if have mysides && [[ -s "$REPO_ROOT/docs/finder-sidebar.txt" ]]; then
 fi
 
 echo
+echo "=== Default repos (docs/repos.txt) ==="
+if [[ -s "$REPO_ROOT/docs/repos.txt" ]]; then
+  while read -r target _; do
+    if [[ -d "$HOME/$target/.git" ]]; then
+      ok "repo: $target"
+    else
+      warn "repo: $target missing — run install.sh or bench-update"
+    fi
+  done < <(parse_repos "$REPO_ROOT/docs/repos.txt")
+else
+  warn "docs/repos.txt missing/empty"
+fi
+
+echo
 echo "=== Git auth ==="
 for tool in gh glab; do
   if "$tool" auth status >/dev/null 2>&1; then

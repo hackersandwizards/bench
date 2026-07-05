@@ -102,6 +102,11 @@ if [[ -s "$REPO_ROOT/docs/moom.plist" ]] && ask "Import Moom settings from docs/
 else
   skip "Moom left as is"
 fi
+if [[ -s "$REPO_ROOT/docs/repos.txt" ]] && ask "Clone missing default repos from docs/repos.txt?"; then
+  clone_repos "$REPO_ROOT/docs/repos.txt"
+else
+  skip "Default repos left as is"
+fi
 if ask "Run ./macos.sh? (system defaults + default apps)"; then
   "$REPO_ROOT/macos.sh" || warn "macos.sh exited with an error partway"
 else

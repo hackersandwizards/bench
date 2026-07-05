@@ -180,6 +180,19 @@ for cli in gh glab; do
   fi
 done
 
+# ---------- Default repos (~/dev + ~/opt) ----------
+# Right after the CLI logins: the https clones ride on gh/glab credentials.
+istep "Clone default repos from docs/repos.txt into ~/dev + ~/opt"
+repos_doc="$REPO_ROOT/docs/repos.txt"
+if [[ ! -s "$repos_doc" ]]; then
+  warn "docs/repos.txt missing/empty — no default repos cloned"
+elif ask "Create ~/dev + ~/opt and clone the missing default repos?"; then
+  mkdir -p "$HOME/dev" "$HOME/opt"
+  clone_repos "$repos_doc"
+else
+  skip "Skipped default repos"
+fi
+
 # ---------- Repo-local git hooks ----------
 istep "Activate repo-local git hooks (gitleaks + shellcheck)"
 if [[ "$(hooks_path)" == ".githooks" ]]; then

@@ -91,6 +91,9 @@ assert_eq "parse_dock: URL, plain-path, and \$HOME forms" "/Applications/Slack.a
 /Users/x/Downloads
 /Applications/Notion Calendar.app
 $HOME/Downloads" "$(parse_dock "$fix")"
+printf '# comment line\ndev/x/y https://github.com/org/y.git\n\nbadline\nopt/z https://gitlab.com/org/z.git\n' > "$fix"
+assert_eq "parse_repos: target+url, drops comments and malformed lines" "dev/x/y https://github.com/org/y.git
+opt/z https://gitlab.com/org/z.git" "$(parse_repos "$fix")"
 # shellcheck disable=SC2016  # single quotes keep $HOME a literal token, as in real snapshots
 printf 'Applications -> file:///Applications/\nDownloads -> file://$HOME/Library/Mobile%%20Documents/com~apple~CloudDocs/Downloads/\niCloud -> x-apple-finder:icloud\n' > "$fix"
 assert_eq "parse_sidebar: name+url TSV, \$HOME expanded, built-ins dropped" "Applications	file:///Applications/

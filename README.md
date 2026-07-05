@@ -22,6 +22,7 @@ Every wizard step is opt-in, in four groups:
 - **Packages**: `brew bundle`, language-ecosystem globals (uv/npm/bun/cargo/gem/pip), SDKMAN + JVM SDKs
 - **Config**: Stow symlinks, `~/.gitconfig.local`, repo-local git hooks, `~/.zshrc` source line, Ghostty config, skhd
 - **Logins + keys**: `gh`/`glab` auth, missing API keys into `secrets.zsh` (key list: `docs/secret-keys.txt`)
+- **Default repos**: `~/dev` + `~/opt` created, missing clones from `docs/repos.txt` (company-os, talks, trainings, MCP servers)
 - **Machine state from `docs/` snapshots**: Safari favorites (merge), Dock layout (replace), Finder sidebar (mirror), Moom settings (import)
 
 `macos.sh` also sets default apps: Zed opens txt/md/json/yaml/toml, Ghostty runs .sh/.command/.tool.
