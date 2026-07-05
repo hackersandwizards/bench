@@ -25,15 +25,17 @@ _init_cache() {
   local out="$HOME/.cache/zsh/$bin.zsh"
   if [[ ! -f "$out" || "$commands[$bin]" -nt "$out" ]]; then
     mkdir -p "$HOME/.cache/zsh"
-    # tmp+mv: a partial write must never poison later shells. An absent
-    # binary caches an empty no-op (fork-free until installed; -nt regens
-    # then); a present-but-failing one retries next shell instead.
-    if "$bin" "$@" > "$out.tmp" 2>/dev/null; then
-      mv "$out.tmp" "$out"
+    # Per-process tmp ($$) + mv: concurrent startups regenerating the same
+    # cache must not interleave writes; each mv lands complete, last wins.
+    # An absent binary caches an empty no-op (fork-free until installed;
+    # -nt regens then); a present-but-failing one retries next shell.
+    local tmp="$out.$$"
+    if "$bin" "$@" > "$tmp" 2>/dev/null; then
+      mv "$tmp" "$out"
     elif (( $+commands[$bin] )); then
-      rm -f "$out.tmp" "$out"; return 1
+      rm -f "$tmp" "$out"; return 1
     else
-      rm -f "$out.tmp"; : > "$out"
+      rm -f "$tmp"; : > "$out"
     fi
   fi
   source "$out" 2>/dev/null
