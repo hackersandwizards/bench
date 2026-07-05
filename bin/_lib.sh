@@ -129,7 +129,6 @@ sdkman_set_config() {
 STOW_FILES=(
   ".gitconfig"
   ".vimrc"
-  ".mongorc.js"
   ".tmux.conf"
   ".gitignore_global"
   ".commitTemplate.txt"

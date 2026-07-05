@@ -1,8 +1,5 @@
 [include]
 	path = ~/.gitconfig.local
-[color]
-	ui = auto
-	diff = true
 [alias]
 	st = status -sb
 	co = checkout
@@ -29,7 +26,6 @@
 	line-numbers = true
 	syntax-theme = GitHub
 [push]
-	default = simple
 	autoSetupRemote = true
 [pull]
 	rebase = true

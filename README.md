@@ -94,7 +94,7 @@ home/                 Stow package — symlinked into $HOME
   .gitconfig            Aliases, delta, includes ~/.gitconfig.local
   .gitignore_global     .DS_Store, IDE noise, etc.
   .commitTemplate.txt   Conventional commit message template
-  .vimrc, .mongorc.js, .tmux.conf
+  .vimrc, .tmux.conf
   .ssh/config           Hardened (Keychain, ControlMaster, no ForwardAgent)
   .config/zed/settings.json   Zed editor defaults
 ghostty/              Ghostty terminal config (single source of truth for theme)
