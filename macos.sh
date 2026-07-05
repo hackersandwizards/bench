@@ -124,9 +124,8 @@ defaults write com.apple.ActivityMonitor SortDirection -int 0
 
 # ============================================================================
 # Default apps — Zed edits text, Ghostty runs scripts
-# duti comes from the Brewfile; LaunchServices persists the bindings per user.
-# com.apple.terminal.shell-script is the .command/.tool UTI — the extension
-# form (`duti -s … .command all`) does not stick, the UTI form does.
+# .command/.tool need their UTI (com.apple.terminal.shell-script); the
+# extension form does not stick.
 # ============================================================================
 if have duti; then
   duti -s dev.zed.Zed public.plain-text all

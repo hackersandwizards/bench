@@ -17,7 +17,14 @@ cd ~/opt/zsh-settings
 ./macos.sh          # ~45 macOS system defaults (also offered as an install.sh step)
 ```
 
-The wizard handles each step opt-in: `brew bundle`, Stow symlinks, `~/.gitconfig.local` generation, `gh`/`glab` logins, repo-local git hooks, `~/.zshrc` source line, Ghostty config symlink, language-ecosystem globals (uv/npm/bun/cargo/gem/pip), SDKMAN + JVM SDKs, Safari favorites merge, Dock layout replay (`docs/dock.txt`), Finder sidebar merge (`docs/finder-sidebar.txt`), macOS system defaults (`macos.sh`), missing API keys into `secrets.zsh` (Fathom, Qonto). `macos.sh` also sets default apps: Zed opens txt/md/json/yaml/toml, Ghostty runs .sh/.command/.tool.
+Every wizard step is opt-in, in four groups:
+
+- **Packages**: `brew bundle`, language-ecosystem globals (uv/npm/bun/cargo/gem/pip), SDKMAN + JVM SDKs
+- **Config**: Stow symlinks, `~/.gitconfig.local`, repo-local git hooks, `~/.zshrc` source line, Ghostty config, skhd
+- **Logins + keys**: `gh`/`glab` auth, missing API keys into `secrets.zsh` (key list: `docs/secret-keys.txt`)
+- **Machine state from `docs/` snapshots**: Safari favorites (merge), Dock layout (replace), Finder sidebar (mirror)
+
+`macos.sh` also sets default apps: Zed opens txt/md/json/yaml/toml, Ghostty runs .sh/.command/.tool.
 
 static.adguard.com drops TLS handshakes on some routes, so the adguard cask download hangs. The wizard's `brew bundle` step works around it and pre-seeds brew's cache from AdGuard's adtidy.org mirror. A manual `brew bundle` run skips that workaround.
 
@@ -49,8 +56,9 @@ Optional, per person: Fathom (`FATHOM_API_KEY` in `secrets.zsh`), OpenAI (Codex 
 - [ ] **Google Workspace in the browser**: sign in once so Claude's Workspace MCP connectors can request permissions against the right account.
 - [ ] **GitHub / GitLab**: `gh auth login` and `glab auth login` if the wizard step was skipped.
 - [ ] **Widgets**: rebuild desktop + Notification Center widgets by hand (right-click desktop → Edit Widgets). macOS has no supported export.
-- [ ] **Default-app cleanup**: Apple system apps live in `/System/Applications` and are SIP-protected — they cannot be deleted. The Dock replay already hides the unwanted ones; drag anything else out of the Dock and delete unwanted App Store installs from `/Applications`.
-- [ ] **Dock / sidebar drift**: after curating Dock or Finder sidebar on any machine, run `bench-export` and commit so the snapshots follow you.
+- [ ] **Default-app cleanup**: Apple system apps live in `/System/Applications` and are SIP-protected — they cannot be deleted. The Dock replay already hides the unwanted ones; delete unwanted App Store installs from `/Applications`.
+- [ ] **App settings outside this repo**: GUI app preferences (Moom, DeepL, …) are not synced; licensed apps restore their own settings after sign-in.
+- [ ] **Dock / sidebar drift**: after curating Dock or Finder sidebar, run `bench-export` and commit. `bench-doctor` flags when a machine drifts from the snapshots.
 
 ## File structure
 
@@ -82,7 +90,7 @@ home/                 Stow package — symlinked into $HOME
   .vimrc, .mongorc.js, .tmux.conf
   .ssh/config           Hardened (Keychain, ControlMaster, no ForwardAgent)
 ghostty/              Ghostty terminal config (single source of truth for theme)
-docs/                 Package inventory snapshots (committed; replayed by install.sh)
+docs/                 Package + machine-state snapshots (committed; replayed by install.sh)
 .claude/              Claude Code statusline + rules + settings
 .githooks/pre-commit  gitleaks + shellcheck + zsh -n (repo-local)
 ```

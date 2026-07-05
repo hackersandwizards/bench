@@ -78,9 +78,21 @@ else
   warn "secrets.zsh missing (optional)"
 fi
 check "docs/safari-favorites.txt" test -s "$REPO_ROOT/docs/safari-favorites.txt"
+check "docs/secret-keys.txt" test -s "$REPO_ROOT/docs/secret-keys.txt"
+if [[ -s "$REPO_ROOT/docs/secret-keys.txt" ]]; then
+  missing_keys=$(grep -vE '^(#|$)' "$REPO_ROOT/docs/secret-keys.txt" | while IFS= read -r k; do
+    grep -q "^export $k=" "$REPO_ROOT/secrets.zsh" 2>/dev/null || printf '%s\n' "$k"
+  done)
+  if [[ -z "$missing_keys" ]]; then
+    ok "all docs/secret-keys.txt keys set in secrets.zsh"
+  else
+    warn "keys missing from secrets.zsh — run install.sh:"
+    printf '%s\n' "$missing_keys" | indent
+  fi
+fi
 
 echo
-echo "=== Applied outcomes (macos.sh + Safari favorites) ==="
+echo "=== Applied outcomes (macos.sh + docs/ snapshots) ==="
 # minimal: one sentinel key stands in for the whole macos.sh run — tap-to-click
 # is what a machine that never ran it visibly misses first.
 if [[ "$(defaults read com.apple.AppleMultitouchTrackpad Clicking 2>/dev/null)" == "1" ]]; then
@@ -103,6 +115,26 @@ elif [[ -z "$missing_favs" ]]; then
 else
   warn "snapshot favorites missing from Safari — re-run install.sh:"
   printf '%s\n' "$missing_favs" | head -n 5 | indent
+fi
+# Dock is ordered (the layout IS the order); the sidebar is compared as a set.
+# The snapshot side keeps only on-disk apps — the replay skips missing ones by
+# design, so the check must promise no more than the replayer does.
+if have dockutil && [[ -s "$REPO_ROOT/docs/dock.txt" ]]; then
+  snap_dock=$(parse_dock "$REPO_ROOT/docs/dock.txt" | while IFS= read -r p; do
+    [[ -e "$p" ]] && printf '%s\n' "$p"
+  done)
+  if [[ "$snap_dock" == "$(current_dock)" ]]; then
+    ok "Dock matches docs/dock.txt"
+  else
+    warn "Dock drifted from docs/dock.txt — bench-export to keep it, install.sh to replay"
+  fi
+fi
+if have mysides && [[ -s "$REPO_ROOT/docs/finder-sidebar.txt" ]]; then
+  if [[ "$(parse_sidebar "$REPO_ROOT/docs/finder-sidebar.txt" | sort)" == "$(current_sidebar | sort)" ]]; then
+    ok "Finder sidebar matches docs/finder-sidebar.txt"
+  else
+    warn "Finder sidebar drifted from docs/finder-sidebar.txt — bench-export to keep it, install.sh to replay"
+  fi
 fi
 
 echo

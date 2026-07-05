@@ -168,9 +168,8 @@ else
 fi
 
 # ---------- GitHub / GitLab CLI logins ----------
-# home/.gitconfig routes git credentials through gh and glab, so an
-# unauthenticated CLI breaks every HTTPS clone/push. Both logins are
-# interactive (browser or token paste).
+# home/.gitconfig routes git credentials through gh and glab — an
+# unauthenticated CLI breaks every HTTPS clone/push.
 istep "GitHub and GitLab CLI logins (gh / glab)"
 for cli in gh glab; do
   if ! have "$cli"; then
@@ -438,9 +437,11 @@ if ! have dockutil; then
   warn "dockutil not installed — run the Brewfile step first"
 elif [[ ! -s "$dock_doc" ]]; then
   skip "docs/dock.txt missing/empty — run bench-export on the old machine"
+# Parse before the wipe: a snapshot that parses empty must never empty the Dock.
+elif dock_items="$(parse_dock "$dock_doc")" && [[ -z "$dock_items" ]]; then
+  warn "no entries parsed from docs/dock.txt — Dock left untouched"
 elif ask "Replace the current Dock with the docs/dock.txt layout?"; then
   dockutil --no-restart --remove all >/dev/null
-  # Process substitution, not a pipe: the while loop stays in the parent shell.
   while IFS= read -r item; do
     if [[ ! -e "$item" ]]; then
       warn "dock: $item not on disk — skipped (install the app, re-run install.sh)"
@@ -449,7 +450,7 @@ elif ask "Replace the current Dock with the docs/dock.txt layout?"; then
     else
       warn "dock: adding $item failed"
     fi
-  done < <(parse_dock "$dock_doc")
+  done <<<"$dock_items"
   killall Dock 2>/dev/null || true
   ok "Dock layout applied"
 else
@@ -457,26 +458,31 @@ else
 fi
 
 # ---------- Finder sidebar ----------
-# Merge-only, like Safari favorites: add snapshot entries missing from the
-# sidebar, never remove or reorder existing ones. Finder built-ins (iCloud,
-# AirDrop, tags) never appear here — parse_sidebar keeps file:// entries only.
-istep "Merge Finder sidebar favorites from docs/finder-sidebar.txt"
+# Replace-then-replay, like the Dock: mysides removes by name and one call
+# removes one entry, so per-URL diffing would delete the wrong twin when two
+# favorites share a name (the snapshot ships two "Downloads"). Built-ins
+# (AirDrop, Recents, iCloud) have non-file URLs — never touched.
+istep "Mirror Finder sidebar from docs/finder-sidebar.txt"
 sidebar_doc="$REPO_ROOT/docs/finder-sidebar.txt"
 if ! have mysides; then
   warn "mysides not installed — run the Brewfile step first"
 elif [[ ! -s "$sidebar_doc" ]]; then
   skip "docs/finder-sidebar.txt missing/empty — run bench-export on the old machine"
-elif ask "Add missing Finder sidebar favorites from the snapshot?"; then
-  sidebar_current="$(mysides list 2>/dev/null || true)"
+# Parse before the wipe: a snapshot that parses empty must never empty the sidebar.
+elif sidebar_snap="$(parse_sidebar "$sidebar_doc")" && [[ -z "$sidebar_snap" ]]; then
+  warn "no file:// entries parsed from docs/finder-sidebar.txt — sidebar left untouched"
+elif ask "Mirror the Finder sidebar to the snapshot (replaces its file:// favorites)?"; then
+  current_sidebar | cut -f1 | while IFS= read -r name; do
+    [[ -n "$name" ]] || continue
+    mysides remove "$name" >/dev/null 2>&1 || warn "sidebar: removing $name failed"
+  done
   while IFS=$'\t' read -r name url; do
-    if grep -qF "$url" <<<"$sidebar_current"; then
-      ok "sidebar: $name already present"
-    elif mysides add "$name" "$url" >/dev/null 2>&1; then
-      ok "sidebar: $name added"
+    if mysides add "$name" "$url" >/dev/null 2>&1; then
+      ok "sidebar: $name"
     else
       warn "sidebar: adding $name ($url) failed"
     fi
-  done < <(parse_sidebar "$sidebar_doc")
+  done <<<"$sidebar_snap"
 else
   skip "Skipped Finder sidebar"
 fi
@@ -497,26 +503,32 @@ else
 fi
 
 # ---------- API keys in secrets.zsh ----------
-# Prompt for every key the toolchain expects and that secrets.zsh is missing.
-# exports.zsh sources secrets.zsh, so the keys are live in the next shell.
-# Fathom: fathom.video account settings. Qonto: app.qonto.com API settings.
-istep "API keys in secrets.zsh"
+# docs/secret-keys.txt is the one list of expected key names; values live only
+# in the gitignored secrets.zsh, sourced by exports.zsh on shell start.
+istep "API keys in secrets.zsh (docs/secret-keys.txt)"
 secrets_file="$REPO_ROOT/secrets.zsh"
-for key in FATHOM_API_KEY QONTO_API_KEY QONTO_ORGANIZATION_ID QONTO_THIRDPARTY_HOST; do
-  if grep -q "^export $key=" "$secrets_file" 2>/dev/null; then
-    ok "$key already in secrets.zsh"
-  elif ask "Set $key in secrets.zsh now?"; then
-    read -rsp "  $key (input hidden): " secret_val; echo
-    if [[ -n "$secret_val" ]]; then
-      printf 'export %s="%s"\n' "$key" "$secret_val" >> "$secrets_file"
-      ok "$key written to secrets.zsh"
+keys_doc="$REPO_ROOT/docs/secret-keys.txt"
+if [[ ! -s "$keys_doc" ]]; then
+  warn "docs/secret-keys.txt missing/empty — no API keys prompted"
+else
+  # Keys on fd 3: stdin must stay free for ask() and the hidden value read.
+  while IFS= read -r -u 3 key; do
+    [[ -n "$key" && "$key" != \#* ]] || continue
+    if grep -q "^export $key=" "$secrets_file" 2>/dev/null; then
+      ok "$key already in secrets.zsh"
+    elif ask "Set $key in secrets.zsh now?"; then
+      read -rsp "  $key (input hidden): " secret_val; echo
+      if [[ -n "$secret_val" ]]; then
+        printf 'export %s="%s"\n' "$key" "$secret_val" >> "$secrets_file"
+        ok "$key written to secrets.zsh"
+      else
+        skip "Empty input — add 'export $key=...' to secrets.zsh later"
+      fi
     else
-      skip "Empty input — add 'export $key=...' to secrets.zsh later"
+      skip "Skipped — add 'export $key=...' to secrets.zsh later"
     fi
-  else
-    skip "Skipped — add 'export $key=...' to secrets.zsh later"
-  fi
-done
+  done 3< "$keys_doc"
+fi
 
 # ---------- Secure secrets.zsh ----------
 # Why 600: an unprivileged process could otherwise slurp live API keys.

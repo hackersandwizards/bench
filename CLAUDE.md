@@ -29,7 +29,7 @@ fonts/                # Only fonts with verified redistribution rights (repo is 
 .claude/              # Statusline command + Claude Code rules/settings
 ghostty/              # Ghostty terminal config
 home/                 # Dotfile templates symlinked via Stow
-docs/                 # Package snapshots, replayed by install.sh (offline-readable); fonts.txt is a manual-restore checklist, never replayed
+docs/                 # Package + machine-state snapshots, replayed by install.sh (offline-readable); fonts.txt (restore checklist) and secret-keys.txt (expected key names) are hand-maintained, never dumped by bench-export
 ```
 
 ## Conventions

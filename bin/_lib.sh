@@ -4,12 +4,8 @@
 
 step() { printf '\n\033[1;36m▸ %s\033[0m\n' "$1"; }
 ok()   { printf '\033[32m✓\033[0m %s\n' "$1"; }
-# Warns also append to the WARN_LOG ledger when the caller defines one.
-# install.sh exports a mktemp path and recaps it at the end — in a long
-# install warns scroll away and a failed step reads as success. A file, not
-# an array: warns from piped subshells (replay_globals, the tap-trust loop)
-# and child scripts (macos.sh) must reach the recap too. Standalone bench-*
-# runs leave it unset → /dev/null.
+# A file, not an array: warns from piped subshells and child scripts
+# (macos.sh) must reach install.sh's end-of-run recap.
 warn() { printf '\033[33m⚠\033[0m %s\n' "$1"; printf '%s\n' "$1" >> "${WARN_LOG:-/dev/null}"; }
 fail() { printf '\033[31m✗\033[0m %s\n' "$1"; }
 skip() { printf '\033[2m·\033[0m %s\n' "$1"; }
@@ -149,11 +145,10 @@ parse_sdk()   { awk 'NF == 2 { print $1, $2 }' "$1"; }
 parse_gem()   { awk -F' *[()] *' 'NF > 1 && $2 !~ /^default:/ { print $1 }' "$1"; }
 # npm/bun global lists. `npm` is dropped because reinstalling the package manager is a no-op.
 parse_node()  { awk 'NF && $NF ~ /@/ { n=$NF; sub(/@[^@]*$/, "", n); if (n != "npm") print n }' "$1"; }
-# `dockutil --list` TSV (label, location, section, plist, bundle id) → one
-# absolute path per line. Location is a file:// URL for Dock-native entries but
-# a plain path for entries dockutil itself wrote (i.e. right after a replay),
-# so both forms must parse or an export-after-replay yields an empty snapshot.
-# %XX-decode only the URL form: a plain path may contain a literal %.
+# `dockutil --list` TSV → one absolute path per line. Field 2 is a file:// URL
+# natively but a plain path for entries dockutil itself wrote, so both forms
+# must parse or an export-after-replay yields an empty snapshot. %XX-decode
+# only the URL form: a plain path may contain a literal %.
 parse_dock() {
   awk -F'\t' '$2 ~ /^(file:\/\/|\/)/ { print $2 }' "$1" \
     | perl -pe 's{^file://}{} and s/%([0-9A-Fa-f]{2})/chr hex $1/ge; s{/$}{}'
@@ -161,3 +156,7 @@ parse_dock() {
 # `mysides list` ("Name -> URL") → "name<TAB>url". Finder built-ins (iCloud,
 # AirDrop: non-file URLs) are dropped — mysides cannot re-add them anyway.
 parse_sidebar() { awk -F' -> ' 'NF == 2 && $2 ~ /^file:\/\// { print $1 "\t" $2 }' "$1"; }
+# Live-state reads shared by install.sh (replay) and bench-doctor (drift) so
+# the two sides can't diverge on tool quirks (mysides stderr, /dev/stdin feed).
+current_dock()    { dockutil --list | parse_dock /dev/stdin; }
+current_sidebar() { mysides list 2>/dev/null | parse_sidebar /dev/stdin; }
