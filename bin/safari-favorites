@@ -4,6 +4,8 @@
   safari-favorites export [plist]            print title<TAB>url per favorite
   safari-favorites merge <snapshot> [plist]  prepend snapshot entries missing
                                              from the favorites bar
+  safari-favorites missing <snapshot> [plist]  print snapshot entries absent
+                                             from the bar (bench-doctor check)
 
 Default plist: ~/Library/Safari/Bookmarks.plist (needs Full Disk Access).
 """
@@ -63,13 +65,13 @@ def subtree_urls(node):
     return urls
 
 
-def merge(snapshot_path, plist_path):
-    is_live_plist = plist_path.expanduser().resolve() == DEFAULT_PLIST.resolve()
-    if is_live_plist and subprocess.run(["pgrep", "-xq", "Safari"]).returncode == 0:
-        sys.exit("Safari is running — quit it first so the plist write sticks.")
-
+def read_snapshot(path):
     entries = []
-    with open(snapshot_path, encoding="utf-8") as f:
+    try:
+        f = open(path, encoding="utf-8")
+    except OSError as e:
+        sys.exit(f"cannot read snapshot: {e}")
+    with f:
         for line in f:
             line = line.rstrip("\n")
             if not line:
@@ -79,7 +81,24 @@ def merge(snapshot_path, plist_path):
                 print(f"skipping malformed line: {line!r}", file=sys.stderr)
                 continue
             entries.append((title, url))
+    return entries
 
+
+# Read-only counterpart to merge with the same subtree dedupe, so a favorite
+# the user later filed into a folder within the bar never reports as missing.
+def missing(snapshot_path, plist_path):
+    existing = subtree_urls(favorites_bar(load(plist_path)))
+    for title, url in read_snapshot(snapshot_path):
+        if url not in existing:
+            print(f"{title}\t{url}")
+
+
+def merge(snapshot_path, plist_path):
+    is_live_plist = plist_path.expanduser().resolve() == DEFAULT_PLIST.resolve()
+    if is_live_plist and subprocess.run(["pgrep", "-xq", "Safari"]).returncode == 0:
+        sys.exit("Safari is running — quit it first so the plist write sticks.")
+
+    entries = read_snapshot(snapshot_path)
     root = load(plist_path)
     bar = favorites_bar(root)
     existing = subtree_urls(bar)
@@ -119,6 +138,8 @@ def main(argv):
         export(Path(argv[2]) if len(argv) > 2 else DEFAULT_PLIST)
     elif len(argv) >= 3 and argv[1] == "merge":
         merge(argv[2], Path(argv[3]) if len(argv) > 3 else DEFAULT_PLIST)
+    elif len(argv) >= 3 and argv[1] == "missing":
+        missing(argv[2], Path(argv[3]) if len(argv) > 3 else DEFAULT_PLIST)
     else:
         sys.exit(__doc__.strip())
 

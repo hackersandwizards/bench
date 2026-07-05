@@ -14,10 +14,10 @@ Terminal setup for hackers&wizards: zsh, Ghostty, Starship, fzf, modern CLI repl
 git clone <repo> ~/opt/zsh-settings
 cd ~/opt/zsh-settings
 ./install.sh        # interactive wizard, idempotent, re-runnable
-./macos.sh          # optional: ~45 macOS system defaults
+./macos.sh          # ~45 macOS system defaults (also offered as an install.sh step)
 ```
 
-The wizard handles each step opt-in: `brew bundle`, Stow symlinks, `~/.gitconfig.local` generation, repo-local git hooks, `~/.zshrc` source line, Ghostty config symlink, language-ecosystem globals (uv/npm/bun/cargo/gem/pip), SDKMAN + JVM SDKs.
+The wizard handles each step opt-in: `brew bundle`, Stow symlinks, `~/.gitconfig.local` generation, `gh`/`glab` logins, repo-local git hooks, `~/.zshrc` source line, Ghostty config symlink, language-ecosystem globals (uv/npm/bun/cargo/gem/pip), SDKMAN + JVM SDKs, Safari favorites merge, Dock layout replay (`docs/dock.txt`), Finder sidebar merge (`docs/finder-sidebar.txt`), macOS system defaults (`macos.sh`), missing API keys into `secrets.zsh` (Fathom, Qonto). `macos.sh` also sets default apps: Zed opens txt/md/json/yaml/toml, Ghostty runs .sh/.command/.tool.
 
 static.adguard.com drops TLS handshakes on some routes, so the adguard cask download hangs. The wizard's `brew bundle` step works around it and pre-seeds brew's cache from AdGuard's adtidy.org mirror. A manual `brew bundle` run skips that workaround.
 
@@ -38,6 +38,19 @@ New team member, fresh machine. Provision these before running `install.sh`. The
 | Circle           | Community platform                                                                               |
 
 Optional, per person: Fathom (`FATHOM_API_KEY` in `secrets.zsh`), OpenAI (Codex CLI, ChatGPT), Cloudflare, Namecheap, AWS, Google Cloud (Workspace sign-in). JetBrains Toolbox, Cursor, Warp, CleanMyMac, DaisyDisk, CrossOver, and superwhisper bring their own licenses.
+
+## New-machine checklist (manual)
+
+`install.sh` replays everything scriptable. These need a human — interactive logins and UI state macOS exposes no API for. Work through them once after the wizard:
+
+- [ ] **Apple Mail + Calendar**: System Settings → Internet Accounts → Add Account → Google → sign in with the Workspace account → enable Mail, Calendar, Contacts.
+- [ ] **Notion Calendar**: launch, sign in with the same Google account, connect the Workspace calendar.
+- [ ] **Slack**: launch, sign in to `hackersandwizards.slack.com`.
+- [ ] **Google Workspace in the browser**: sign in once so Claude's Workspace MCP connectors can request permissions against the right account.
+- [ ] **GitHub / GitLab**: `gh auth login` and `glab auth login` if the wizard step was skipped.
+- [ ] **Widgets**: rebuild desktop + Notification Center widgets by hand (right-click desktop → Edit Widgets). macOS has no supported export.
+- [ ] **Default-app cleanup**: Apple system apps live in `/System/Applications` and are SIP-protected — they cannot be deleted. The Dock replay already hides the unwanted ones; drag anything else out of the Dock and delete unwanted App Store installs from `/Applications`.
+- [ ] **Dock / sidebar drift**: after curating Dock or Finder sidebar on any machine, run `bench-export` and commit so the snapshots follow you.
 
 ## File structure
 

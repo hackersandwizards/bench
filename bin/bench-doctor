@@ -80,6 +80,32 @@ fi
 check "docs/safari-favorites.txt" test -s "$REPO_ROOT/docs/safari-favorites.txt"
 
 echo
+echo "=== Applied outcomes (macos.sh + Safari favorites) ==="
+# minimal: one sentinel key stands in for the whole macos.sh run — tap-to-click
+# is what a machine that never ran it visibly misses first.
+if [[ "$(defaults read com.apple.AppleMultitouchTrackpad Clicking 2>/dev/null)" == "1" ]]; then
+  ok "tap-to-click enabled (macos.sh applied)"
+else
+  warn "tap-to-click off — run ./macos.sh, then log out/restart"
+fi
+pic=$(osascript -e 'tell application "System Events" to get picture of current desktop' 2>/dev/null)
+if [[ "$pic" == "$WALLPAPER" ]]; then
+  ok "wallpaper = assets/wallpaper.png"
+else
+  warn "wallpaper is ${pic:-unreadable (System Events / Automation permission?)} — run ./macos.sh"
+fi
+# Stderr flows through on purpose: the script's own message (Full Disk Access,
+# Safari never launched, corrupt plist) is the diagnosis, not a guess here.
+if ! missing_favs=$("$REPO_ROOT/bin/safari-favorites" missing "$REPO_ROOT/docs/safari-favorites.txt"); then
+  warn "cannot read Safari favorites (see message above)"
+elif [[ -z "$missing_favs" ]]; then
+  ok "all snapshot favorites present in Safari"
+else
+  warn "snapshot favorites missing from Safari — re-run install.sh:"
+  printf '%s\n' "$missing_favs" | head -n 5 | indent
+fi
+
+echo
 echo "=== Git auth ==="
 for tool in gh glab; do
   if "$tool" auth status >/dev/null 2>&1; then

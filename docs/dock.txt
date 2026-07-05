@@ -1,0 +1,21 @@
+Apps	file:///System/Applications/Apps.app/	persistentApps	/Users/bstemmildt/Library/Preferences/com.apple.dock.plist	com.apple.apps.launcher
+Safari	file:///System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app/	persistentApps	/Users/bstemmildt/Library/Preferences/com.apple.dock.plist	com.apple.Safari
+Messages	file:///System/Applications/Messages.app/	persistentApps	/Users/bstemmildt/Library/Preferences/com.apple.dock.plist	com.apple.MobileSMS
+Mail	file:///System/Applications/Mail.app/	persistentApps	/Users/bstemmildt/Library/Preferences/com.apple.dock.plist	com.apple.mail
+Maps	file:///System/Applications/Maps.app/	persistentApps	/Users/bstemmildt/Library/Preferences/com.apple.dock.plist	com.apple.Maps
+Photos	file:///System/Applications/Photos.app/	persistentApps	/Users/bstemmildt/Library/Preferences/com.apple.dock.plist	com.apple.Photos
+FaceTime	file:///System/Applications/FaceTime.app/	persistentApps	/Users/bstemmildt/Library/Preferences/com.apple.dock.plist	com.apple.FaceTime
+Notion Calendar	file:///Applications/Notion%20Calendar.app/	persistentApps	/Users/bstemmildt/Library/Preferences/com.apple.dock.plist	com.cron.electron
+Contacts	file:///System/Applications/Contacts.app/	persistentApps	/Users/bstemmildt/Library/Preferences/com.apple.dock.plist	com.apple.AddressBook
+Reminders	file:///System/Applications/Reminders.app/	persistentApps	/Users/bstemmildt/Library/Preferences/com.apple.dock.plist	com.apple.reminders
+Notion	file:///Applications/Notion.app/	persistentApps	/Users/bstemmildt/Library/Preferences/com.apple.dock.plist	notion.id
+Freeform	file:///System/Applications/Freeform.app/	persistentApps	/Users/bstemmildt/Library/Preferences/com.apple.dock.plist	com.apple.freeform
+TV	file:///System/Applications/TV.app/	persistentApps	/Users/bstemmildt/Library/Preferences/com.apple.dock.plist	com.apple.TV
+Music	file:///System/Applications/Music.app/	persistentApps	/Users/bstemmildt/Library/Preferences/com.apple.dock.plist	com.apple.Music
+Keynote Creator Studio	file:///Applications/Keynote%20Creator%20Studio.app/	persistentApps	/Users/bstemmildt/Library/Preferences/com.apple.dock.plist	com.apple.Keynote
+Numbers Creator Studio	file:///Applications/Numbers%20Creator%20Studio.app/	persistentApps	/Users/bstemmildt/Library/Preferences/com.apple.dock.plist	com.apple.Numbers
+Pages Creator Studio	file:///Applications/Pages%20Creator%20Studio.app/	persistentApps	/Users/bstemmildt/Library/Preferences/com.apple.dock.plist	com.apple.Pages
+App Store	file:///System/Applications/App%20Store.app/	persistentApps	/Users/bstemmildt/Library/Preferences/com.apple.dock.plist	com.apple.AppStore
+Campo	file:///System/Applications/Campo.app/	persistentApps	/Users/bstemmildt/Library/Preferences/com.apple.dock.plist	com.apple.campo
+System Settings	file:///System/Applications/System%20Settings.app/	persistentApps	/Users/bstemmildt/Library/Preferences/com.apple.dock.plist	com.apple.systempreferences
+Downloads	file:///Users/bstemmildt/Library/Mobile%20Documents/com~apple~CloudDocs/Downloads/	persistentOthers	/Users/bstemmildt/Library/Preferences/com.apple.dock.plist	

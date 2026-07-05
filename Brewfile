@@ -42,6 +42,10 @@ brew "deno"
 brew "diffutils"
 # Load/unload environment variables based on $PWD
 brew "direnv"
+# Tool for managing dock items (replayed from docs/dock.txt)
+brew "dockutil"
+# Select default apps for documents and URL schemes on macOS
+brew "duti"
 # Classic UNIX line editor
 brew "ed"
 # Functional metaprogramming aware language built on Erlang VM
@@ -120,6 +124,8 @@ brew "less"
 brew "mas"
 # Deep clean and optimize your Mac
 brew "mole"
+# Manage Finder sidebar favorites (replayed from docs/finder-sidebar.txt)
+brew "mysides"
 # Open-source, cross-platform JavaScript runtime environment
 brew "node"
 # Protocol buffers (Google's data interchange format)

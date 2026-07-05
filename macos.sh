@@ -123,12 +123,31 @@ defaults write com.apple.ActivityMonitor SortColumn -string "CPUUsage"
 defaults write com.apple.ActivityMonitor SortDirection -int 0
 
 # ============================================================================
+# Default apps — Zed edits text, Ghostty runs scripts
+# duti comes from the Brewfile; LaunchServices persists the bindings per user.
+# com.apple.terminal.shell-script is the .command/.tool UTI — the extension
+# form (`duti -s … .command all`) does not stick, the UTI form does.
+# ============================================================================
+if have duti; then
+  duti -s dev.zed.Zed public.plain-text all
+  duti -s dev.zed.Zed net.daringfireball.markdown all
+  duti -s dev.zed.Zed public.json all
+  duti -s dev.zed.Zed public.yaml all
+  duti -s dev.zed.Zed .toml all
+  ok "Zed set as default for txt/md/json/yaml/toml"
+  duti -s com.mitchellh.ghostty public.shell-script all
+  duti -s com.mitchellh.ghostty com.apple.terminal.shell-script all
+  ok "Ghostty set as default for .sh/.command/.tool"
+else
+  warn "duti not installed — default apps unchanged (brew install duti, re-run)"
+fi
+
+# ============================================================================
 # Desktop wallpaper
 # Placement (Fill Screen) and "Show on all Spaces" are preserved from user
 # prefs (no public Tahoe API forces them). Image matches display res
 # (5120x2880), so all placement modes render identically on this hardware.
 # ============================================================================
-WALLPAPER="$REPO_ROOT/assets/wallpaper.png"
 if [[ -f "$WALLPAPER" ]]; then
   if osascript -e "tell application \"System Events\" to set picture of every desktop to \"$WALLPAPER\"" 2>/dev/null; then
     ok "Wallpaper set"

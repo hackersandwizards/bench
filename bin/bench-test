@@ -28,6 +28,16 @@ step "have()"
 assert_ok   "finds an existing binary" have sh
 assert_fail "rejects a missing binary" have zzz-not-a-real-binary
 
+step "warn() ledger"
+# The ledger's reason to exist: warns from piped subshells must reach it.
+WARN_LOG=$(mktemp)
+warn "parent" >/dev/null
+echo x | { while read -r _; do warn "pipeline" >/dev/null; done; }
+assert_eq "collects warns across subshell boundaries" $'parent\npipeline' "$(cat "$WARN_LOG")"
+rm -f "$WARN_LOG"; WARN_LOG=""
+warn "unledgered" >/dev/null
+assert_ok "no ledger configured — warn still succeeds" true
+
 step "sdkman_set_config()"
 # Point the helper at a throwaway config — never touches the real ~/.sdkman.
 cfg=$(mktemp)
@@ -67,6 +77,19 @@ json" "$(parse_gem "$fix")"
 printf '/opt/homebrew/lib\n├── npm@10.2.0\n├── typescript@5.3.3\n└── @angular/cli@17.0.0\n' > "$fix"
 assert_eq "parse_node: strip version, drop npm, keep scope" "typescript
 @angular/cli" "$(parse_node "$fix")"
+# Line 4 is the post-replay shape: dockutil-written entries list a plain path
+# (no file:// URL, no %XX) — an export taken then must still round-trip.
+printf 'Slack\tfile:///Applications/Slack.app/\tpersistentApps\t/U/dock.plist\tcom.tinyspeck.slackmacgap
+Keynote Creator Studio\tfile:///Applications/Keynote%%20Creator%%20Studio.app/\tpersistentApps\t/U/dock.plist\tcom.apple.iWork.Keynote
+Downloads\tfile:///Users/x/Downloads/\tpersistentOthers\t/U/dock.plist
+Notion Calendar\t/Applications/Notion Calendar.app\tpersistentApps\t/U/dock.plist\t\n' > "$fix"
+assert_eq "parse_dock: URL and plain-path forms, no trailing slash" "/Applications/Slack.app
+/Applications/Keynote Creator Studio.app
+/Users/x/Downloads
+/Applications/Notion Calendar.app" "$(parse_dock "$fix")"
+printf 'Applications -> file:///Applications/\nDownloads -> file:///Users/x/Library/Mobile%%20Documents/com~apple~CloudDocs/Downloads/\niCloud -> x-apple-finder:icloud\n' > "$fix"
+assert_eq "parse_sidebar: name+url TSV, drops Finder built-ins" "Applications	file:///Applications/
+Downloads	file:///Users/x/Library/Mobile%20Documents/com~apple~CloudDocs/Downloads/" "$(parse_sidebar "$fix")"
 rm -f "$fix"
 
 step "brew bottle-support guard"
@@ -114,6 +137,16 @@ merged=$'a\thttps://a/\nb\thttps://b/'
 assert_eq "prepends only missing URLs (subtree dedupe)" "$merged" "$("$sf" export "$tdir/b.plist")"
 assert_ok "idempotent merge exits ok" "$sf" merge "$tdir/snap.txt" "$tdir/b.plist"
 assert_eq "idempotent — re-run adds nothing" "$merged" "$("$sf" export "$tdir/b.plist")"
+# `missing` must count c (in a folder within the bar) as present — subtree scan.
+assert_eq "missing: empty when all snapshot URLs in bar subtree" \
+  "" "$("$sf" missing "$tdir/snap.txt" "$tdir/b.plist")"
+printf 'd\thttps://d/\n' >> "$tdir/snap.txt"
+assert_eq "missing: lists snapshot entries absent from the bar" \
+  $'d\thttps://d/' "$("$sf" missing "$tdir/snap.txt" "$tdir/b.plist")"
+assert_fail "missing: non-zero exit on absent snapshot" \
+  "$sf" missing "$tdir/nope.txt" "$tdir/b.plist"
+assert_eq "missing: clean error, no traceback, on absent snapshot" \
+  "0" "$("$sf" missing "$tdir/nope.txt" "$tdir/b.plist" 2>&1 | grep -c Traceback)"
 rm -rf "$tdir"
 
 step "missing_fonts()"

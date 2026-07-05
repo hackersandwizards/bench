@@ -7,10 +7,16 @@ set -u
 . "$(dirname "$0")/bin/_lib.sh"
 cd "$REPO_ROOT" || exit 1
 
+# Ledger for the end-of-run recap: every warn() also lands here (see _lib.sh).
+# Exported so child scripts' warns (macos.sh) reach it too.
+if WARN_LOG=$(mktemp); then trap 'rm -f "$WARN_LOG"' EXIT; else WARN_LOG=/dev/null; fi
+export WARN_LOG
+
 ask() {
   local prompt="$1" default="${2:-Y}" reply hint
   if [[ "$default" == "Y" ]]; then hint="[Y/n]"; else hint="[y/N]"; fi
-  read -rp "$prompt $hint " reply
+  # EOF (no TTY) declines: a piped run must never auto-confirm system changes.
+  read -rp "$prompt $hint " reply || return 1
   reply="${reply:-$default}"
   [[ "$reply" =~ ^[Yy]$ ]]
 }
@@ -160,6 +166,27 @@ EOF
 else
   skip "Skipped — you'll need ~/.gitconfig.local for [user] block to work"
 fi
+
+# ---------- GitHub / GitLab CLI logins ----------
+# home/.gitconfig routes git credentials through gh and glab, so an
+# unauthenticated CLI breaks every HTTPS clone/push. Both logins are
+# interactive (browser or token paste).
+istep "GitHub and GitLab CLI logins (gh / glab)"
+for cli in gh glab; do
+  if ! have "$cli"; then
+    warn "$cli not installed — run the Brewfile step first, then '$cli auth login'"
+  elif "$cli" auth status >/dev/null 2>&1; then
+    ok "$cli already authenticated"
+  elif ask "Run '$cli auth login' now?"; then
+    if "$cli" auth login; then
+      ok "$cli authenticated"
+    else
+      warn "$cli auth login failed — run '$cli auth login' later"
+    fi
+  else
+    skip "Skipped — run '$cli auth login' later"
+  fi
+done
 
 # ---------- Repo-local git hooks ----------
 istep "Activate repo-local git hooks (gitleaks + shellcheck)"
@@ -384,6 +411,10 @@ istep "Merge Safari favorites from docs/safari-favorites.txt"
 fav_doc="$REPO_ROOT/docs/safari-favorites.txt"
 if [[ ! -s "$fav_doc" ]]; then
   skip "docs/safari-favorites.txt missing/empty — run bench-export on the old machine"
+# Read-only probe before the prompts: bin/safari-favorites owns the diagnosis
+# (no Full Disk Access, Safari never launched), so its stderr is the message.
+elif ! "$REPO_ROOT/bin/safari-favorites" missing "$fav_doc" >/dev/null; then
+  warn "Safari favorites: cannot read Safari bookmarks (see message above) — fix and re-run install.sh"
 elif ask "Prepend missing snapshot favorites into Safari's favorites bar?"; then
   if pgrep -xq Safari && ask "Safari must be quit for the write to stick. Quit it now?"; then
     osascript -e 'quit app "Safari"'
@@ -398,6 +429,95 @@ else
   skip "Skipped Safari favorites"
 fi
 
+# ---------- Dock layout ----------
+# Replace, don't merge: a fresh machine's Dock is all Apple defaults, and an
+# append-only replay would keep them. The wipe is why this has its own ask.
+istep "Apply Dock layout from docs/dock.txt"
+dock_doc="$REPO_ROOT/docs/dock.txt"
+if ! have dockutil; then
+  warn "dockutil not installed — run the Brewfile step first"
+elif [[ ! -s "$dock_doc" ]]; then
+  skip "docs/dock.txt missing/empty — run bench-export on the old machine"
+elif ask "Replace the current Dock with the docs/dock.txt layout?"; then
+  dockutil --no-restart --remove all >/dev/null
+  # Process substitution, not a pipe: the while loop stays in the parent shell.
+  while IFS= read -r item; do
+    if [[ ! -e "$item" ]]; then
+      warn "dock: $item not on disk — skipped (install the app, re-run install.sh)"
+    elif dockutil --no-restart --add "$item" >/dev/null 2>&1; then
+      ok "dock: ${item##*/}"
+    else
+      warn "dock: adding $item failed"
+    fi
+  done < <(parse_dock "$dock_doc")
+  killall Dock 2>/dev/null || true
+  ok "Dock layout applied"
+else
+  skip "Skipped Dock layout"
+fi
+
+# ---------- Finder sidebar ----------
+# Merge-only, like Safari favorites: add snapshot entries missing from the
+# sidebar, never remove or reorder existing ones. Finder built-ins (iCloud,
+# AirDrop, tags) never appear here — parse_sidebar keeps file:// entries only.
+istep "Merge Finder sidebar favorites from docs/finder-sidebar.txt"
+sidebar_doc="$REPO_ROOT/docs/finder-sidebar.txt"
+if ! have mysides; then
+  warn "mysides not installed — run the Brewfile step first"
+elif [[ ! -s "$sidebar_doc" ]]; then
+  skip "docs/finder-sidebar.txt missing/empty — run bench-export on the old machine"
+elif ask "Add missing Finder sidebar favorites from the snapshot?"; then
+  sidebar_current="$(mysides list 2>/dev/null || true)"
+  while IFS=$'\t' read -r name url; do
+    if grep -qF "$url" <<<"$sidebar_current"; then
+      ok "sidebar: $name already present"
+    elif mysides add "$name" "$url" >/dev/null 2>&1; then
+      ok "sidebar: $name added"
+    else
+      warn "sidebar: adding $name ($url) failed"
+    fi
+  done < <(parse_sidebar "$sidebar_doc")
+else
+  skip "Skipped Finder sidebar"
+fi
+
+# ---------- macOS system defaults ----------
+# Wallpaper and the trackpad/keyboard/Finder/Dock defaults all live in
+# macos.sh. Offering it as a real step (not a closing hint) is what gets it
+# run on a fresh machine — "optional next steps" were skipped in practice.
+istep "Apply macOS system defaults (macos.sh)"
+if ask "Run ./macos.sh now? (keyboard, trackpad, Finder, Dock, wallpaper)"; then
+  if "$REPO_ROOT/macos.sh"; then
+    ok "macos.sh applied — log out/restart for trackpad + keyboard changes"
+  else
+    warn "macos.sh exited with an error partway — re-run './macos.sh'"
+  fi
+else
+  skip "Skipped — run './macos.sh' anytime later"
+fi
+
+# ---------- API keys in secrets.zsh ----------
+# Prompt for every key the toolchain expects and that secrets.zsh is missing.
+# exports.zsh sources secrets.zsh, so the keys are live in the next shell.
+# Fathom: fathom.video account settings. Qonto: app.qonto.com API settings.
+istep "API keys in secrets.zsh"
+secrets_file="$REPO_ROOT/secrets.zsh"
+for key in FATHOM_API_KEY QONTO_API_KEY QONTO_ORGANIZATION_ID QONTO_THIRDPARTY_HOST; do
+  if grep -q "^export $key=" "$secrets_file" 2>/dev/null; then
+    ok "$key already in secrets.zsh"
+  elif ask "Set $key in secrets.zsh now?"; then
+    read -rsp "  $key (input hidden): " secret_val; echo
+    if [[ -n "$secret_val" ]]; then
+      printf 'export %s="%s"\n' "$key" "$secret_val" >> "$secrets_file"
+      ok "$key written to secrets.zsh"
+    else
+      skip "Empty input — add 'export $key=...' to secrets.zsh later"
+    fi
+  else
+    skip "Skipped — add 'export $key=...' to secrets.zsh later"
+  fi
+done
+
 # ---------- Secure secrets.zsh ----------
 # Why 600: an unprivileged process could otherwise slurp live API keys.
 if [[ -f "$REPO_ROOT/secrets.zsh" ]]; then
@@ -407,10 +527,14 @@ fi
 
 # ---------- Final hints ----------
 step "Optional next steps"
-echo "  • Run './macos.sh' to apply ~45 macOS system defaults (keyboard, finder, dock, etc.)"
 echo "  • Run 'bench-doctor' to verify the install"
 echo "  • Run 'bench-export' to refresh Brewfile/docs/ snapshots"
 echo "  • Create '$REPO_ROOT/secrets.zsh' for API keys (auto-chmod 600 on next install run)"
+
+if [[ -s "$WARN_LOG" ]]; then
+  step "Recap: $(grep -c . "$WARN_LOG") warning(s) need attention"
+  indent < "$WARN_LOG"
+fi
 
 step "Done"
 echo "Open a new terminal or run 'exec zsh' to load the new config."

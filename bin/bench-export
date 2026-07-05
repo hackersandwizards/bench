@@ -67,6 +67,8 @@ have cargo && dump_to "$DOCS/cargo.txt" cargo install --list       &
 have sdk   && dump_to "$DOCS/sdks.txt"  sdk_run current            &
 have mix   && dump_to "$DOCS/mix.txt"   mix archive                &
 dump_to "$DOCS/safari-favorites.txt" "$REPO_ROOT/bin/safari-favorites" export &
+have dockutil && dump_to "$DOCS/dock.txt"           dockutil --list &
+have mysides  && dump_to "$DOCS/finder-sidebar.txt" mysides list    &
 wait
 [[ -f "$HOME/.gradle/gradle.properties" ]] \
   && cp "$HOME/.gradle/gradle.properties" "$DOCS/gradle.properties" \
