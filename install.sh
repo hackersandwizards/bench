@@ -516,8 +516,7 @@ else
     elif ask "Set $key in secrets.zsh now?"; then
       read -rsp "  $key (input hidden): " secret_val; echo
       if [[ -n "$secret_val" ]]; then
-        # Single quotes: a value with $ ` " \ must not expand when sourced.
-        printf "export %s='%s'\n" "$key" "${secret_val//\'/\'\\\'\'}" >> "$secrets_file"
+        secret_line "$key" "$secret_val" >> "$secrets_file"
         ok "$key written to secrets.zsh"
       else
         skip "Empty input — add 'export $key=...' to secrets.zsh later"

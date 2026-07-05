@@ -100,6 +100,27 @@ assert_eq "parse_sidebar: name+url TSV, \$HOME expanded, built-ins dropped" "App
 Downloads	file://$HOME/Library/Mobile%20Documents/com~apple~CloudDocs/Downloads/" "$(parse_sidebar "$fix")"
 rm -f "$fix"
 
+step "secret_line()"
+assert_eq "plain value" "export K='v'" "$(secret_line K v)"
+# The round-trip is the spec: what install.sh writes, exports.zsh must read
+# back verbatim when zsh sources secrets.zsh.
+sv="pa'ss\$w\`ord\\"
+assert_eq "round-trips ' \$ \` \\ through a zsh source" \
+  "$sv" "$(zsh -c "$(secret_line K "$sv"); printf '%s' \"\$K\"")"
+
+step "apply_dock / apply_sidebar empty guard"
+# The guard must fire before any dockutil/mysides call: an empty here-string
+# still iterates once, so without it the wipe would run and nothing re-adds.
+assert_fail "apply_dock refuses an empty snapshot"    apply_dock ""
+assert_fail "apply_sidebar refuses an empty snapshot" apply_sidebar ""
+
+step "clone_repos target validation"
+fix=$(mktemp)
+printf '/abs https://example.invalid/a.git\ndev/../up https://example.invalid/b.git\n' > "$fix"
+assert_eq "rejects absolute and dot-dot targets (no clone attempted)" \
+  "2" "$(clone_repos "$fix" 2>&1 | grep -c refusing)"
+rm -f "$fix"
+
 step "brew bottle-support guard"
 # Shim `brew --repository` at a fixture Homebrew checkout and `sw_vers` at a
 # chosen macOS version, so the parse + comparison run without the real system.

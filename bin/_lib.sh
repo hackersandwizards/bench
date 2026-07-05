@@ -32,6 +32,14 @@ run() {
   if "$@"; then ok "$label"; else warn "$label failed (continuing)"; fi
 }
 
+# One sourceable `export KEY='value'` line. Single quotes so $ ` \ never
+# expand; the replacement rides a variable because bash 3.2 mangles
+# backslashes written literally in ${var//pat/rep} (bash 4.3 change).
+secret_line() {
+  local q="'\\''"
+  printf "export %s='%s'\n" "$1" "${2//\'/$q}"
+}
+
 # Homebrew's Python is externally-managed (PEP 668); pip refuses to install into
 # it without this. install.sh's replay and bench-update's upgrades run pip under
 # bash, and on a fresh machine ~/.zshrc has not yet sourced exports.zsh, so set
@@ -176,7 +184,8 @@ current_dock()    { dockutil --list | parse_dock /dev/stdin; }
 current_sidebar() { mysides list 2>/dev/null | parse_sidebar /dev/stdin; }
 
 # Mutating replay cores, shared by install.sh and bench-update's converge.
-# Callers own the guards and the ask; input is the matching parse_* output.
+# Callers own the ask and the file-specific messaging; the helpers refuse
+# empty input themselves as the last belt before a wipe.
 apply_dock() {
   # Refuse empty input here too (callers also guard): an empty here-string
   # still iterates once, so the wipe below would run and nothing re-adds.
