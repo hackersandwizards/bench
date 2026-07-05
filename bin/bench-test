@@ -78,18 +78,23 @@ printf '/opt/homebrew/lib\n├── npm@10.2.0\n├── typescript@5.3.3\n└
 assert_eq "parse_node: strip version, drop npm, keep scope" "typescript
 @angular/cli" "$(parse_node "$fix")"
 # Line 4 is the post-replay shape: dockutil-written entries list a plain path
-# (no file:// URL, no %XX) — an export taken then must still round-trip.
+# (no file:// URL, no %XX). Line 5 is the bench-export shape: $HOME normalized
+# to a token so the snapshot replays for any user.
+# shellcheck disable=SC2016  # single quotes keep $HOME a literal token, as in real snapshots
 printf 'Slack\tfile:///Applications/Slack.app/\tpersistentApps\t/U/dock.plist\tcom.tinyspeck.slackmacgap
 Keynote Creator Studio\tfile:///Applications/Keynote%%20Creator%%20Studio.app/\tpersistentApps\t/U/dock.plist\tcom.apple.iWork.Keynote
 Downloads\tfile:///Users/x/Downloads/\tpersistentOthers\t/U/dock.plist
-Notion Calendar\t/Applications/Notion Calendar.app\tpersistentApps\t/U/dock.plist\t\n' > "$fix"
-assert_eq "parse_dock: URL and plain-path forms, no trailing slash" "/Applications/Slack.app
+Notion Calendar\t/Applications/Notion Calendar.app\tpersistentApps\t/U/dock.plist\t
+Downloads\tfile://$HOME/Downloads/\tpersistentOthers\t/U/dock.plist\n' > "$fix"
+assert_eq "parse_dock: URL, plain-path, and \$HOME forms" "/Applications/Slack.app
 /Applications/Keynote Creator Studio.app
 /Users/x/Downloads
-/Applications/Notion Calendar.app" "$(parse_dock "$fix")"
-printf 'Applications -> file:///Applications/\nDownloads -> file:///Users/x/Library/Mobile%%20Documents/com~apple~CloudDocs/Downloads/\niCloud -> x-apple-finder:icloud\n' > "$fix"
-assert_eq "parse_sidebar: name+url TSV, drops Finder built-ins" "Applications	file:///Applications/
-Downloads	file:///Users/x/Library/Mobile%20Documents/com~apple~CloudDocs/Downloads/" "$(parse_sidebar "$fix")"
+/Applications/Notion Calendar.app
+$HOME/Downloads" "$(parse_dock "$fix")"
+# shellcheck disable=SC2016  # single quotes keep $HOME a literal token, as in real snapshots
+printf 'Applications -> file:///Applications/\nDownloads -> file://$HOME/Library/Mobile%%20Documents/com~apple~CloudDocs/Downloads/\niCloud -> x-apple-finder:icloud\n' > "$fix"
+assert_eq "parse_sidebar: name+url TSV, \$HOME expanded, built-ins dropped" "Applications	file:///Applications/
+Downloads	file://$HOME/Library/Mobile%20Documents/com~apple~CloudDocs/Downloads/" "$(parse_sidebar "$fix")"
 rm -f "$fix"
 
 step "brew bottle-support guard"

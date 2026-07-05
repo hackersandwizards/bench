@@ -1,5 +1,5 @@
-Applications -> file:///Applications/
-Downloads -> file:///Users/bstemmildt/Library/Mobile%20Documents/com~apple~CloudDocs/Downloads/
-Downloads -> file:///Users/bstemmildt/Downloads/
-Desktop -> file:///Users/bstemmildt/Desktop/
 iCloud -> x-apple-finder:icloud
+Applications -> file:///Applications/
+Downloads -> file://$HOME/Library/Mobile%20Documents/com~apple~CloudDocs/Downloads/
+Downloads -> file://$HOME/Downloads/
+Desktop -> file://$HOME/Desktop/

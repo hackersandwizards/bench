@@ -12,14 +12,7 @@ cd "$REPO_ROOT" || exit 1
 if WARN_LOG=$(mktemp); then trap 'rm -f "$WARN_LOG"' EXIT; else WARN_LOG=/dev/null; fi
 export WARN_LOG
 
-ask() {
-  local prompt="$1" default="${2:-Y}" reply hint
-  if [[ "$default" == "Y" ]]; then hint="[Y/n]"; else hint="[y/N]"; fi
-  # EOF (no TTY) declines: a piped run must never auto-confirm system changes.
-  read -rp "$prompt $hint " reply || return 1
-  reply="${reply:-$default}"
-  [[ "$reply" =~ ^[Yy]$ ]]
-}
+# ask() lives in _lib.sh — bench-update's converge section shares it.
 
 # Self-numbering step headers — adding or removing a step never renumbers the
 # rest. Grep the file via REPO_ROOT, not $0: after the cd above a relative $0
@@ -441,27 +434,14 @@ elif [[ ! -s "$dock_doc" ]]; then
 elif dock_items="$(parse_dock "$dock_doc")" && [[ -z "$dock_items" ]]; then
   warn "no entries parsed from docs/dock.txt — Dock left untouched"
 elif ask "Replace the current Dock with the docs/dock.txt layout?"; then
-  dockutil --no-restart --remove all >/dev/null
-  while IFS= read -r item; do
-    if [[ ! -e "$item" ]]; then
-      warn "dock: $item not on disk — skipped (install the app, re-run install.sh)"
-    elif dockutil --no-restart --add "$item" >/dev/null 2>&1; then
-      ok "dock: ${item##*/}"
-    else
-      warn "dock: adding $item failed"
-    fi
-  done <<<"$dock_items"
-  killall Dock 2>/dev/null || true
+  apply_dock "$dock_items"
   ok "Dock layout applied"
 else
   skip "Skipped Dock layout"
 fi
 
 # ---------- Finder sidebar ----------
-# Replace-then-replay, like the Dock: mysides removes by name and one call
-# removes one entry, so per-URL diffing would delete the wrong twin when two
-# favorites share a name (the snapshot ships two "Downloads"). Built-ins
-# (AirDrop, Recents, iCloud) have non-file URLs — never touched.
+# Built-ins (AirDrop, Recents, iCloud) have non-file URLs — never touched.
 istep "Mirror Finder sidebar from docs/finder-sidebar.txt"
 sidebar_doc="$REPO_ROOT/docs/finder-sidebar.txt"
 if ! have mysides; then
@@ -472,19 +452,20 @@ elif [[ ! -s "$sidebar_doc" ]]; then
 elif sidebar_snap="$(parse_sidebar "$sidebar_doc")" && [[ -z "$sidebar_snap" ]]; then
   warn "no file:// entries parsed from docs/finder-sidebar.txt — sidebar left untouched"
 elif ask "Mirror the Finder sidebar to the snapshot (replaces its file:// favorites)?"; then
-  current_sidebar | cut -f1 | while IFS= read -r name; do
-    [[ -n "$name" ]] || continue
-    mysides remove "$name" >/dev/null 2>&1 || warn "sidebar: removing $name failed"
-  done
-  while IFS=$'\t' read -r name url; do
-    if mysides add "$name" "$url" >/dev/null 2>&1; then
-      ok "sidebar: $name"
-    else
-      warn "sidebar: adding $name ($url) failed"
-    fi
-  done <<<"$sidebar_snap"
+  apply_sidebar "$sidebar_snap"
 else
   skip "Skipped Finder sidebar"
+fi
+
+# ---------- Moom window layouts ----------
+istep "Import Moom settings from docs/moom.plist"
+moom_doc="$REPO_ROOT/docs/moom.plist"
+if [[ ! -s "$moom_doc" ]]; then
+  skip "docs/moom.plist missing/empty — run bench-export on the old machine"
+elif ask "Import Moom settings? (overwrites the local Moom config)"; then
+  apply_moom "$moom_doc"
+else
+  skip "Skipped Moom"
 fi
 
 # ---------- macOS system defaults ----------

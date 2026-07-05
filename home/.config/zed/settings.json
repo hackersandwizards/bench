@@ -1,0 +1,79 @@
+// Zed settings
+//
+// For information on how to configure Zed, see the Zed
+// documentation: https://zed.dev/docs/configuring-zed
+//
+// To see all of Zed's default settings without changing your
+// custom settings, run `zed: open default settings` from the
+// command palette (cmd-shift-p / ctrl-shift-p)
+{
+  "project_panel": {
+    "dock": "right"
+  },
+  "outline_panel": {
+    "dock": "right"
+  },
+  "collaboration_panel": {
+    "dock": "right"
+  },
+  "agent": {
+    "default_profile": "write",
+    "dock": "left",
+    "favorite_models": [],
+    "model_parameters": [],
+    "default_model": {
+      "provider": "local-mlx-mtplx",
+      "model": "qwen3.6-27b"
+    }
+  },
+  "language_models": {
+    "openai_compatible": {
+      "local-mlx": {
+        "api_url": "http://127.0.0.1:8080/v1",
+        "available_models": [
+          {
+            "name": "qwen3.6-35b",
+            "display_name": "Qwen 3.6 (35B-A3B) — local",
+            "max_tokens": 262144,
+            "capabilities": {
+              "tools": true,
+              "images": false,
+              "parallel_tool_calls": true,
+              "prompt_cache_key": false,
+              "chat_completions": true,
+              "interleaved_reasoning": true
+            }
+          }
+        ]
+      },
+      "local-mlx-mtplx": {
+        "api_url": "http://127.0.0.1:8001/v1",
+        "available_models": [
+          {
+            "name": "qwen3.6-27b",
+            "display_name": "Qwen 3.6 (27B) — local MTPLX",
+            "max_tokens": 262144,
+            "capabilities": {
+              "tools": true,
+              "images": true,
+              "parallel_tool_calls": true,
+              "prompt_cache_key": false,
+              "chat_completions": true,
+              "interleaved_reasoning": true
+            }
+          }
+        ]
+      }
+    }
+  },
+  "git_panel": {
+    "dock": "right"
+  },
+  "ui_font_size": 16,
+  "buffer_font_size": 16,
+  "theme": {
+    "mode": "system",
+    "light": "One Light",
+    "dark": "One Dark"
+  }
+}
