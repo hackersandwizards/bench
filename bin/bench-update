@@ -20,7 +20,6 @@ if [[ -f "$ANTIDOTE_SH" ]]; then
   rm -f "$REPO_ROOT/plugins.zsh" "$REPO_ROOT/plugins-post.zsh"
   ok "Antidote static bundles invalidated (regenerate on next shell)"
 fi
-have rustup   && run "Rust toolchain"   rustup update
 
 if have gem; then
   run "RubyGems system"   gem update --system

@@ -76,7 +76,6 @@ hdrhistogram_c
 helm
 hf
 highway
-httpie
 huggingface-cli
 icu4c@78
 imath
@@ -198,7 +197,6 @@ ripgrep
 rsync
 ruby
 rust
-rustup
 screen
 sdl2-compat
 sdl3

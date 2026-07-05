@@ -122,7 +122,7 @@ To change the theme: edit the `palette` section in `ghostty/config.ghostty`. Eve
 
 ```bash
 bench-doctor                   # verify everything is wired up
-bench-update                   # upgrade brew, antidote, rust, ruby, python, uv, bun, sdkman + converge to repo defaults
+bench-update                   # upgrade brew, antidote, ruby, python, uv, bun, sdkman + converge to repo defaults
 bench-prefs-diff snap|diff     # capture a settings change as defaults keys for macos.sh
 bench-export                   # snapshot installed packages + sync home/ from $HOME
 bench-clean                    # reclaim disk: caches, .DS_Store, VS Code dedup (alias: cleanup)

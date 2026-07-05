@@ -39,7 +39,6 @@ hashicorp/tap/terraform
 haskell-stack
 helm
 hf
-httpie
 jaq
 jq
 jundot/omlx/omlx
@@ -70,7 +69,6 @@ ripgrep
 rsync
 ruby
 rust
-rustup
 screen
 shellcheck
 sslscan

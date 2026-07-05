@@ -100,8 +100,6 @@ brew "haskell-stack"
 brew "helm"
 # Client library for huggingface.co hub
 brew "hf"
-# User-friendly cURL replacement (command-line HTTP client)
-brew "httpie"
 # JQ clone focussed on correctness, speed, and simplicity
 brew "jaq"
 # Lightweight and flexible command-line JSON processor
@@ -162,10 +160,9 @@ brew "ripgrep"
 brew "rsync"
 # Powerful, clean, object-oriented scripting language
 brew "ruby"
-# Safe, concurrent, practical language
+# Safe, concurrent, practical language. Not rustup: the two conflict (both
+# link cargo/rustc), and brew upgrade already covers toolchain updates.
 brew "rust"
-# Rust toolchain installer
-brew "rustup"
 # Terminal multiplexer with VT100/ANSI terminal emulation
 brew "screen"
 # Static analysis and lint tool, for (ba)sh scripts
@@ -212,7 +209,6 @@ brew "zoxide"
 brew "zsh"
 # Simple hotkey-daemon for macOS
 brew "asmvik/formulae/skhd"
-# Terraform
 brew "hashicorp/tap/terraform"
 # LLM inference server optimized for Apple Silicon
 brew "jundot/omlx/omlx"
