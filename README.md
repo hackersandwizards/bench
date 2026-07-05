@@ -33,7 +33,7 @@ static.adguard.com drops TLS handshakes on some routes, so the adguard cask down
 
 ## Defaults ownership
 
-Benedikt maintains the defaults. `bench-export` runs on his machine and commits the `docs/` snapshots. He curates the `macos.sh` keys and the Stow configs by hand. Everyone else consumes them: after a `git pull`, `bench-update`'s last section re-applies Dock, sidebar, Moom, and `macos.sh`, each behind a prompt. Local deviations are unsupported: they are never exported, and answering yes to a converge prompt resets them. To capture a new System Settings deviation as `defaults` keys for `macos.sh`: `bench-prefs-diff snap`, flip the setting in the UI, `bench-prefs-diff diff`.
+Benedikt maintains the defaults. `bench-export` runs on his machine and commits the `docs/` snapshots. He curates the `macos.sh` keys and the Stow configs by hand. Everyone else consumes them: `install.sh` replays Dock, sidebar, Moom, and `macos.sh` on a fresh machine. Local deviations are unsupported: they are never exported, and an `install.sh` replay resets them. To capture a new System Settings deviation as `defaults` keys for `macos.sh`: `bench-prefs-diff snap`, flip the setting in the UI, `bench-prefs-diff diff`.
 
 ## Onboarding accounts
 
@@ -89,7 +89,7 @@ macos.sh              Opt-in macOS system defaults
 secrets.zsh           Untracked, gitignored. API keys go here
 bin/
   _lib.sh               Shared helpers (step/ok/warn/skip/have, STOW_FILES, ANTIDOTE_SH, REPO_ROOT)
-  bench-update          Update brew, antidote, language tools, globals + converge to repo defaults
+  bench-update          Update brew, antidote, language tools, globals
   bench-export          Refresh Brewfile + docs/ snapshots + sync home/ from $HOME
   bench-doctor          Health check
   bench-prefs-diff      Capture a settings change as defaults keys for macos.sh
@@ -130,7 +130,7 @@ To change the theme: edit the `palette` section in `ghostty/config.ghostty`. Eve
 
 ```bash
 bench-doctor                   # verify everything is wired up
-bench-update                   # upgrade brew, antidote, ruby, python, uv, bun, sdkman + converge to repo defaults
+bench-update                   # upgrade brew, antidote, ruby, python, uv, bun, sdkman
 bench-prefs-diff snap|diff     # capture a settings change as defaults keys for macos.sh
 bench-export                   # snapshot installed packages + sync home/ from $HOME
 bench-clean                    # reclaim disk: caches, .DS_Store, VS Code dedup (alias: cleanup)

@@ -81,39 +81,4 @@ fi
 have npm-check && \
   run "npm globals" env NPM_CHECK_INSTALLER=npm npm-check --global --update-all --save-exact
 
-# ---------- Converge to repo defaults ----------
-# Benedikt maintains the defaults (bench-export on his machine -> docs/);
-# everyone else re-applies them here after a git pull. Every action asks, and
-# ask() declines on EOF, so unattended runs skip this section cleanly.
-step "Converge machine state to repo defaults"
-if have dockutil && [[ -s "$REPO_ROOT/docs/dock.txt" ]] \
-    && dock_items=$(parse_dock "$REPO_ROOT/docs/dock.txt") && [[ -n "$dock_items" ]] \
-    && ask "Replace the Dock with docs/dock.txt?"; then
-  apply_dock "$dock_items"
-else
-  skip "Dock left as is"
-fi
-if have mysides && [[ -s "$REPO_ROOT/docs/finder-sidebar.txt" ]] \
-    && sidebar_snap=$(parse_sidebar "$REPO_ROOT/docs/finder-sidebar.txt") && [[ -n "$sidebar_snap" ]] \
-    && ask "Mirror the Finder sidebar to docs/finder-sidebar.txt?"; then
-  apply_sidebar "$sidebar_snap"
-else
-  skip "Finder sidebar left as is"
-fi
-if [[ -s "$REPO_ROOT/docs/moom.plist" ]] && ask "Import Moom settings from docs/moom.plist?"; then
-  apply_moom "$REPO_ROOT/docs/moom.plist"
-else
-  skip "Moom left as is"
-fi
-if [[ -s "$REPO_ROOT/docs/repos.txt" ]] && ask "Clone missing default repos from docs/repos.txt?"; then
-  clone_repos "$REPO_ROOT/docs/repos.txt"
-else
-  skip "Default repos left as is"
-fi
-if ask "Run ./macos.sh? (system defaults + default apps)"; then
-  "$REPO_ROOT/macos.sh" || warn "macos.sh exited with an error partway"
-else
-  skip "macos.sh skipped"
-fi
-
 step "Done"

@@ -189,7 +189,7 @@ parse_sidebar() {
 current_dock()    { dockutil --list | parse_dock /dev/stdin; }
 current_sidebar() { mysides list 2>/dev/null | parse_sidebar /dev/stdin; }
 
-# Mutating replay cores, shared by install.sh and bench-update's converge.
+# Mutating replay cores, driven by install.sh.
 # Callers own the ask and the file-specific messaging; the helpers refuse
 # empty input themselves as the last belt before a wipe.
 apply_dock() {
@@ -228,7 +228,7 @@ apply_sidebar() {
 # docs/repos.txt ("<target-rel-$HOME> <url>", # comments) -> "target url" lines.
 parse_repos() { awk 'NF == 2 && $1 !~ /^#/ { print $1, $2 }' "$1"; }
 # Existing clones are left untouched, never pulled: local work must not be
-# touched by a converge.
+# touched by a replay.
 clone_repos() {
   local target url output
   while read -r target url; do

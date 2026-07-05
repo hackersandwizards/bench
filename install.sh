@@ -12,7 +12,6 @@ cd "$REPO_ROOT" || exit 1
 if WARN_LOG=$(mktemp); then trap 'rm -f "$WARN_LOG"' EXIT; else WARN_LOG=/dev/null; fi
 export WARN_LOG
 
-# ask() lives in _lib.sh; bench-update's converge section shares it.
 
 # Self-numbering step headers: adding or removing a step never renumbers the
 # rest. Grep the file via REPO_ROOT, not $0: after the cd above a relative $0
