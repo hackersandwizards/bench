@@ -74,9 +74,8 @@ have dockutil && dump_to "$DOCS/dock.txt"           dock_dump    &
 have mysides  && dump_to "$DOCS/finder-sidebar.txt" sidebar_dump &
 have defaults && dump_to "$DOCS/moom.plist" defaults export com.manytricks.Moom - &
 wait
-[[ -f "$HOME/.gradle/gradle.properties" ]] \
-  && cp "$HOME/.gradle/gradle.properties" "$DOCS/gradle.properties" \
-  && ok "gradle.properties"
+# Never dump ~/.gradle/gradle.properties here: it holds signing/Sonatype
+# credentials and this repo is public (leaked once, 2026-07).
 # fonts.txt is a union checklist, not a state snapshot (same rule as the
 # Brewfile drift check above): a fresh machine's sparse ~/Library/Fonts must
 # never erase the old machine's manual-restore list. Merge, don't overwrite;

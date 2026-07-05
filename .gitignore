@@ -19,3 +19,6 @@ home/.ssh/control/
 # before install.sh links the global excludesfile.
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
+
+# Held live Maven/Sonatype credentials once (2026-07); belt against any re-add.
+gradle.properties
