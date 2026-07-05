@@ -122,8 +122,6 @@ brew "less"
 brew "mas"
 # Deep clean and optimize your Mac
 brew "mole"
-# Manage Finder sidebar favorites (replayed from docs/finder-sidebar.txt)
-brew "mysides"
 # Open-source, cross-platform JavaScript runtime environment
 brew "node"
 # Protocol buffers (Google's data interchange format)

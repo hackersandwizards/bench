@@ -460,8 +460,23 @@ fi
 # Built-ins (AirDrop, Recents, iCloud) have non-file URLs and are never touched.
 istep "Mirror Finder sidebar from docs/finder-sidebar.txt"
 sidebar_doc="$REPO_ROOT/docs/finder-sidebar.txt"
+# mysides left Homebrew (cask disabled 2025-10-13, upstream unmaintained), so
+# install the last release pkg from GitHub, checksummed against the old cask.
+if ! have mysides && ask "mysides missing (no longer in Homebrew). Install v1.0.1 pkg from GitHub?"; then
+  mysides_pkg=$(mktemp)
+  if curl -fsSL -o "$mysides_pkg" \
+        "https://github.com/mosen/mysides/releases/download/v1.0.1/mysides-1.0.1.pkg" \
+      && echo "76946b8f7c5bf714125d75f1ada8140e034f05a9e288c73a7af445d76c2a5514  $mysides_pkg" \
+        | shasum -a 256 -c - >/dev/null 2>&1 \
+      && sudo installer -pkg "$mysides_pkg" -target /; then
+    ok "mysides 1.0.1 installed"
+  else
+    warn "mysides pkg install failed (download, checksum, or installer — see above)"
+  fi
+  rm -f "$mysides_pkg"
+fi
 if ! have mysides; then
-  warn "mysides not installed — run the Brewfile step first"
+  warn "mysides not installed — Finder sidebar left untouched"
 elif [[ ! -s "$sidebar_doc" ]]; then
   skip "docs/finder-sidebar.txt missing/empty — run bench-export on the old machine"
 # Parse before the wipe: a snapshot that parses empty must never empty the sidebar.
