@@ -23,3 +23,4 @@ home/.ssh/control/
 
 # Held live Maven/Sonatype credentials once (2026-07); belt against any re-add.
 gradle.properties
+__pycache__/
