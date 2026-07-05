@@ -12,9 +12,9 @@ cd "$REPO_ROOT" || exit 1
 if WARN_LOG=$(mktemp); then trap 'rm -f "$WARN_LOG"' EXIT; else WARN_LOG=/dev/null; fi
 export WARN_LOG
 
-# ask() lives in _lib.sh — bench-update's converge section shares it.
+# ask() lives in _lib.sh; bench-update's converge section shares it.
 
-# Self-numbering step headers — adding or removing a step never renumbers the
+# Self-numbering step headers: adding or removing a step never renumbers the
 # rest. Grep the file via REPO_ROOT, not $0: after the cd above a relative $0
 # no longer resolves. bench-test asserts every istep call sits at column 0.
 STEP_TOTAL=$(grep -c '^istep ' "$REPO_ROOT/install.sh")
@@ -30,10 +30,10 @@ backup() {
   warn "backed up $target → $bak"
 }
 
-# Install each stdin line as a package: runs `"$@" <fields…>` per line, so
+# Install each stdin line as a package: runs `"$@" <fields...>` per line, so
 # single-token lines and multi-token `sdk` lines (name version) both work.
 # `< /dev/null` keeps a package manager that reads stdin from draining the loop.
-# On failure the captured output is shown — a fresh-machine install needs the
+# On failure the captured output is shown: a fresh-machine install needs the
 # reason (missing toolchain, native-extension build error), not a bare "failed".
 replay_globals() {
   local label="$1"; shift
@@ -53,7 +53,7 @@ replay_globals() {
 # parse_* docs/ snapshot parsers live in _lib.sh (sourced above) so they are
 # sourceable and unit-tested by bench-test; replay_ecosystem calls them by name.
 
-#   replay_ecosystem <tool> <docs-basename> <parser-fn> <install-cmd…>
+#   replay_ecosystem <tool> <docs-basename> <parser-fn> <install-cmd...>
 replay_ecosystem() {
   local tool="$1" file="$2" parser="$3"; shift 3
   local doc="$REPO_ROOT/docs/$file"
@@ -121,8 +121,11 @@ elif have brew && ask "Run 'brew bundle' now?"; then
       warn "adguard mirror download failed, brew bundle will retry the primary CDN"
     fi
   fi
-  brew bundle --file="$REPO_ROOT/Brewfile"
-  ok "Brewfile installed"
+  if brew bundle --file="$REPO_ROOT/Brewfile"; then
+    ok "Brewfile installed"
+  else
+    warn "brew bundle finished with failures — re-run this step after fixing them"
+  fi
 else
   skip "Skipped Brewfile install"
 fi
@@ -161,7 +164,7 @@ else
 fi
 
 # ---------- GitHub / GitLab CLI logins ----------
-# home/.gitconfig routes git credentials through gh and glab — an
+# home/.gitconfig routes git credentials through gh and glab: an
 # unauthenticated CLI breaks every HTTPS clone/push.
 istep "GitHub and GitLab CLI logins (gh / glab)"
 for cli in gh glab; do
@@ -245,7 +248,7 @@ elif ask "Symlink skhdrc and start the skhd service?"; then
   backup "$skhd_target"
   ln -sf "$REPO_ROOT/skhd/skhdrc" "$skhd_target"
   # --restart-service aborts when the LaunchAgent was never installed;
-  # --start-service installs it when missing — branch on the plist, not pgrep.
+  # --start-service installs it when missing. Branch on the plist, not pgrep.
   if [[ -f "$skhd_plist" ]]; then skhd_cmd=--restart-service; else skhd_cmd=--start-service; fi
   if skhd "$skhd_cmd"; then
     ok "skhd linked and service started"
@@ -260,13 +263,13 @@ fi
 # ---------- Fonts ----------
 # fonts/ holds only fonts with verified redistribution rights (repo is public);
 # the caskable free families come from the Brewfile. docs/fonts.txt inventories
-# the old machine's full ~/Library/Fonts — commercial/brand fonts listed there
+# the old machine's full ~/Library/Fonts; commercial/brand fonts listed there
 # must be restored manually from a backup, never committed here.
 istep "Install fonts (fonts/ + checklist from docs/fonts.txt)"
 fonts_doc="$REPO_ROOT/docs/fonts.txt"
 if ask "Copy fonts/ into ~/Library/Fonts?"; then
   mkdir -p "$HOME/Library/Fonts"
-  # minimal: -n never overwrites a user's existing copy — repo fonts are static,
+  # minimal: -n never overwrites a user's existing copy. Repo fonts are static,
   # so no backup dance like the config symlinks need.
   if cp -n "$REPO_ROOT"/fonts/* "$HOME/Library/Fonts/"; then
     ok "fonts/ installed (existing files kept)"
@@ -276,7 +279,7 @@ if ask "Copy fonts/ into ~/Library/Fonts?"; then
 else
   skip "Skipped fonts"
 fi
-# Report-only checklist: runs even when the copy is declined — on a re-run the
+# Report-only checklist: runs even when the copy is declined. On a re-run the
 # missing-fonts report is the step's real value.
 if [[ -s "$fonts_doc" ]]; then
   missing=$(missing_fonts "$fonts_doc" "$HOME/Library/Fonts")
@@ -305,7 +308,7 @@ fi
 
 # ---------- Antidote pre-warm ----------
 # Generate plugins.zsh + plugins-post.zsh ahead of first interactive shell so
-# the user doesn't pay the cold-cache cost (~5–10s of git clones + bundle
+# the user doesn't pay the cold-cache cost (~5-10s of git clones + bundle
 # compile) on first login. Mirrors init.zsh:_antidote_bundle exactly.
 # bench-update invalidates these caches by deleting them; this is the inverse.
 istep "Pre-warm antidote plugin bundles"
@@ -364,10 +367,10 @@ fi
 istep "Install language-ecosystem global CLIs (uv, npm, bun, cargo, gem, pip)"
 if ask "Install uv / npm / bun / cargo / gem / pip global CLIs from docs/ snapshots?"; then
   # brew ruby and python are keg-only, so their gem/pip aren't on PATH until
-  # exports.zsh runs — which it hasn't on a fresh machine. Without this the replay
+  # exports.zsh runs, which it hasn't on a fresh machine. Without this the replay
   # would use /usr/bin/gem (system ruby, wrong ABI) and never find `pip` (brew
   # links only pip3). Mirror exports.zsh so the replay uses brew's gem and pip.
-  # python3 is brew's alias for the current default python — version-agnostic, so
+  # python3 is brew's alias for the current default python: version-agnostic, so
   # it tracks upgrades instead of pinning python@3.14.
   export PATH="/opt/homebrew/opt/ruby/bin:/opt/homebrew/opt/python3/libexec/bin:$PATH"
   # The six managers come from brew bundle, not installed here. The replay only
@@ -383,7 +386,7 @@ else
 fi
 
 # ---------- SDKMAN + JVM-ecosystem SDKs ----------
-# SDKMAN_INIT and source_sdkman live in _lib.sh — `sdk` is a shell function, not
+# SDKMAN_INIT and source_sdkman live in _lib.sh: `sdk` is a shell function, not
 # a binary, so its init must be sourced before `sdk install` works.
 istep "Install SDKMAN and JVM-ecosystem SDKs"
 if [[ ! -s "$SDKMAN_INIT" ]] && ask "SDKMAN not installed. Install it now?"; then
@@ -400,7 +403,7 @@ else
     source_sdkman
     # sdk_run, not raw sdk: the `sdk` function reads $2 and other vars unset under
     # install.sh's `set -u` (see _lib.sh). `sdk install <name> <ver>` clears the
-    # $2 read, but the install path goes deeper — sdk_run relaxes nounset for the
+    # $2 read, but the install path goes deeper; sdk_run relaxes nounset for the
     # whole call, matching how bench-update and bench-export invoke sdk.
     parse_sdk "$sdks_doc" | replay_globals sdk sdk_run install
   else
@@ -444,7 +447,7 @@ if ! have dockutil; then
 elif [[ ! -s "$dock_doc" ]]; then
   skip "docs/dock.txt missing/empty — run bench-export on the old machine"
 # Parse before the wipe: a snapshot that parses empty must never empty the Dock.
-elif dock_items="$(parse_dock "$dock_doc")" && [[ -z "$dock_items" ]]; then
+elif ! dock_items="$(parse_dock "$dock_doc")" || [[ -z "$dock_items" ]]; then
   warn "no entries parsed from docs/dock.txt — Dock left untouched"
 elif ask "Replace the current Dock with the docs/dock.txt layout?"; then
   apply_dock "$dock_items"
@@ -454,7 +457,7 @@ else
 fi
 
 # ---------- Finder sidebar ----------
-# Built-ins (AirDrop, Recents, iCloud) have non-file URLs — never touched.
+# Built-ins (AirDrop, Recents, iCloud) have non-file URLs and are never touched.
 istep "Mirror Finder sidebar from docs/finder-sidebar.txt"
 sidebar_doc="$REPO_ROOT/docs/finder-sidebar.txt"
 if ! have mysides; then
@@ -462,7 +465,7 @@ if ! have mysides; then
 elif [[ ! -s "$sidebar_doc" ]]; then
   skip "docs/finder-sidebar.txt missing/empty — run bench-export on the old machine"
 # Parse before the wipe: a snapshot that parses empty must never empty the sidebar.
-elif sidebar_snap="$(parse_sidebar "$sidebar_doc")" && [[ -z "$sidebar_snap" ]]; then
+elif ! sidebar_snap="$(parse_sidebar "$sidebar_doc")" || [[ -z "$sidebar_snap" ]]; then
   warn "no file:// entries parsed from docs/finder-sidebar.txt — sidebar left untouched"
 elif ask "Mirror the Finder sidebar to the snapshot (replaces its file:// favorites)?"; then
   apply_sidebar "$sidebar_snap"
@@ -484,7 +487,7 @@ fi
 # ---------- macOS system defaults ----------
 # Wallpaper and the trackpad/keyboard/Finder/Dock defaults all live in
 # macos.sh. Offering it as a real step (not a closing hint) is what gets it
-# run on a fresh machine — "optional next steps" were skipped in practice.
+# run on a fresh machine: "optional next steps" were skipped in practice.
 istep "Apply macOS system defaults (macos.sh)"
 if ask "Run ./macos.sh now? (keyboard, trackpad, Finder, Dock, wallpaper)"; then
   if "$REPO_ROOT/macos.sh"; then
@@ -513,7 +516,8 @@ else
     elif ask "Set $key in secrets.zsh now?"; then
       read -rsp "  $key (input hidden): " secret_val; echo
       if [[ -n "$secret_val" ]]; then
-        printf 'export %s="%s"\n' "$key" "$secret_val" >> "$secrets_file"
+        # Single quotes: a value with $ ` " \ must not expand when sourced.
+        printf "export %s='%s'\n" "$key" "${secret_val//\'/\'\\\'\'}" >> "$secrets_file"
         ok "$key written to secrets.zsh"
       else
         skip "Empty input — add 'export $key=...' to secrets.zsh later"

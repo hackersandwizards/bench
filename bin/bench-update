@@ -43,7 +43,7 @@ _pip_global_upgrade() {
   [[ -z "$managed" ]] && return 0
   pip list --outdated --format=json 2>/dev/null \
     | jaq -r '.[].name' \
-    | rg -ixFf <(printf '%s\n' "$managed") \
+    | grep -ixFf <(printf '%s\n' "$managed") \
     | xargs -r pip install --upgrade
 }
 
@@ -53,13 +53,16 @@ _pip_user_upgrade() {
     | xargs -r pip install --user --upgrade
 }
 
-have pip && run "Python pip globals"   _pip_global_upgrade
-have pip && run "Python pip user-site" _pip_user_upgrade
+# jaq gated here like every other tool: without it the pipelines exit through
+# xargs's 0 and would print a false ok. grep, not rg, keeps the only other
+# dependency pre-Brewfile-safe.
+have pip && have jaq && run "Python pip globals"   _pip_global_upgrade
+have pip && have jaq && run "Python pip user-site" _pip_user_upgrade
 
 # `sdk` is a shell function, so `have sdk` is false until its init is sourced.
 source_sdkman || true
 if have sdk; then
-  # Never block an unattended run on a prompt — auto-answer "yes" (newest as
+  # Never block an unattended run on a prompt: auto-answer "yes" (newest as
   # default), regardless of the machine's etc/config. `sdk` is a function in
   # this shell, so it reads this variable directly.
   # shellcheck disable=SC2034  # consumed by the sourced `sdk` function
@@ -78,7 +81,7 @@ have npm-check && \
   run "npm globals" env NPM_CHECK_INSTALLER=npm npm-check --global --update-all --save-exact
 
 # ---------- Converge to repo defaults ----------
-# Benedikt maintains the defaults (bench-export on his machine → docs/);
+# Benedikt maintains the defaults (bench-export on his machine -> docs/);
 # everyone else re-applies them here after a git pull. Every action asks, and
 # ask() declines on EOF, so unattended runs skip this section cleanly.
 step "Converge machine state to repo defaults"

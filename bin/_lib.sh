@@ -10,7 +10,7 @@ warn() { printf '\033[33m⚠\033[0m %s\n' "$1"; printf '%s\n' "$1" >> "${WARN_LO
 fail() { printf '\033[31m✗\033[0m %s\n' "$1"; }
 skip() { printf '\033[2m·\033[0m %s\n' "$1"; }
 have() { command -v "$1" >/dev/null 2>&1; }
-indent() { sed 's/^/    /'; }  # detail lines under an ok/warn/fail
+indent() { sed 's/^/    /'; }
 
 check() {
   local label="$1"; shift
@@ -34,7 +34,7 @@ run() {
 
 # Homebrew's Python is externally-managed (PEP 668); pip refuses to install into
 # it without this. install.sh's replay and bench-update's upgrades run pip under
-# bash — and on a fresh machine ~/.zshrc has not yet sourced exports.zsh — so set
+# bash, and on a fresh machine ~/.zshrc has not yet sourced exports.zsh, so set
 # it here, the one file every script sources. Mirrors exports.zsh (interactive).
 export PIP_BREAK_SYSTEM_PACKAGES=1
 
@@ -42,7 +42,7 @@ export PIP_BREAK_SYSTEM_PACKAGES=1
 # Homebrew maps the running macOS major to a codename (its macos_version.rb
 # SYMBOLS table). A macOS newer than the newest entry has no codename, so the
 # bottle tag becomes "arm64_dunno" and every formulae.brew.sh JSON-API fetch
-# 404s — brew upgrade/cleanup/leaves fail and retry in a loop. This lasts from a
+# 404s: brew upgrade/cleanup/leaves fail and retry in a loop. This lasts from a
 # major macOS release until Homebrew ships support for it. Reading brew's own
 # map (not a hardcoded ceiling) makes the guard self-clear the day brew updates.
 
@@ -55,7 +55,7 @@ brew_newest_macos() {
 }
 
 # True unless the running macOS is newer than brew's newest supported major.
-# An unreadable map or non-macOS host counts as supported — never wrongly block.
+# An unreadable map or non-macOS host counts as supported: never wrongly block.
 brew_bottles_supported() {
   local major newest
   major="$(sw_vers -productVersion 2>/dev/null)"; major="${major%%.*}"
@@ -77,7 +77,6 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck disable=SC2034
 WALLPAPER="$REPO_ROOT/assets/wallpaper.png"
 
-# Current core.hooksPath setting; "<unset>" when unconfigured.
 hooks_path() {
   git -C "$REPO_ROOT" config core.hooksPath 2>/dev/null || echo "<unset>"
 }
@@ -90,7 +89,7 @@ SDKMAN_CONFIG="$HOME/.sdkman/etc/config"
 
 # Source SDKMAN's init so the `sdk` shell function exists. It is not a binary,
 # so `have sdk` is false until this runs. The init reads unset vars, so `set +u`
-# wraps it. Returns 1 when SDKMAN is absent.
+# wraps it.
 source_sdkman() {
   [[ -s "$SDKMAN_INIT" ]] || return 1
   set +u
@@ -110,8 +109,8 @@ sdk_run() {
   return "$rc"
 }
 
-# Idempotently set KEY=VALUE in SDKMAN's etc/config. Edits via a temp file (no
-# `sed -i`) to work under both BSD and GNU sed. `cat >` preserves perms and inode.
+# No `sed -i`: the temp-file edit works under both BSD and GNU sed. `cat >`
+# preserves perms and inode.
 sdkman_set_config() {
   local key="$1" value="$2" tmp
   [[ -f "$SDKMAN_CONFIG" ]] || return 1
@@ -142,7 +141,7 @@ STOW_FILES=(
 # shellcheck disable=SC2012
 missing_fonts() { comm -23 <(sort "$1") <(ls "$2" 2>/dev/null | sort); }
 
-# docs/ snapshot parsers — each reads a snapshot file ($1) and emits one package
+# docs/ snapshot parsers: each reads a snapshot file ($1) and emits one package
 # per line (parse_sdk emits "name version"); the output feeds install.sh's
 # replay_globals. Sourced from here so they are unit-testable (see bench-test).
 parse_uv()    { awk 'NF && $1 !~ /^-/ { print $1 }' "$1"; }
@@ -152,9 +151,9 @@ parse_sdk()   { awk 'NF == 2 { print $1, $2 }' "$1"; }
 # Replay only gems carrying a user-installed version; skip Ruby's bundled gems
 # (those show a lone `default:` version).
 parse_gem()   { awk -F' *[()] *' 'NF > 1 && $2 !~ /^default:/ { print $1 }' "$1"; }
-# npm/bun global lists. `npm` is dropped because reinstalling the package manager is a no-op.
+# Drop `npm` itself: reinstalling the package manager is a no-op.
 parse_node()  { awk 'NF && $NF ~ /@/ { n=$NF; sub(/@[^@]*$/, "", n); if (n != "npm") print n }' "$1"; }
-# `dockutil --list` TSV → one absolute path per line. Field 2 is a file:// URL
+# `dockutil --list` TSV -> one absolute path per line. Field 2 is a file:// URL
 # natively but a plain path for entries dockutil itself wrote, so both forms
 # must parse or an export-after-replay yields an empty snapshot. %XX-decode
 # only the URL form: a plain path may contain a literal %. A leading $HOME
@@ -164,8 +163,8 @@ parse_dock() {
   awk -F'\t' '$2 ~ /^(file:\/\/|\/|\$HOME)/ { print $2 }' "$1" \
     | perl -pe 's{^file://}{} and s/%([0-9A-Fa-f]{2})/chr hex $1/ge; s{/$}{}; s{^\$HOME}{$ENV{HOME}}'
 }
-# `mysides list` ("Name -> URL") → "name<TAB>url", $HOME token expanded (see
-# parse_dock). Finder built-ins (iCloud, AirDrop: non-file URLs) are dropped —
+# `mysides list` ("Name -> URL") -> "name<TAB>url", $HOME token expanded (see
+# parse_dock). Finder built-ins (iCloud, AirDrop: non-file URLs) are dropped;
 # mysides cannot re-add them anyway.
 parse_sidebar() {
   awk -F' -> ' -v home="$HOME" \
@@ -179,6 +178,9 @@ current_sidebar() { mysides list 2>/dev/null | parse_sidebar /dev/stdin; }
 # Mutating replay cores, shared by install.sh and bench-update's converge.
 # Callers own the guards and the ask; input is the matching parse_* output.
 apply_dock() {
+  # Refuse empty input here too (callers also guard): an empty here-string
+  # still iterates once, so the wipe below would run and nothing re-adds.
+  [[ -n "$1" ]] || { warn "dock: empty snapshot — left untouched"; return 1; }
   dockutil --no-restart --remove all >/dev/null
   while IFS= read -r item; do
     if [[ ! -e "$item" ]]; then
@@ -192,6 +194,7 @@ apply_dock() {
   killall Dock 2>/dev/null || true
 }
 apply_sidebar() {
+  [[ -n "$1" ]] || { warn "sidebar: empty snapshot — left untouched"; return 1; }
   # Replace-then-replay: mysides removes by name, one entry per call, so
   # per-URL diffing would delete the wrong twin when two favorites share a
   # name (the snapshot ships two "Downloads").
@@ -207,18 +210,22 @@ apply_sidebar() {
     fi
   done <<<"$1"
 }
-# docs/repos.txt ("<target-rel-$HOME> <url>", # comments) → "target url" lines.
+# docs/repos.txt ("<target-rel-$HOME> <url>", # comments) -> "target url" lines.
 parse_repos() { awk 'NF == 2 && $1 !~ /^#/ { print $1, $2 }' "$1"; }
-# Clone every missing repos.txt entry. Existing clones are left untouched —
-# never pull: local work must not be touched by a converge.
+# Existing clones are left untouched, never pulled: local work must not be
+# touched by a converge.
 clone_repos() {
   local target url output
   while read -r target url; do
-    if [[ -d "$HOME/$target/.git" ]]; then
+    # repos.txt is a trust boundary (PR-able): keep targets under $HOME and
+    # `--` stops a crafted URL from becoming a git option (--upload-pack runs).
+    if [[ "$target" == /* || "$target" == *..* ]]; then
+      warn "repo: refusing target outside \$HOME: $target"
+    elif [[ -d "$HOME/$target/.git" ]]; then
       ok "repo: $target already cloned"
     # GIT_TERMINAL_PROMPT=0: without gh/glab credentials git would stop and ask
-    # for a username mid-run — fail fast into the warn instead.
-    elif output=$(GIT_TERMINAL_PROMPT=0 git clone -q "$url" "$HOME/$target" 2>&1); then
+    # for a username mid-run. Fail fast into the warn instead.
+    elif output=$(GIT_TERMINAL_PROMPT=0 git clone -q -- "$url" "$HOME/$target" 2>&1); then
       ok "repo: $target"
     else
       warn "repo: cloning $target failed — check gh/glab auth, re-run"

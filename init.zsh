@@ -14,6 +14,8 @@ HISTFILE="$HOME/.zsh_history"
 export ZSH_SETTINGS_DIR="${${(%):-%N}:A:h}"
 
 # --- Exports (PATH must be set before tools that depend on it) ---
+# -U dedups path/fpath: nested shells (tmux, `zsh` in zsh) re-prepend everything.
+typeset -gU path fpath
 source "$ZSH_SETTINGS_DIR/exports.zsh"
 
 # --- Init-output cache: source cached `init zsh` output, regenerating when the
@@ -23,7 +25,9 @@ _init_cache() {
   local out="$HOME/.cache/zsh/$bin.zsh"
   if [[ ! -f "$out" || "$commands[$bin]" -nt "$out" ]]; then
     mkdir -p "$HOME/.cache/zsh"
-    "$bin" "$@" > "$out" 2>/dev/null
+    # Drop the cache on failure: a kept partial write would poison every
+    # later shell until the next binary upgrade bumps the mtime.
+    "$bin" "$@" > "$out" 2>/dev/null || { rm -f "$out"; return 1; }
   fi
   source "$out" 2>/dev/null
 }
@@ -120,18 +124,23 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 # Trade-off: tab-complete on gcloud/entire is silent until the command is run
 # once per session, direct invocations always work. (bun needs no stub, brew
 # ships _bun via site-functions/compinit.)
-function gcloud() {
-  unfunction gcloud
-  source "/opt/homebrew/share/google-cloud-sdk/completion.zsh.inc"
-  gcloud "$@"
-}
+# Stub only when the SDK exists: on a fresh machine the stub's `source` would
+# error where the shell's own "command not found" is the honest answer.
+# (entire needs no guard: _init_cache fails silently and cleans up.)
+if [[ -f /opt/homebrew/share/google-cloud-sdk/completion.zsh.inc ]]; then
+  function gcloud() {
+    unfunction gcloud
+    source "/opt/homebrew/share/google-cloud-sdk/completion.zsh.inc"
+    gcloud "$@"
+  }
+fi
 function entire() {
   unfunction entire
   _init_cache entire completion zsh
   entire "$@"
 }
 
-# direnv adds a chpwd hook — must be registered eagerly to fire on every cd.
+# direnv adds a chpwd hook: it must be registered eagerly to fire on every cd.
 _init_cache direnv hook zsh
 
 # --- Profiling report ---

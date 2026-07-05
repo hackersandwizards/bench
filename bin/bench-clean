@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Reclaim disk: purge regenerable caches, dedup VS Code extensions, sweep .DS_Store.
-# Removes only auto-regenerating caches and superseded files — never installed tools.
+# Removes only auto-regenerating caches and superseded files, never installed tools.
 set -u
 
 # shellcheck source-path=SCRIPTDIR
@@ -10,7 +10,7 @@ set -u
 rm_path() { [[ -e "$1" ]] && rm -rf "$1"; return 0; }
 
 # Independent jobs (disjoint cache dirs + a .DS_Store sweep that only unlinks its
-# own vanishing files) — fan out to per-slot logs, then `wait`. Idiom: bench-export.
+# own vanishing files): fan out to per-slot logs, then `wait`. Idiom: bench-export.
 WORK=$(mktemp -d)
 bg() {  # bg slot "label" cmd...
   local slot="$1" label="$2"; shift 2
@@ -23,18 +23,18 @@ if have brew && brew_bottles_supported; then
 elif have brew; then
   brew_unsupported_notice >"$WORK/1" 2>&1   # printed in slot order by the cat below
 fi
-# `bun pm cache rm` demands a package.json in cwd — target the cache dir directly
-# instead (covers bunx too; it lives under the same path).
+# `bun pm cache rm` demands a package.json in cwd, so target the cache dir
+# directly (covers bunx too; it lives under the same path).
 have bun  && bg 2 "Bun install cache" rm_path "${BUN_INSTALL:-$HOME/.bun}/install/cache"
 have uv   && bg 3 "uv cache (full)"   env UV_LOCK_TIMEOUT=10 uv cache clean
-bg 4 "Sweep .DS_Store" bash -c "fd -H -I -t f -g '.DS_Store' / \
+have fd   && bg 4 "Sweep .DS_Store" bash -c "fd -H -I -t f -g '.DS_Store' / \
   --exclude '*BACKUP*' --exclude '*timemachine*' --exclude '*TimeMachine*' \
-  --exclude '/System/Volumes/Data' -x rm {} 2>/dev/null; true"
+  --exclude '/System/Volumes/Data' -X rm 2>/dev/null; true"
 wait
 cat "$WORK"/* 2>/dev/null
 rm -rf "$WORK"
 
-# Instant steps — sequential, no benefit to parallelizing.
+# Instant steps: sequential, parallelizing buys nothing.
 run "Puppeteer Chromium" rm_path "$HOME/.cache/puppeteer"
 run "Claude HTTP cache"  rm_path "$HOME/Library/Application Support/Claude/Cache"
 run "Claude code cache"  rm_path "$HOME/Library/Application Support/Claude/Code Cache"

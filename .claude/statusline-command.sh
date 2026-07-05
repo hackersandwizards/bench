@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2154
 # (extract/pct_color/time_color/render_bar all assign via `printf -v "$var"`,
-#  which shellcheck can't trace — so it flags every consumer as unset.)
+#  which shellcheck can't trace, so it flags every consumer as unset.)
 #
 # Claude Code Status Line
 #
 # Renders a colored, single-line status bar:
-#   [Project |] [Branch* |] [(REBASING 3/7) |] [↑N↓N |] [Agent |] Model | [Effort |] ████░░░░░░ XX% | [████░░░░░░ XX% Xh Xm] [| status]
+#   [Project |] [Branch* |] [(REBASING 3/7) |] [ahead/behind |] [Agent |] Model | [Effort |] context bar XX% | [rate-limit bar XX% Xh Xm] [| status]
 #
 # Colors match starship prompt: cyan=directory, gray=branch, red=dirty, yellow=git state.
 # Effort badge colors match Claude's UI: low=yellow, medium=green, high=blue, xhigh=magenta, max=gradient.
@@ -25,7 +25,7 @@ BLUE="${ESC}[34m"
 RED="${ESC}[31m"
 MAGENTA="${ESC}[35m"
 GRAY="${ESC}[90m"
-# Truecolor for the `max` effort gradient — m=orange, a=gold, x=sky.
+# Truecolor for the `max` effort gradient: m=orange, a=gold, x=sky.
 ORANGE="${ESC}[38;2;230;130;50m"
 GOLD="${ESC}[38;2;220;200;60m"
 SKY="${ESC}[38;2;110;180;200m"
@@ -36,11 +36,11 @@ SEP="${GRAY}|${RESET}"
 
 # Context window: Claude reports "% context used" against the auto-compact threshold,
 # not the full window. As of cli v2.1.156 the threshold is:
-#   context_window_size − reservedForSummary − 13000(buffer)
+#   context_window_size - reservedForSummary - 13000(buffer)
 # where reservedForSummary = min(maxOutputTokens, 20000) and the default maxOutput is
 # capped at 8000, so the reserve is a fixed 8000 + 13000 = 21000 tokens. It's a token
-# count (not a %), so the same value is correct for any window size (200k, 1M, …).
-# Not exposed in the statusline JSON — re-sync this if Anthropic changes the constants.
+# count (not a %), so the same value is correct for any window size (200k, 1M, ...).
+# Not exposed in the statusline JSON: re-sync this if Anthropic changes the constants.
 CTX_RESERVE_TOKENS=21000
 # % of the usable window at which the context bar turns red / yellow (how far toward
 # auto-compact we are). Percentage-based, so the same pair holds for any window size.
@@ -86,10 +86,10 @@ pct_color() {
 }
 
 # Color the rate-limit countdown by how alarming the burn rate is.
-# Matrix (pct used × seconds left):
-#   high pct (≥80) + lots of time left → red (burning too fast)
-#   mid  pct (≥50) + lots of time left → yellow; ≤30min left → green (almost reset)
-#   low  pct (<50)                     → gray (no concern, ignore time)
+# Matrix (pct used x seconds left):
+#   high pct (>=80) + lots of time left -> red (burning too fast)
+#   mid  pct (>=50) + lots of time left -> yellow; <=30min left -> green (almost reset)
+#   low  pct (<50)                      -> gray (no concern, ignore time)
 time_color() {
     local pct="$1" secs="$2" var="$3"
     if (( pct >= 80 )); then
@@ -122,7 +122,7 @@ extract '"five_hour":\{[^}]*"used_percentage":([0-9]+)' rl5_pct     ""
 extract '"five_hour":\{[^}]*"resets_at":([0-9]+)'       rl5_resets  ""
 
 # Context usage: sum the live token counts from context_window.current_usage
-# (input + cache_creation + cache_read — Claude excludes output_tokens). Strip rate_limits
+# (input + cache_creation + cache_read; Claude excludes output_tokens). Strip rate_limits
 # first so the token regexes only ever see the context-window block. "input_tokens" does
 # not match inside "total_input_tokens"/"cache_*_input_tokens" (no leading quote there).
 ctx_only="${input%%\"rate_limits\"*}"
@@ -139,10 +139,9 @@ while [[ $dir && $dir != / ]]; do
     if [[ -d $dir/.git ]]; then
         git_dir=$dir/.git; break
     elif [[ -f $dir/.git ]]; then
-        # Worktree: .git is a text file containing "gitdir: <path>"
         gitdir_pointer=$(< "$dir/.git")
         git_dir=${gitdir_pointer#gitdir: }
-        # Relative gitdir → absolute (worktrees can use either form).
+        # Relative gitdir -> absolute (worktrees can use either form).
         [[ $git_dir == /* ]] || git_dir=$dir/$git_dir
         break
     fi
@@ -152,7 +151,9 @@ done
 if [[ -n $git_dir ]]; then
     git_status=$(git status --porcelain -b 2>/dev/null)
     if [[ -n $git_status ]]; then
-        [[ $git_status =~ ^##\ ([^.$'\n']+) ]] && branch="${BASH_REMATCH[1]%%...*}"
+        # Capture the whole line; %%...* strips the upstream half. A "." in
+        # the exclusion class would truncate dotted branches (release-1.2).
+        [[ $git_status =~ ^##\ ([^$'\n']+) ]] && branch="${BASH_REMATCH[1]%%...*}"
         [[ $git_status == *$'\n'* ]] && dirty=1
         [[ $git_status =~ ahead\ ([0-9]+) ]] && ahead="${BASH_REMATCH[1]}"
         [[ $git_status =~ behind\ ([0-9]+) ]] && behind="${BASH_REMATCH[1]}"
@@ -169,7 +170,7 @@ if [[ -n $git_dir ]]; then
 fi
 
 # "% context used" exactly as Claude renders it: round against the usable window
-# (full window minus the auto-compact reserve), mirroring 100 − round(remaining/usable).
+# (full window minus the auto-compact reserve), mirroring 100 - round(remaining/usable).
 usable=$(( ctx_size - CTX_RESERVE_TOKENS ))
 (( usable < 1 )) && usable=1
 if (( tokens >= usable )); then
@@ -184,7 +185,7 @@ pct_color "$pct" "$CTX_BAR_RED" "$CTX_BAR_YELLOW" bar_color
 # --- Build output ---
 # Convention: trailing " ${SEP} " on a section means "more sections may follow."
 # Leading " ${SEP} " (used by the rl5 bar and the status badge) means "only joins
-# when something rendered before us" — the load-bearing inconsistency is intentional.
+# when something rendered before us". The load-bearing inconsistency is intentional.
 
 out=""
 
@@ -242,7 +243,7 @@ status_expiry=0
 [[ $status_expiry =~ ^[0-9]+$ ]] || status_expiry=0
 if (( now >= status_expiry )); then
     # Pre-write next expiry so parallel renders don't all spawn fetches; also
-    # debounces retries when the upstream is unreachable (curl fails → cache stays).
+    # debounces retries when the upstream is unreachable (curl fails -> cache stays).
     echo $(( now + STATUS_CACHE_TTL )) > "$status_expiry_file"
     (
         resp=$(curl -s --max-time "$STATUS_FETCH_TIMEOUT" "https://status.claude.com/api/v2/summary.json")

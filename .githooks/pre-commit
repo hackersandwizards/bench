@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
 # Pre-commit checks: gitleaks (secrets), shellcheck (*.sh), zsh -n (*.zsh).
-# NUL-delimited read via mapfile -d '' so filenames with spaces or shell
-# metacharacters can't trip the linter calls (no xargs needed).
+# NUL-delimited read so filenames with spaces or shell metacharacters can't
+# trip the linter calls. while-read, not mapfile: the hook must survive
+# /bin/bash 3.2 when it fires before the Brewfile installed bash 5.
 set -e
 
 # shellcheck source-path=SCRIPTDIR/../bin
 # shellcheck source=../bin/_lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/../bin/_lib.sh"
 
-mapfile -d '' staged < <(git diff --cached --name-only --diff-filter=ACMR -z)
+staged=()
+while IFS= read -r -d '' f; do staged+=("$f"); done \
+  < <(git diff --cached --name-only --diff-filter=ACMR -z)
 sh_files=()  zsh_files=()
 for f in "${staged[@]}"; do
   case $f in

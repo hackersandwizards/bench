@@ -11,7 +11,7 @@ if subprocess.run(["pgrep", "-f", "IntelliJ IDEA.app"],
     sys.exit("Quit IntelliJ IDEA first, then re-run.")
 
 def fix(tag):  # set weight by anchor (add if missing); no anchor == left
-    w = "0.33" if 'anchor="bottom"' in tag else "0.33" if 'anchor="right"' in tag else "0.165"
+    w = "0.33" if 'anchor="bottom"' in tag or 'anchor="right"' in tag else "0.165"
     if "weight=" in tag:
         return re.sub(r'weight="[^"]*"', f'weight="{w}"', tag)
     return tag[:-2].rstrip() + f' weight="{w}" />'
