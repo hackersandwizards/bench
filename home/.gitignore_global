@@ -25,7 +25,7 @@ $RECYCLE.BIN/
 # Claude Code local settings (per-machine, never committed)
 **/.claude/settings.local.json
 
-# Secrets — keep .env.example / .env.production trackable as templates
+# Secrets: keep .env.example / .env.production trackable as templates
 .env
 .env.local
 .env.*.local

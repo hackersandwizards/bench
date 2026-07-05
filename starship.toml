@@ -40,6 +40,9 @@ diverged = "↑${ahead_count}↓${behind_count}"
 format = ' [|](bright-black) \([$state( $progress_current/$progress_total)]($style)\)'
 style = "yellow"
 
+# The explicit format above already omits these modules; disabled = true is
+# deliberate belt-and-suspenders so a format edit (e.g. adding $all) cannot
+# re-enable their detection cost. Do not remove as dead config.
 [cmd_duration]
 disabled = true
 

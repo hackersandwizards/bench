@@ -14,7 +14,6 @@ import plistlib
 import shutil
 import subprocess
 import sys
-import time
 import uuid
 from pathlib import Path
 
@@ -122,7 +121,8 @@ def merge(snapshot_path, plist_path):
     bar["Children"] = new + bar.get("Children", [])
     tmp = f"{plist_path}.tmp"
     try:
-        shutil.copy2(plist_path, f"{plist_path}.backup-{int(time.time())}")
+        # Fixed name, overwritten per run: one-deep rollback, no backup pileup.
+        shutil.copy2(plist_path, f"{plist_path}.backup")
         with open(tmp, "wb") as f:
             plistlib.dump(root, f, fmt=plistlib.FMT_BINARY)
         os.replace(tmp, plist_path)

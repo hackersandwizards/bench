@@ -15,6 +15,10 @@ dump() { defaults read 2>/dev/null; defaults -currentHost read 2>/dev/null; }
 case "${1:-}" in
   snap)
     mkdir -p "${SNAP%/*}"
+    # 600 before content: the dump carries every app's defaults, which can
+    # embed tokens, so never let them touch disk at umask perms.
+    touch "$SNAP"
+    chmod 600 "$SNAP"
     dump > "$SNAP"
     ok "snapshot taken — change the setting in the UI, then run: bench-prefs-diff diff"
     ;;

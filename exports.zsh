@@ -24,11 +24,13 @@ $PATH"
 if [[ -n "$RUBY_API" ]]; then
   export GEM_HOME="$HOME/.gem/ruby/$RUBY_API"
   export GEM_PATH="$GEM_HOME:/opt/homebrew/lib/ruby/gems/$RUBY_API"
+  # Keg-only ruby: native gem builds need the header/lib paths. Inside the
+  # guard so a machine without the ruby keg does not point every build here.
+  export LDFLAGS="-L/opt/homebrew/opt/ruby/lib"
+  export CPPFLAGS="-I/opt/homebrew/opt/ruby/include"
+  export PKG_CONFIG_PATH="/opt/homebrew/opt/ruby/lib/pkgconfig"
 fi
 unset RUBY_API
-export LDFLAGS="-L/opt/homebrew/opt/ruby/lib"
-export CPPFLAGS="-I/opt/homebrew/opt/ruby/include"
-export PKG_CONFIG_PATH="/opt/homebrew/opt/ruby/lib/pkgconfig"
 
 # --- Homebrew ---
 # Load formulae/casks/commands only from official or explicitly-trusted taps

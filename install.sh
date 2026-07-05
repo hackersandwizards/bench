@@ -162,9 +162,12 @@ write_git_identity() {
     skip "Empty name or email — add the [user] block to ~/.gitconfig.local later"
     return
   fi
-  git config --file "$HOME/.gitconfig.local" user.name "$name"
-  git config --file "$HOME/.gitconfig.local" user.email "$email"
-  ok "Identity saved: $name <$email>"
+  if git config --file "$HOME/.gitconfig.local" user.name "$name" \
+      && git config --file "$HOME/.gitconfig.local" user.email "$email"; then
+    ok "Identity saved: $name <$email>"
+  else
+    warn "writing ~/.gitconfig.local failed (see error above) — fix the file and re-run"
+  fi
 }
 if [[ -n "$git_name" && -n "$git_email" ]]; then
   if ask "Git identity: $git_name <$git_email>. Change it?" N; then
@@ -535,12 +538,22 @@ fi
 istep "API keys in secrets.zsh (docs/secret-keys.txt)"
 secrets_file="$REPO_ROOT/secrets.zsh"
 keys_doc="$REPO_ROOT/docs/secret-keys.txt"
+# 600 before any write: an unprivileged process could otherwise slurp live
+# API keys during the window between first append and end of run. Also fixes
+# perms on a hand-created secrets.zsh even when the key list is absent.
+touch "$secrets_file"
+chmod 600 "$secrets_file"
 if [[ ! -s "$keys_doc" ]]; then
   warn "docs/secret-keys.txt missing/empty — no API keys prompted"
 else
   # Keys on fd 3: stdin must stay free for ask() and the hidden value read.
   while IFS= read -r -u 3 key; do
     [[ -n "$key" && "$key" != \#* ]] || continue
+    # Pre-check for the message; secret_line itself also fails closed.
+    if ! valid_key_name "$key"; then
+      warn "invalid key name in docs/secret-keys.txt, skipped: $key"
+      continue
+    fi
     if grep -q "^export $key=" "$secrets_file" 2>/dev/null; then
       ok "$key already in secrets.zsh"
     elif ask "Set $key in secrets.zsh now?"; then
@@ -557,18 +570,11 @@ else
   done 3< "$keys_doc"
 fi
 
-# ---------- Secure secrets.zsh ----------
-# Why 600: an unprivileged process could otherwise slurp live API keys.
-if [[ -f "$REPO_ROOT/secrets.zsh" ]]; then
-  chmod 600 "$REPO_ROOT/secrets.zsh"
-  ok "secrets.zsh chmod 600"
-fi
-
 # ---------- Final hints ----------
 step "Optional next steps"
 echo "  • Run 'bench-doctor' to verify the install"
 echo "  • Run 'bench-export' to refresh Brewfile/docs/ snapshots"
-echo "  • Create '$REPO_ROOT/secrets.zsh' for API keys (auto-chmod 600 on next install run)"
+echo "  • Add API keys to '$REPO_ROOT/secrets.zsh' (kept chmod 600, gitignored)"
 
 if [[ -s "$WARN_LOG" ]]; then
   step "Recap: $(grep -c . "$WARN_LOG") warning(s) need attention"

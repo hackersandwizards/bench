@@ -32,10 +32,16 @@ run() {
   if "$@"; then ok "$label"; else warn "$label failed (continuing)"; fi
 }
 
+# Guards the docs/secret-keys.txt trust boundary: key names land unquoted in
+# `export KEY=` lines that exports.zsh sources on every shell start.
+valid_key_name() { [[ "$1" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; }
+
 # One sourceable `export KEY='value'` line. Single quotes so $ ` \ never
 # expand; the replacement rides a variable because bash 3.2 mangles
 # backslashes written literally in ${var//pat/rep} (bash 4.3 change).
+# Fails closed on an invalid key name; callers pre-check for the UX message.
 secret_line() {
+  valid_key_name "$1" || return 1
   local q="'\\''"
   printf "export %s='%s'\n" "$1" "${2//\'/$q}"
 }

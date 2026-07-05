@@ -5,6 +5,7 @@ secrets.zsh
 secrets.*.zsh
 *.env
 .env.*
+.envrc
 *credentials*
 *.pem
 *.key

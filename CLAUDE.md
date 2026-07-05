@@ -17,6 +17,7 @@ fzf.zsh               # fzf defaults + preview command env vars
 plugins.txt           # Antidote main plugins (plugins.zsh generated, gitignored)
 plugins-post.txt      # Antidote post-compinit plugins (fzf-tab)
 starship.toml         # Starship prompt config
+ripgreprc             # rg defaults, wired via RIPGREP_CONFIG_PATH in exports.zsh
 secrets.zsh           # Untracked, gitignored - API keys go here
 install.sh            # Fresh-machine bootstrap (sources bin/_lib.sh)
 macos.sh              # Opt-in macOS system defaults
@@ -27,6 +28,7 @@ skhd/                 # skhd hotkey config, symlinked to ~/.config/skhd/skhdrc b
 fonts/                # Only fonts with verified redistribution rights (repo is public); free families come as Brewfile font casks
 .githooks/pre-commit  # gitleaks + shellcheck + zsh -n on staged files
 .claude/              # Statusline command + Claude Code rules/settings
+.codex/               # Codex CLI config
 ghostty/              # Ghostty terminal config
 home/                 # Dotfile templates symlinked via Stow
 docs/                 # Package + machine-state snapshots, replayed by install.sh (offline-readable); fonts.txt (restore checklist), secret-keys.txt (expected key names), and repos.txt (default clones) are hand-maintained, never dumped by bench-export

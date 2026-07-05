@@ -25,7 +25,7 @@ Every wizard step is opt-in:
 - **Config**: Stow symlinks, `~/.gitconfig.local`, repo-local git hooks, `~/.zshrc` source line, Ghostty config, skhd
 - **Logins + keys**: `gh`/`glab` auth, missing API keys into `secrets.zsh` (key list: `docs/secret-keys.txt`)
 - **Default repos**: `~/dev` + `~/opt` created, missing clones from `docs/repos.txt` (company-os, talks, trainings, MCP servers)
-- **Machine state from `docs/` snapshots**: Safari favorites (merge), Dock layout (replace), Finder sidebar (mirror), Moom settings (import)
+- **Machine state from `docs/` snapshots**: Safari favorites (merge), Dock layout (replace), Finder sidebar (mirror; installs mysides via sudo from a GitHub pkg), Moom settings (import)
 
 `macos.sh` also sets default apps: Zed opens txt/md/json/yaml/toml, Ghostty runs .sh/.command/.tool.
 
@@ -82,6 +82,7 @@ fzf.zsh               fzf config + ANSI color mapping
 plugins.txt           Antidote plugin list (core)
 plugins-post.txt      Antidote plugin list (post-compinit)
 starship.toml         Starship prompt
+ripgreprc             rg defaults (wired via RIPGREP_CONFIG_PATH in exports.zsh)
 Brewfile              brew bundle source-of-truth
 install.sh            Interactive wizard
 macos.sh              Opt-in macOS system defaults
@@ -94,6 +95,7 @@ bin/
   bench-prefs-diff      Capture a settings change as defaults keys for macos.sh
   bench-clean           Reclaim disk: caches, .DS_Store, VS Code extension dedup
   bench-test            Unit tests for _lib.sh helpers (plain bash asserts)
+  safari-favorites      Export/merge the Safari favorites bar (bench-export, bench-doctor, install.sh)
 macos/                Hotkey-driven scripts (ghostty-grid.js, idea-reset-layout.py); bound in skhd/skhdrc
 home/                 Stow package, symlinked into $HOME
   .gitconfig            Aliases, delta, includes ~/.gitconfig.local
@@ -105,6 +107,7 @@ home/                 Stow package, symlinked into $HOME
 ghostty/              Ghostty terminal config (single source of truth for theme)
 docs/                 Package + machine-state snapshots (committed; replayed by install.sh)
 .claude/              Claude Code statusline + rules + settings
+.codex/               Codex CLI config
 .githooks/pre-commit  gitleaks + shellcheck + zsh -n (repo-local)
 ```
 

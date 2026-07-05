@@ -76,15 +76,21 @@ if [[ "$hp" == ".githooks" ]]; then
 else
   warn "core.hooksPath = $hp (run install.sh to fix)"
 fi
-if [[ -f "$REPO_ROOT/secrets.zsh" ]]; then
-  ok "secrets.zsh present"
-else
+if [[ ! -f "$REPO_ROOT/secrets.zsh" ]]; then
   warn "secrets.zsh missing (optional)"
+# Verify what install.sh enforces: a hand copy can re-widen the perms.
+elif [[ "$(stat -f %Lp "$REPO_ROOT/secrets.zsh")" == 600 ]]; then
+  ok "secrets.zsh present (600)"
+else
+  warn "secrets.zsh perms are $(stat -f %Lp "$REPO_ROOT/secrets.zsh"), not 600 — chmod 600 secrets.zsh"
 fi
 check "docs/safari-favorites.txt" test -s "$REPO_ROOT/docs/safari-favorites.txt"
 check "docs/secret-keys.txt" test -s "$REPO_ROOT/docs/secret-keys.txt"
 if [[ -s "$REPO_ROOT/docs/secret-keys.txt" ]]; then
   missing_keys=$(grep -vE '^(#|$)' "$REPO_ROOT/docs/secret-keys.txt" | while IFS= read -r k; do
+    # Invalid names never reach secrets.zsh (install.sh skips them with its
+    # own warn), so reporting them as missing would point at a dead end.
+    valid_key_name "$k" || continue
     grep -q "^export $k=" "$REPO_ROOT/secrets.zsh" 2>/dev/null || printf '%s\n' "$k"
   done)
   if [[ -z "$missing_keys" ]]; then
