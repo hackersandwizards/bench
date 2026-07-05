@@ -147,20 +147,35 @@ else
 fi
 
 # ---------- Personal git identity ----------
+# ~/.gitconfig.local is untracked (per-machine), so there is no snapshot to
+# diff against: show the live identity and let the user decide if it drifted.
+# Writes go through `git config --file` so extra local sections survive.
 istep "Personal git identity (~/.gitconfig.local)"
-if [[ -f "$HOME/.gitconfig.local" ]]; then
-  ok "$HOME/.gitconfig.local already exists, skipping"
-elif ask "Create ~/.gitconfig.local with [user] block?"; then
-  read -rp "  Full name: " git_name
-  read -rp "  Email: " git_email
-  cat > "$HOME/.gitconfig.local" <<EOF
-[user]
-	name = $git_name
-	email = $git_email
-EOF
-  ok "Created ~/.gitconfig.local"
+git_name=$(git config --file "$HOME/.gitconfig.local" user.name 2>/dev/null)
+git_email=$(git config --file "$HOME/.gitconfig.local" user.email 2>/dev/null)
+write_git_identity() {
+  local name email
+  read -rp "  Full name${git_name:+ [$git_name]}: " name
+  read -rp "  Email${git_email:+ [$git_email]}: " email
+  name="${name:-$git_name}" email="${email:-$git_email}"
+  if [[ -z "$name" || -z "$email" ]]; then
+    skip "Empty name or email — add the [user] block to ~/.gitconfig.local later"
+    return
+  fi
+  git config --file "$HOME/.gitconfig.local" user.name "$name"
+  git config --file "$HOME/.gitconfig.local" user.email "$email"
+  ok "Identity saved: $name <$email>"
+}
+if [[ -n "$git_name" && -n "$git_email" ]]; then
+  if ask "Git identity: $git_name <$git_email>. Change it?" N; then
+    write_git_identity
+  else
+    ok "Kept $git_name <$git_email>"
+  fi
+elif ask "Set git identity (user.name/email) in ~/.gitconfig.local?"; then
+  write_git_identity
 else
-  skip "Skipped — you'll need ~/.gitconfig.local for [user] block to work"
+  skip "Skipped — git needs the [user] block in ~/.gitconfig.local"
 fi
 
 # ---------- GitHub / GitLab CLI logins ----------
