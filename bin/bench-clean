@@ -7,8 +7,6 @@ set -u
 # shellcheck source=_lib.sh
 . "$(dirname "$0")/_lib.sh"
 
-rm_path() { [[ -e "$1" ]] && rm -rf "$1"; return 0; }
-
 # Independent jobs (disjoint cache dirs + a .DS_Store sweep that only unlinks its
 # own vanishing files): fan out to per-slot logs, then `wait`. Idiom: bench-export.
 WORK=$(mktemp -d)
@@ -25,7 +23,7 @@ elif have brew; then
 fi
 # `bun pm cache rm` demands a package.json in cwd, so target the cache dir
 # directly (covers bunx too; it lives under the same path).
-have bun  && bg 2 "Bun install cache" rm_path "${BUN_INSTALL:-$HOME/.bun}/install/cache"
+have bun  && bg 2 "Bun install cache" rm -rf "${BUN_INSTALL:-$HOME/.bun}/install/cache"
 have uv   && bg 3 "uv cache (full)"   env UV_LOCK_TIMEOUT=10 uv cache clean
 have fd   && bg 4 "Sweep .DS_Store" bash -c "fd -H -I -t f -g '.DS_Store' / \
   --exclude '*BACKUP*' --exclude '*timemachine*' --exclude '*TimeMachine*' \
@@ -35,9 +33,9 @@ cat "$WORK"/* 2>/dev/null
 rm -rf "$WORK"
 
 # Instant steps: sequential, parallelizing buys nothing.
-run "Puppeteer Chromium" rm_path "$HOME/.cache/puppeteer"
-run "Claude HTTP cache"  rm_path "$HOME/Library/Application Support/Claude/Cache"
-run "Claude code cache"  rm_path "$HOME/Library/Application Support/Claude/Code Cache"
+run "Puppeteer Chromium" rm -rf "$HOME/.cache/puppeteer"
+run "Claude HTTP cache"  rm -rf "$HOME/Library/Application Support/Claude/Cache"
+run "Claude code cache"  rm -rf "$HOME/Library/Application Support/Claude/Code Cache"
 
 dedup_vscode() {
   local dir="$HOME/.vscode/extensions" manifest d name removed=0

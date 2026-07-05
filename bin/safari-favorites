@@ -16,6 +16,7 @@ import subprocess
 import sys
 import uuid
 from pathlib import Path
+from xml.parsers.expat import ExpatError
 
 DEFAULT_PLIST = Path.home() / "Library/Safari/Bookmarks.plist"
 
@@ -31,6 +32,13 @@ def load(path):
         )
     except FileNotFoundError:
         sys.exit(f"{path} missing — launch Safari once, quit it, then re-run.")
+    # ValueError covers InvalidFileException (binary) and malformed XML values;
+    # ExpatError covers truncated XML. Both escape plistlib.load as-is.
+    except (ValueError, ExpatError):
+        sys.exit(
+            f"{path} is not a valid plist — corrupt? Restore it from a backup "
+            "(next to it as *.backup, or Time Machine), then re-run."
+        )
 
 
 def favorites_bar(root):

@@ -149,7 +149,8 @@ while [[ $dir && $dir != / ]]; do
 done
 
 if [[ -n $git_dir ]]; then
-    git_status=$(git status --porcelain -b 2>/dev/null)
+    # --no-optional-locks: runs every render; don't take index.lock under foreground git.
+    git_status=$(git --no-optional-locks status --porcelain -b 2>/dev/null)
     if [[ -n $git_status ]]; then
         # Capture the whole line; %%...* strips the upstream half. A "." in
         # the exclusion class would truncate dotted branches (release-1.2).

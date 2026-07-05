@@ -68,8 +68,13 @@ istep "Install Homebrew packages from Brewfile"
 if ! have brew; then
   if ask "Homebrew not installed. Install it now?"; then
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-    ok "Homebrew installed"
+    # A failed curl leaves bash -c "" exiting 0; probe the binary instead.
+    if [[ -x /opt/homebrew/bin/brew ]]; then
+      eval "$(/opt/homebrew/bin/brew shellenv)"
+      ok "Homebrew installed"
+    else
+      warn "Homebrew install failed — remaining steps need it"
+    fi
   else
     skip "Skipped — Homebrew required for remaining steps"
   fi
@@ -286,13 +291,15 @@ istep "Install fonts (fonts/ + checklist from docs/fonts.txt)"
 fonts_doc="$REPO_ROOT/docs/fonts.txt"
 if ask "Copy fonts/ into ~/Library/Fonts?"; then
   mkdir -p "$HOME/Library/Fonts"
-  # minimal: -n never overwrites a user's existing copy. Repo fonts are static,
-  # so no backup dance like the config symlinks need.
-  if cp -n "$REPO_ROOT"/fonts/* "$HOME/Library/Fonts/"; then
-    ok "fonts/ installed (existing files kept)"
-  else
-    warn "fonts/ copy failed (see error above)"
-  fi
+  # Per-file skip, not `cp -n` for the batch: BSD cp -n exits 1 whenever any
+  # destination exists, which made every re-run warn "copy failed" falsely.
+  fonts_failed=0
+  for f in "$REPO_ROOT"/fonts/*; do
+    [[ -e "$HOME/Library/Fonts/${f##*/}" ]] \
+      || cp "$f" "$HOME/Library/Fonts/" \
+      || { warn "fonts: ${f##*/} copy failed"; fonts_failed=1; }
+  done
+  (( fonts_failed )) || ok "fonts/ installed (existing files kept)"
 else
   skip "Skipped fonts"
 fi
@@ -409,7 +416,10 @@ istep "Install Claude Code CLI"
 if have claude || [[ -x "$HOME/.local/bin/claude" ]]; then
   ok "claude already installed"
 elif ask "Install Claude Code (official installer)?"; then
-  if curl -fsSL https://claude.ai/install.sh | bash; then
+  # No pipefail here, so `curl | bash` reports bash's exit (0 even when curl
+  # fails and stdin is empty). Probe the installed artifact, not the pipe.
+  curl -fsSL https://claude.ai/install.sh | bash
+  if have claude || [[ -x "$HOME/.local/bin/claude" ]]; then
     ok "Claude Code installed"
   else
     warn "Claude Code install failed — re-run 'curl -fsSL https://claude.ai/install.sh | bash'"

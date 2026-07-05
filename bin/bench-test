@@ -35,8 +35,7 @@ warn "parent" >/dev/null
 echo x | { while read -r _; do warn "pipeline" >/dev/null; done; }
 assert_eq "collects warns across subshell boundaries" $'parent\npipeline' "$(cat "$WARN_LOG")"
 rm -f "$WARN_LOG"; WARN_LOG=""
-warn "unledgered" >/dev/null
-assert_ok "no ledger configured — warn still succeeds" true
+assert_ok "no ledger configured — warn still succeeds" warn "unledgered"
 
 step "sdkman_set_config()"
 # The real ~/.sdkman stays untouched.
