@@ -209,6 +209,7 @@ brew "zoxide"
 brew "zsh"
 # Simple hotkey-daemon for macOS
 brew "asmvik/formulae/skhd"
+# Infrastructure-as-code CLI
 brew "hashicorp/tap/terraform"
 # LLM inference server optimized for Apple Silicon
 brew "jundot/omlx/omlx"

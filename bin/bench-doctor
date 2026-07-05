@@ -20,6 +20,10 @@ check "antidote" test -f "$ANTIDOTE_SH"
 for cmd in starship zoxide fzf eza bat fd rg gh glab git delta lazygit jaq xh; do
   check "$cmd" command -v "$cmd"
 done
+# The Brewfile ships rust, not rustup. Leftover rustup shims sit ahead of
+# /opt/homebrew/bin in PATH and nothing updates their toolchain anymore.
+[[ -x "$HOME/.cargo/bin/rustc" ]] \
+  && warn "rustup shims in ~/.cargo/bin shadow brew's rust — run: rustup self uninstall"
 
 echo
 echo "=== Optional tools ==="

@@ -91,8 +91,9 @@ defaults write com.apple.screencapture disable-shadow -bool false
 # ============================================================================
 defaults write com.apple.screensaver askForPassword -int 1
 defaults write com.apple.screensaver askForPasswordDelay -int 0
-# Deliberate tradeoff: no "downloaded from the internet" prompt for new apps.
-# Gatekeeper signature/notarization checks still run.
+# Deliberate tradeoff: without the quarantine xattr, downloaded apps skip
+# Gatekeeper's first-open assessment (notarization check) entirely; only
+# baseline code-signature validation at exec remains.
 defaults write com.apple.LaunchServices LSQuarantine -bool false
 
 # ============================================================================

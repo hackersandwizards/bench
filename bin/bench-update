@@ -53,11 +53,12 @@ _pip_user_upgrade() {
     | xargs -r pip install --user --upgrade
 }
 
-# jaq gated here like every other tool: without it the pipelines exit through
-# xargs's 0 and would print a false ok. grep, not rg, keeps the only other
-# dependency pre-Brewfile-safe.
-have pip && have jaq && run "Python pip globals"   _pip_global_upgrade
-have pip && have jaq && run "Python pip user-site" _pip_user_upgrade
+# jaq gated like every other tool: without it the pipelines would exit
+# through xargs's 0 and print a false ok.
+if have pip && have jaq; then
+  run "Python pip globals"   _pip_global_upgrade
+  run "Python pip user-site" _pip_user_upgrade
+fi
 
 # `sdk` is a shell function, so `have sdk` is false until its init is sourced.
 source_sdkman || true
