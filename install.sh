@@ -402,6 +402,22 @@ else
   skip "Skipped language-ecosystem globals"
 fi
 
+# ---------- Claude Code CLI ----------
+# Native installer, not npm/brew: it self-updates in place. Installs to
+# ~/.local/bin, which exports.zsh already puts on PATH.
+istep "Install Claude Code CLI"
+if have claude || [[ -x "$HOME/.local/bin/claude" ]]; then
+  ok "claude already installed"
+elif ask "Install Claude Code (official installer)?"; then
+  if curl -fsSL https://claude.ai/install.sh | bash; then
+    ok "Claude Code installed"
+  else
+    warn "Claude Code install failed — re-run 'curl -fsSL https://claude.ai/install.sh | bash'"
+  fi
+else
+  skip "Skipped Claude Code install"
+fi
+
 # ---------- SDKMAN + JVM-ecosystem SDKs ----------
 # SDKMAN_INIT and source_sdkman live in _lib.sh: `sdk` is a shell function, not
 # a binary, so its init must be sourced before `sdk install` works.
