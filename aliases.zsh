@@ -28,7 +28,7 @@ alias ez='vim "$ZSH_SETTINGS_DIR/init.zsh"'
 
 # --- Pipe globals ---
 # C-prefixed variants inject --color=always before the pipe, for tools that
-# only colorize on a tty (brew, kubectl, …).
+# only colorize on a tty (brew, kubectl, ...).
 alias -g G='| grep --color=always'
 alias -g CG='--color=always | grep --color=always'
 alias -g L='| less'

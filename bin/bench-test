@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Tests for _lib.sh helpers, bin/ scripts, and repo invariants — plain bash
+# Tests for _lib.sh helpers, bin/ scripts, and repo invariants: plain bash
 # asserts, no framework.
 # Run: bench-test   (exits non-zero if any assertion fails)
 set -u
@@ -39,7 +39,7 @@ warn "unledgered" >/dev/null
 assert_ok "no ledger configured — warn still succeeds" true
 
 step "sdkman_set_config()"
-# Point the helper at a throwaway config — never touches the real ~/.sdkman.
+# The real ~/.sdkman stays untouched.
 cfg=$(mktemp)
 printf 'sdkman_auto_answer=false\nsdkman_colour_enable=true\n' > "$cfg"
 SDKMAN_CONFIG="$cfg"
@@ -67,7 +67,7 @@ printf 'Current default versions:\ngradle 9.5.1\njava 26.0.1-tem\n' > "$fix"
 assert_eq "parse_sdk: candidate + version" "gradle 9.5.1
 java 26.0.1-tem" "$(parse_sdk "$fix")"
 # `json (2.19.8, default: 2.18.0)` is the dominant real shape: a user-updated
-# version alongside the bundled one. It must be kept — the `^` anchor in the
+# version alongside the bundled one. It must be kept: the `^` anchor in the
 # parser (`$2 !~ /^default:/`) is what distinguishes it from a `(default: X)`
 # bundled-only gem. Without this case an unanchored regex would pass the test
 # but silently drop every updated stdlib gem from replay.
@@ -145,7 +145,7 @@ merged=$'a\thttps://a/\nb\thttps://b/'
 assert_eq "prepends only missing URLs (subtree dedupe)" "$merged" "$("$sf" export "$tdir/b.plist")"
 assert_ok "idempotent merge exits ok" "$sf" merge "$tdir/snap.txt" "$tdir/b.plist"
 assert_eq "idempotent — re-run adds nothing" "$merged" "$("$sf" export "$tdir/b.plist")"
-# `missing` must count c (in a folder within the bar) as present — subtree scan.
+# `missing` must count c (in a folder within the bar) as present: subtree scan.
 assert_eq "missing: empty when all snapshot URLs in bar subtree" \
   "" "$("$sf" missing "$tdir/snap.txt" "$tdir/b.plist")"
 printf 'd\thttps://d/\n' >> "$tdir/snap.txt"
@@ -168,7 +168,7 @@ assert_eq "empty when everything is present" "" "$(missing_fonts "$fdir/checklis
 rm -rf "$fdir"
 
 step "install.sh istep self-count"
-# STEP_TOTAL greps for '^istep ' — an indented call would increment STEP_N
+# STEP_TOTAL greps for '^istep ': an indented call would increment STEP_N
 # without being counted, printing "Step 14/13". Fails here first instead.
 assert_fail "no indented istep calls (self-count stays exact)" \
   grep -qE '^[[:space:]]+istep ' "$REPO_ROOT/install.sh"

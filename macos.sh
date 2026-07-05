@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# macOS system defaults — opt-in. Run manually: ./macos.sh
+# macOS system defaults, opt-in. Run manually: ./macos.sh
 # Re-runnable. Each `defaults write` is idempotent.
 # Curated subset of mathiasbynens/dotfiles/.macos for macOS Tahoe (26).
 
@@ -26,7 +26,7 @@ defaults write NSGlobalDomain NSAutomaticSpellingCorrectionEnabled -bool false
 defaults write NSGlobalDomain AppleKeyboardUIMode -int 3
 
 # ============================================================================
-# Trackpad — tap to click everywhere (built-in, Bluetooth, login screen)
+# Trackpad: tap to click everywhere (built-in, Bluetooth, login screen)
 # ============================================================================
 defaults write com.apple.AppleMultitouchTrackpad Clicking -bool true
 defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true
@@ -34,13 +34,13 @@ defaults write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
 defaults -currentHost write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
 
 # ============================================================================
-# Cursor — disable shake-to-find-cursor magnification
+# Cursor: disable shake-to-find-cursor magnification
 # ============================================================================
 defaults write NSGlobalDomain CGDisableCursorLocationMagnification -bool true
 
 # ============================================================================
-# Save / print panels — expanded by default
-# Skip the disclosure-triangle click on every ⌘S and ⌘P. The "2"-suffixed keys
+# Save / print panels: expanded by default
+# Skip the disclosure-triangle click on every Cmd-S and Cmd-P. The "2"-suffixed keys
 # cover apps built against the newer NSSavePanel/PMPrintPanel APIs.
 # ============================================================================
 defaults write NSGlobalDomain NSNavPanelExpandedStateForSaveMode -bool true
@@ -49,7 +49,7 @@ defaults write NSGlobalDomain PMPrintingExpandedStateForPrint -bool true
 defaults write NSGlobalDomain PMPrintingExpandedStateForPrint2 -bool true
 
 # ============================================================================
-# Crash reporter — quiet notification instead of blocking modal dialog
+# Crash reporter: quiet notification instead of blocking modal dialog
 # ============================================================================
 defaults write com.apple.CrashReporter DialogType none
 
@@ -73,13 +73,13 @@ defaults write com.apple.finder ShowMountedServersOnDesktop -bool false
 
 # ============================================================================
 # .DS_Store on network shares and USB drives
-# (local disks have no official flag — the cleanup alias sweeps them after.)
+# (local disks have no official flag; the cleanup alias sweeps them after.)
 # ============================================================================
 defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true
 defaults write com.apple.desktopservices DSDontWriteUSBStores -bool true
 
 # ============================================================================
-# Screenshots → ~/Documents/Screenshots, PNG, with shadow
+# Screenshots -> ~/Documents/Screenshots, PNG, with shadow
 # ============================================================================
 mkdir -p "$HOME/Documents/Screenshots"
 defaults write com.apple.screencapture location -string "$HOME/Documents/Screenshots"
@@ -91,10 +91,12 @@ defaults write com.apple.screencapture disable-shadow -bool false
 # ============================================================================
 defaults write com.apple.screensaver askForPassword -int 1
 defaults write com.apple.screensaver askForPasswordDelay -int 0
+# Deliberate tradeoff: no "downloaded from the internet" prompt for new apps.
+# Gatekeeper signature/notarization checks still run.
 defaults write com.apple.LaunchServices LSQuarantine -bool false
 
 # ============================================================================
-# Software Updates — fully automatic
+# Software Updates: fully automatic
 # ============================================================================
 defaults write com.apple.SoftwareUpdate AutomaticCheckEnabled -bool true
 defaults write com.apple.SoftwareUpdate AutomaticDownload -bool true
@@ -115,7 +117,7 @@ defaults write com.apple.dock show-process-indicators -bool true
 defaults write com.apple.dock tilesize -int 48
 
 # ============================================================================
-# Activity Monitor — Dock icon shows the default application icon
+# Activity Monitor: Dock icon shows the default application icon
 # ============================================================================
 defaults write com.apple.ActivityMonitor OpenMainWindow -bool true
 defaults write com.apple.ActivityMonitor IconType -int 0
@@ -123,7 +125,7 @@ defaults write com.apple.ActivityMonitor SortColumn -string "CPUUsage"
 defaults write com.apple.ActivityMonitor SortDirection -int 0
 
 # ============================================================================
-# Default apps — Zed edits text, Ghostty runs scripts
+# Default apps: Zed edits text, Ghostty runs scripts
 # .command/.tool need their UTI (com.apple.terminal.shell-script); the
 # extension form does not stick.
 # ============================================================================

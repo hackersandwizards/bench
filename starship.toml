@@ -1,4 +1,4 @@
-# Starship prompt — Pure-style layout, default Starship colors
+# Starship prompt: Pure-style layout, default Starship colors
 "$schema" = 'https://starship.rs/config-schema.json'
 
 format = """
@@ -22,6 +22,9 @@ style = "bright-black"
 [git_status]
 format = "[[(*$conflicted$untracked$modified$staged$renamed$deleted)](red) ($ahead_behind$stashed)]($style)"
 style = "bright-black"
+# The six values below are U+200B zero-width spaces, not empty strings: any
+# dirty state renders the lone * above. Empty strings would disable the (...)
+# group entirely. Do not let an editor strip them.
 conflicted = "​"
 untracked = "​"
 modified = "​"
@@ -44,7 +47,6 @@ disabled = true
 format = " [|](bright-black) [$symbol$number]($style)"
 style = "cyan"
 
-# Disabled modules
 [gcloud]
 disabled = true
 

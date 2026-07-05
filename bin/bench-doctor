@@ -93,7 +93,7 @@ fi
 
 echo
 echo "=== Applied outcomes (macos.sh + docs/ snapshots) ==="
-# minimal: one sentinel key stands in for the whole macos.sh run — tap-to-click
+# minimal: one sentinel key stands in for the whole macos.sh run. Tap-to-click
 # is what a machine that never ran it visibly misses first.
 if [[ "$(defaults read com.apple.AppleMultitouchTrackpad Clicking 2>/dev/null)" == "1" ]]; then
   ok "tap-to-click enabled (macos.sh applied)"
@@ -117,7 +117,7 @@ else
   printf '%s\n' "$missing_favs" | head -n 5 | indent
 fi
 # Dock is ordered (the layout IS the order); the sidebar is compared as a set.
-# The snapshot side keeps only on-disk apps — the replay skips missing ones by
+# The snapshot side keeps only on-disk apps: the replay skips missing ones by
 # design, so the check must promise no more than the replayer does.
 if have dockutil && [[ -s "$REPO_ROOT/docs/dock.txt" ]]; then
   snap_dock=$(parse_dock "$REPO_ROOT/docs/dock.txt" | while IFS= read -r p; do

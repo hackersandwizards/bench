@@ -128,7 +128,7 @@ def merge(snapshot_path, plist_path):
         os.replace(tmp, plist_path)
     except OSError as e:
         # load() already proved read access, so this is not a Full Disk Access
-        # problem — report the real error (locked file, unwritable dir, ...).
+        # problem; report the real error (locked file, unwritable dir, ...).
         sys.exit(f"write failed: {e}")
     print(f"added {len(new)}")
 

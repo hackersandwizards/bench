@@ -1,6 +1,6 @@
 # --- Completion & key bindings (interactive shells only) ---
-# Both scripts save and restore the whole option set via `eval options=(…)`,
-# which trips "(eval):1: can't change option: zle" — zle is read-only, so
+# Both scripts save and restore the whole option set via `eval options=(...)`,
+# which trips "(eval):1: can't change option: zle". zle is read-only, so
 # restoring it errors. The bindings still install; the error is pure noise on
 # every shell start, so silence both. (completion.zsh also emits harmless
 # compdef warnings, since it is sourced before compinit.)
@@ -14,7 +14,7 @@ export FZF_BAT_PREVIEW='bat --style=numbers --color=always --line-range :300 {}'
 export FZF_EZA_PREVIEW='eza --tree --icons --level=2 {}'
 
 # --- Defaults ---
-# Colors map to ANSI palette → inherits Ghostty theme automatically.
+# Colors map to the ANSI palette, so fzf inherits the Ghostty theme automatically.
 export FZF_DEFAULT_OPTS="\
 --height 40% --layout=reverse --border \
 --color=fg:0,bg:-1,hl:4,fg+:0,bg+:7,hl+:1 \

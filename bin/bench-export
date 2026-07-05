@@ -11,10 +11,10 @@ HOME_DIR="$REPO_ROOT/home"
 
 mkdir -p "$DOCS"
 
-# Run "$@" capturing stdout to $1; only overwrite the destination on success
-# so a failed command leaves the previous snapshot intact (no empty files).
-# On failure the captured stderr is shown — some dumpers (safari-favorites)
-# put the remediation there, and a bare "failed" would hide it.
+# Overwrite the destination only on success: a failed command leaves the
+# previous snapshot intact (no empty files). On failure the captured stderr is
+# shown; some dumpers (safari-favorites) put the remediation there, and a bare
+# "failed" would hide it.
 dump_to() {
   local out="$1"; shift
   local tmp="$out.tmp"
@@ -51,7 +51,7 @@ fi
 source_sdkman || true
 
 # --- docs/ snapshots (replayed by install.sh, offline-readable) ---
-# Each tool is its own subprocess and stat-bound — fan out, then `wait`.
+# Each tool is its own subprocess and stat-bound: fan out, then `wait`.
 step "docs/ snapshots"
 if have brew && brew_bottles_supported; then   # unsupported notice already shown above
   dump_to "$DOCS/brew-taps.txt"   brew tap    &
@@ -67,7 +67,7 @@ have cargo && dump_to "$DOCS/cargo.txt" cargo install --list       &
 have sdk   && dump_to "$DOCS/sdks.txt"  sdk_run current            &
 have mix   && dump_to "$DOCS/mix.txt"   mix archive                &
 dump_to "$DOCS/safari-favorites.txt" "$REPO_ROOT/bin/safari-favorites" export &
-# $HOME → literal token so the snapshots replay for any user (parse_* expands it).
+# $HOME -> literal token so the snapshots replay for any user (parse_* expands it).
 dock_dump()    { dockutil --list | sed "s|$HOME|\$HOME|g"; }
 sidebar_dump() { mysides list    | sed "s|$HOME|\$HOME|g"; }
 have dockutil && dump_to "$DOCS/dock.txt"           dock_dump    &
@@ -90,7 +90,6 @@ else
   warn "fonts.txt failed"
 fi
 
-# --- home/ sync: copy real $HOME files back into repo, skip Stow symlinks ---
 step "home/ sync (Symlinks → skip, real files → copy back)"
 for rel in "${STOW_FILES[@]}"; do
   src="$HOME/$rel"
