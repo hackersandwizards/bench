@@ -21,6 +21,6 @@
   "voiceEnabled": true,
   "outputStyle": "truth-challenger",
   "enabledMcpjsonServers": [],
-  "model": "fable",
+  "model": "opus",
   "effortLevel": "high"
 }
