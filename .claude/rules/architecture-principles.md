@@ -1,6 +1,6 @@
 # Architecture & Engineering Principles
 
-hackers&wizards brings 20+ years of enterprise engineering experience to every engagement. These principles come from building, operating, and scaling real systems at [client], [client], [client], and [client].
+hackers&wizards brings 20+ years of enterprise engineering experience to every engagement. These principles come from building, operating, and scaling large-scale systems.
 
 When making technical recommendations, writing proposals, drafting content, or reviewing architecture, ground your work in these principles. They define what "good" looks like in the systems we help clients build.
 
@@ -62,12 +62,3 @@ Poor code craftsmanship, missing domain understanding, missing systems thinking,
 ## Decision Frameworks
 
 - **Build or Buy**: Evaluate Functional Complexity, Technical Complexity, Operational Complexity, Unique Business Value. Then 5-level cost analysis (License, Integration, Operation, Opportunity, Migration).
-- **AEMM Levels**: Ad-Hoc Adopter -> Systematic Collaborator -> Strategic Orchestrator -> Autonomous Partner -> Code Multiplier
-
-## The Culmination Thesis
-
-Agentic Engineering is not coding. It is not programming. It is the culmination of modern software engineering.
-
-The progression: Developer Experience -> Pragmatic Programming -> Extreme Programming -> Modern Software Engineering -> Vibe Coding (chaotic) -> Prompt Engineering (reactive) -> Context Engineering (the breakthrough) -> Agentic Engineering (the culmination).
-
-Context Engineering recognized that AI output quality is determined by the entire information environment: not just the prompt, but the codebase, architectural decisions, team conventions, and business constraints. Agentic Engineering unifies deep software engineering principles with AI agents that operate autonomously within well-defined boundaries.

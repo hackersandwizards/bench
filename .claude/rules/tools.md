@@ -24,6 +24,7 @@ Modern CLI replacements installed via Homebrew. Prefer when running shell comman
 
 **Git and code-host:**
 - `gh` for GitHub (issues, PRs, CI runs)
+- `glab` for GitLab (issues, MRs, CI pipelines)
 - `lazygit` for git TUI, `git-filter-repo` for history rewrites
 - Global git aliases from `~/.gitconfig` that add workflow behavior:
   - `git all <args...>` -> run `git <args...>` in every repository under the current tree
