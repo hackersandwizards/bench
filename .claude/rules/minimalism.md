@@ -34,4 +34,4 @@ For a complex request, ship the lazy version and question the rest in the same r
 
 Never simplify away: input validation at trust boundaries, error handling that prevents data loss, security measures, accessibility basics.
 
-Non-trivial logic (a branch, a loop, a parser, a money or security path) leaves one runnable check behind, the smallest thing that fails if the logic breaks: an `assert`-based self-check or one small `test_*.py`. No frameworks or fixtures unless asked. Trivial one-liners need no test. YAGNI applies to tests too.
+Work that doesn't warrant full TDD (scripts, spikes, one-offs; see engineering.md) still leaves one runnable check behind, the smallest thing that fails if the logic breaks: an `assert`-based self-check or one small `test_*.py`. No frameworks or fixtures unless asked. Trivial one-liners need no test. YAGNI applies to tests too.

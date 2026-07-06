@@ -26,8 +26,6 @@ Create an immediate visual comparison they can grasp.
 
 > *"I'm like a driving instructor, but for AI coding."*
 
-> *"Imagine a CTO who's also your team's AI sherpa."*
-
 **Failure mode if you skip:** without a metaphor, the listener has no shelf to put you on. They forget the name within minutes.
 
 ## F: Fame, one number + one success story
@@ -41,8 +39,6 @@ Prove capability with a specific achievement that matters.
 > *"I helped scale [client] from 200M to 1.2B in revenue."*
 
 > *"30+ teams ignited, 500+ developers in our community, 40+ practitioners in our network."*
-
-> *"15+ teams elevated to confident AI practitioners."*
 
 Any number cites metric, target, source. Don't say "10x productivity". Name the actual measurement.
 
@@ -69,8 +65,6 @@ A specific action they can picture themselves taking.
 - They should see themselves in it.
 
 > *"I'm asking three questions: Where are you now? Where do you want to be? What's blocking the path?"*
-
-> *"I'm collecting stories of AI wins and fails. Got 15 minutes to share yours?"*
 
 > *"Coffee chat about your biggest technical headache?"*
 

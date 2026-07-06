@@ -71,7 +71,7 @@ Hold price, offer creative scope alternatives. Discounting trains them to ask ag
 ### Concession before claim
 *"Du hast recht, X ist teurer als der Marktdurchschnitt. Der Grund ist Y."*
 
-See `personal-voice.md` § Concession before claim. Give ground before the sharp claim.
+See `personal-voice.md` § Concession and self-deprecation. Give ground before the sharp claim.
 
 ## h&w-specific situations
 

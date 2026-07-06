@@ -21,8 +21,8 @@ Each layer constrains the next; the more concrete rule beats the more abstract o
 
 | Layer | File | Owns |
 |-------|------|------|
-| 1. Brand | `brand-voice.md` | h&w-as-a-company: positioning principles, canonical banned-words list, performance-language standards, banned Unicode/style, Schwartz awareness-stage messaging, audience |
-| 2. The user's voice | `personal-voice.md` | The user specifically: rhythm, hedges, Konjunktiv, openings/closings matrices, channel calibration table, anti-patterns, real exemplars, sender identity. Defers to `prose-style.md` on sentence mechanics. |
+| 1. Brand | `brand-voice.md` | h&w-as-a-company: positioning principles, canonical banned-words list, performance-language standards, banned Unicode/style, Schwartz awareness-stage messaging, audience, sender identity |
+| 2. The user's voice | `personal-voice.md` | The user specifically: rhythm, hedges, Konjunktiv, openings/closings matrices, channel calibration table, anti-patterns, inline verbatim quotes. Defers to `prose-style.md` on sentence mechanics. |
 | 3. Prose | `prose-style.md` | Sentence mechanics (DE/EN): short sentences, strong verbs over nominalizations, no filler, concrete over abstract. Authority on mechanics; outranks `personal-voice.md` on conflict. Schneider, Reiners, Strunk & White, Orwell. |
 | 4. Orthography | `german-text.md` | UTF-8 encoding for German Umlaute (`ä ö ü ß`). |
 | 5. AI-tells filter | `ai-tells.md` | Pure detector list of sentence structures, openers, transitions, copula dodges, and formatting tics that mark prose as LLM-generated. Run the draft against it after layers 1-4 and rewrite anything that triggers. Writing rules themselves live in `prose-style.md`. |

@@ -64,11 +64,8 @@ Use Konjunktiv (würde, wäre, könnte, hätte) for recommendations, suggestions
 
 Give ground before claiming, and name uncertainty openly. Both moves earn the rest of the sentence: how peer-to-peer authority lands without sounding like a vendor. The user uses these in client meetings; the authenticity is the asset.
 
-- *"I'm biased too. But..."*
-- *"Blitzy is a great product. But I don't think it solves your problem here."*
-- *"I'm by far not an expert in Blitzy, but..."*
-- *"I'm not really an expert in X."*
-- *"Hui. Den Termin hab ich total verpeilt..."*
+- *"Blitzy is a great product. But I don't think it solves your problem here."* (concession)
+- *"I'm not really an expert in X."* (self-deprecation)
 
 ## Voice moves
 
@@ -126,7 +123,7 @@ The bad versions all open with certainty. The user opens with curiosity.
 
 When in doubt, go warmer rather than more formal. German allows for slightly warmer overall.
 
-**`/bene` is never a solo line.** Across every channel and every relationship stage, `/bene` always sits on a line below a closing word (`LG`, `Cheers`, `Best`, `Warmly`, `Alles Gute`, `Herzliche Grüße`, `Möge dein Code...`, etc., per the matrix above). A bare `/bene` reads as abrupt and wrong. The only place no sign-off appears at all is Slack thread replies, LinkedIn posts, and Slack DMs continuing a same-day exchange: there `/bene` (and the closing word) are both omitted, not separated.
+**`/bene` is never a solo line.** Where `/bene` is used (casual email, signed Slack messages), it sits on a line below a closing word (`LG`, `Cheers`), never on its own; a bare `/bene` reads as abrupt and wrong. The warmer spelled-out closings in the matrix use `Benedikt`, not `/bene`. The only place no sign-off appears at all is Slack thread replies, LinkedIn posts, and Slack DMs continuing a same-day exchange: there the closing is omitted entirely.
 
 **Slack:** `LG` + newline + `/bene` for any signed message. For thread replies: no closing at all (no `/bene`, no `LG`). Save *"May your context..."* for email.
 
