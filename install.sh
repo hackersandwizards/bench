@@ -506,7 +506,9 @@ sidebar_doc="$REPO_ROOT/docs/finder-sidebar.txt"
 # mysides left Homebrew (cask disabled 2025-10-13, upstream unmaintained), so
 # install the last release pkg from GitHub, checksummed against the old cask.
 if ! have mysides && ask "mysides missing (no longer in Homebrew). Install v1.0.1 pkg from GitHub?"; then
-  mysides_pkg=$(mktemp)
+  # installer rejects a path without a .pkg extension, so name it inside a temp dir.
+  mysides_dir=$(mktemp -d)
+  mysides_pkg="$mysides_dir/mysides-1.0.1.pkg"
   if curl -fsSL -o "$mysides_pkg" \
         "https://github.com/mosen/mysides/releases/download/v1.0.1/mysides-1.0.1.pkg" \
       && echo "76946b8f7c5bf714125d75f1ada8140e034f05a9e288c73a7af445d76c2a5514  $mysides_pkg" \
@@ -516,7 +518,7 @@ if ! have mysides && ask "mysides missing (no longer in Homebrew). Install v1.0.
   else
     warn "mysides pkg install failed (download, checksum, or installer — see above)"
   fi
-  rm -f "$mysides_pkg"
+  rm -rf "$mysides_dir"
 fi
 if ! have mysides; then
   warn "mysides not installed — Finder sidebar left untouched"
