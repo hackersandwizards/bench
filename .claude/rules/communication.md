@@ -49,5 +49,5 @@ Confidence is not a percentage you can compute. It is shorthand for whether a cl
 Write and read rules for a literal reader. You execute instructions exactly as written.
 
 - Prefer positive imperatives with explicit objects.
-- Keep load-bearing negatives negative; the specific failure mode is what makes the rule enforceable.
+- Keep a negative that carries the rule negative; the specific failure mode is what makes the rule enforceable.
 - Replace vague adverbs ("usually", "typically", "as appropriate", "when relevant") with the actual condition.

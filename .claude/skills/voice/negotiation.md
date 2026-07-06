@@ -77,7 +77,7 @@ See `personal-voice.md` § Concession and self-deprecation. Give ground before t
 
 **Speaker outreach with fee question.** Standard frame: honor is ours + travel/hotel covered + fees not default but open to discuss + peer-group list + CTO Summit/Dinner invite + podcast offer. Close with *"Was brauchst du von uns, um eine Entscheidung zu treffen?"* This sentence shifts you from selling to co-deciding.
 
-**Training-price pushback.** Hold the flat per-training anchor: *"Pricing ist immer flat pro Training, nie pro Teilnehmer."* If they push, offer **scope reductions** before discount: shorter format, single track, fewer follow-ups. The flat model is brand-load-bearing.
+**Training-price pushback.** Hold the flat per-training anchor: *"Pricing ist immer flat pro Training, nie pro Teilnehmer."* If they push, offer **scope reductions** before discount: shorter format, single track, fewer follow-ups. The flat model is central to the brand.
 
 **Advisor / board setup.** Decouple engagement tier from advisor framing: visibility and network access are STANDARD parts of an advisor relationship, not premium add-ons. Pick a tier proactively (don't punt to next paid meeting). Pair the visibility ask with the cash commitment to earn moral standing. Frame visibility as *"in unser Board of Advisors aufnehmen, zusammen mit X, Y"* (recognition + good company), not as *"öffentlich nennen"* (extraction). Name the secondary marketing motive openly.
 

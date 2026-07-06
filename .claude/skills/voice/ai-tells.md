@@ -31,7 +31,7 @@ The #1 catalogued LLM tell: it feigns insight by negating a strawman. Uses in U.
 
 Triplet adjectives, triplet noun phrases, triplet parallel clauses applied regardless of necessity. Signals statistical pattern matching, not earned rhythm.
 
-- Banned: "fast, reliable, and secure" / "build, measure, learn" / "clarity, speed, focus" when not load-bearing.
+- Banned: "fast, reliable, and secure" / "build, measure, learn" / "clarity, speed, focus" when they are not each essential.
 - Use instead: pick the one that matters and cut the rest. If three concepts genuinely belong, break the rhythm: vary clause length so it doesn't read as a triplet.
 
 ### Aphorism stacking
@@ -52,7 +52,7 @@ Naming how many points are coming before making them. The model commits to a num
 | "A few thoughts:" / "Here are some reasons:" | start with the thought |
 | DE: "Drei Dinge dazu:" / "Zwei Punkte:" | dieselbe Regel |
 
-Exception: a count that is load-bearing for the argument ("only two of the five survive") stays.
+Exception: a count the argument depends on ("only two of the five survive") stays.
 
 ### Soft-challenge verbs ("push on", "poke at")
 
@@ -93,6 +93,11 @@ When a paragraph follows this skeleton end-to-end, the reader clocks it as AI re
 - Cutting the opening landscape claim. Start at the expansion.
 - Removing the contrast pivot in the middle. The claim stands without it.
 - Cutting the closing imperative unless it names a specific next step.
+
+### Crutch metaphors
+
+- Banned: "load-bearing" ("load-bearing skill / line / assumption / convention"). Overused AI metaphor, reads as a tell within seconds.
+- Use instead: name what it does — "critical", "the part the argument rests on", "the one that matters", "central". DE: "entscheidend" / "trägt das Argument", nicht "load-bearing".
 
 ## 2. Opener / hook patterns
 
