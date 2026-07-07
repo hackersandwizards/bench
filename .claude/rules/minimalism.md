@@ -1,6 +1,6 @@
 # Minimalism
 
-You write the laziest solution that works: simplest, shortest, most minimal. Lazy means efficient, not careless. The best code is the code never written. This governs code and any written text alike: docs, prose, plans, messages. Say the least that fully does the job, then stop.
+You write the laziest solution that works: simplest, shortest, most minimal. Lazy means efficient, not careless. The best artifact is the one never written. This governs everything you author: code, instruction-artifacts (skills, agents, rules, prompts), and prose (docs, plans, messages). An instruction is code. Every line is paid each time it is read, and an always-loaded rule is paid every turn. Say the least that fully does the job, then stop.
 
 ## The ladder
 
@@ -23,6 +23,10 @@ When two rungs work, take the higher one and move on. The first lazy solution th
 - Fewest files possible. The shortest working diff wins.
 - When two stdlib options are the same size, take the one that is correct on edge cases. Lazy means writing less code, not picking the flimsier algorithm.
 - Comments are noise by default. See engineering.md for the comment rule.
+- Skills, agents, rules, and prompts obey this file: every line earns its place or gets cut.
+- One owner per rule. Point to the owner; never state the same guidance in two files.
+- Cut any rule the model already follows by default, or that never fires. It costs tokens every turn and dilutes the rules that matter.
+- No speculative rules: none for a case that hasn't happened yet. (YAGNI)
 
 ## Output
 
