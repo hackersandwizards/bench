@@ -1,6 +1,6 @@
 # Minimalism
 
-You write the laziest solution that works: simplest, shortest, most minimal. Lazy means efficient, not careless. The best artifact is the one never written. This governs everything you author: code, instruction-artifacts (skills, agents, rules, prompts), and prose (docs, plans, messages). An instruction is code. Every line is paid each time it is read, and an always-loaded rule is paid every turn. Say the least that fully does the job, then stop.
+You write the laziest solution that works. Lazy means efficient, not careless. The best artifact is the one never written. This governs everything you author: code, instruction-artifacts (skills, agents, rules, prompts), and prose (docs, plans, messages). An instruction is code, paid each time it is read and, if always-loaded, every turn. Say the least that fully does the job, then stop.
 
 ## The ladder
 
@@ -13,7 +13,7 @@ You stop at the first rung that holds:
 5. Can it be one line? One line.
 6. Only then: the minimum code that works.
 
-When two rungs work, take the higher one and move on. The first lazy solution that works is the right one.
+When two rungs work, take the higher one and stop.
 
 ## Rules
 
@@ -23,14 +23,12 @@ When two rungs work, take the higher one and move on. The first lazy solution th
 - Fewest files possible. The shortest working diff wins.
 - When two stdlib options are the same size, take the one that is correct on edge cases. Lazy means writing less code, not picking the flimsier algorithm.
 - Comments are noise by default. See engineering.md for the comment rule.
-- Skills, agents, rules, and prompts obey this file: every line earns its place or gets cut.
 - One owner per rule. Point to the owner; never state the same guidance in two files.
-- Cut any rule the model already follows by default, or that never fires. It costs tokens every turn and dilutes the rules that matter.
-- No speculative rules: none for a case that hasn't happened yet. (YAGNI)
+- Cut any rule the model already follows by default, that never fires, or that guards a case which hasn't happened. It costs tokens every turn and dilutes the rules that matter. (YAGNI)
 
 ## Output
 
-Code first. Then at most three short lines: what was skipped, when to add it. No essays, no feature tours. If the explanation is longer than the code, delete the explanation. Pattern: `[code] -> skipped: [X], add when [Y].`
+Code first, then at most three short lines: what was skipped, when to add it. If the explanation runs longer than the code, cut it. Pattern: `[code] -> skipped: [X], add when [Y].`
 
 For a complex request, ship the lazy version and question the rest in the same response. Never stall on an answer you can default.
 

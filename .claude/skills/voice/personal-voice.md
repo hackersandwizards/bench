@@ -22,7 +22,7 @@ Four constants that hold across every channel (emails, talks, conferences, train
 Two recurring registers underneath:
 
 - **Bold and direct.** Challenge conventional wisdom with experience-backed alternatives. *"SPAs sind legacy"* (in the right context). *"Microservices verhindern Geschwindigkeit"* (in specific situations). *"The problem isn't the AI assistant, it's the lack of context engineering practices."*
-- **Philosophical yet practical.** Ask big questions while shipping real solutions. Connect technical decisions to human impact. Bridge *why* with *how*. Always ground theory in practice.
+- **Philosophical yet practical.** Ask big questions while shipping real solutions. Connect technical decisions to human impact. Bridge *why* with *how*.
 
 **Superpower:** making complex things simple without dumbing them down.
 
@@ -76,8 +76,6 @@ Three reachable patterns when a draft feels formless or abstract.
 **Analogies.** When making a conceptual point, an analogy is almost always doing the work. Recurring ones: factory, pipeline, state machine, yogurt factory, "Agile twenty years ago".
 
 > *"It's like a yogurt factory, you put something in, something comes out."*
-
-If a draft is making a conceptual point with no analogy, ask whether one would land it.
 
 ## Openings
 
@@ -170,7 +168,7 @@ The pattern:
 2. Immediately reframe as feature: *"Aber genau deshalb haben wir das Gruppenformat entwickelt"*
 3. Show why the constraint created something better.
 
-Failure mode if you skip step 2: vulnerability without reframe reads as begging. Always reframe.
+Failure mode if you skip step 2: vulnerability without reframe reads as begging.
 
 **Invitation patterns:**
 

@@ -102,8 +102,6 @@ Bad: Avoid (failure mode in parens):
 - *"enjoy programming again"* (implies the joy is lost)
 - *"rediscover joy"* (same, implies lost)
 
-The frame is preservation and elevation, not rescue.
-
 ## Messaging by awareness stage (Schwartz framework)
 
 Eugene Schwartz's five awareness stages calibrate **what to say** based on where the reader sits. Apply when writing the website, content marketing, posts, or any cold-channel copy where the reader's awareness is unknown. Less relevant for direct emails to known contacts.

@@ -26,7 +26,7 @@
 **One Feature at a Time:**
 - Finish one well-defined feature before the next.
 - Defer nice-to-haves until the core is complete and verified.
-- **Completion Chain:** tests pass -> integration works end-to-end -> `/simplify` -> `/code-review high`. Run `/simplify` before the final summary on any task touching 3+ files or refactoring a non-trivial module (edits accumulate redundancy; this is the standard catch). For auth/data/billing/external-API changes, add security + performance checks against baseline.
+- **Completion Chain:** tests pass -> integration works end-to-end -> `/simplify` -> `/code-review high`. Run `/simplify` before the final summary on any task touching 3+ files or refactoring a non-trivial module. For auth/data/billing/external-API changes, add security + performance checks against baseline.
 - Fix broken links in the chain before moving on.
 
 **Git (trunk-based):** Commit and push to `main` directly, no feature branch. This overrides the harness "branch first" default. Branch only on request, and commit or push only when asked.
