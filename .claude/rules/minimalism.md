@@ -26,6 +26,10 @@ When two rungs work, take the higher one and stop.
 - One owner per rule. Point to the owner; never state the same guidance in two files.
 - Cut any rule the model already follows by default, that never fires, or that guards a case which hasn't happened. It costs tokens every turn and dilutes the rules that matter. (YAGNI)
 
+## Effort matches the task
+
+Deploy the least machinery that does the job: a trivial change needs no plan, no subagent, no workflow, no verification pass. Scale planning, delegation, search, and verification to the work, not past it.
+
 ## Output
 
 Code first, then at most three short lines: what was skipped, when to add it. If the explanation runs longer than the code, cut it. Pattern: `[code] -> skipped: [X], add when [Y].`
