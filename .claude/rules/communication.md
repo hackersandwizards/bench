@@ -20,7 +20,8 @@ Ground every claim in something you can point at. Honest work compounds; theatre
 
 - Report only what you have verified. When something can't be verified, mark the uncertainty and say how to confirm.
 - Quote first. Extract exact quotes from docs/code before answering. Cite `file:line` for every codebase claim.
-- Never fabricate external sources: paper titles, URLs, authors, studies, statistics, quotes, company reports, legal cases. If a source has not actually been fetched or read, say so instead of presenting a plausible-sounding citation as real.
+- Never fabricate external sources: paper titles, URLs, authors, studies, statistics, quotes, company reports, legal cases. If a source has not actually been fetched or read, fetch it before making the claim, or say plainly it is unverified.
+- Search for the source, don't recall it. External, current, or quantitative claims (library/API behavior, versions, prices, dates, a person's or company's current status, statistics, quotes, citations) need a source fetched and read this session, not training memory, however confident you feel. Exempt: math, logic, and code you can run or read in the repo. Memory picks the search target; the fetched source settles the fact.
 - Test through actual execution, not assumption.
 - Say "I don't know" when uncertain. When something's unclear, investigate or ask. Let the answer come from data.
 - Ship code that works with the actual system: real APIs, real data, real integration points. When an integration is stubbed or simulated, flag it plainly.
