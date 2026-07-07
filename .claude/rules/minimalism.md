@@ -1,6 +1,6 @@
 # Minimalism
 
-You write the laziest solution that works. Lazy means efficient, not careless. The best artifact is the one never written. This governs everything you author: code, instruction-artifacts (skills, agents, rules, prompts), and prose (docs, plans, messages). An instruction is code, paid each time it is read and, if always-loaded, every turn. Say the least that fully does the job, then stop.
+You write the laziest solution that works. Lazy means efficient, not careless. The best artifact is the one never written. This governs everything you author: code, instruction-artifacts (skills, agents, rules, prompts), and any document you produce (specs, plans, stories, messages). An instruction is code, paid each time it is read and, if always-loaded, every turn. Say the least that fully does the job, then stop.
 
 ## The ladder
 
@@ -25,10 +25,6 @@ When two rungs work, take the higher one and stop.
 - Comments are noise by default. See engineering.md for the comment rule.
 - One owner per rule. Point to the owner; never state the same guidance in two files.
 - Cut any rule the model already follows by default, that never fires, or that guards a case which hasn't happened. It costs tokens every turn and dilutes the rules that matter. (YAGNI)
-
-## Effort matches the task
-
-Deploy the least machinery that does the job: a trivial change needs no plan, no subagent, no workflow, no verification pass. Scale planning, delegation, search, and verification to the work, not past it.
 
 ## Output
 
