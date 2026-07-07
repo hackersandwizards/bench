@@ -2,7 +2,7 @@
 
 - Delegate when: (a) a task spans 3+ files, (b) research could fill the main context, (c) multiple independent queries can run in parallel.
 - One task per subagent for focused execution.
-- Consult the `claude-code-guide` agent before building or changing Claude Code artifacts (skills, rules, subagents, hooks, output styles, settings, MCP config). Verify current frontmatter and mechanics against it or the official docs; don't guess the schema from memory.
+- Before building or changing Claude Code artifacts (skills, rules, subagents, hooks, output styles, settings, MCP), consult the `claude-code-guide` agent or official docs. Don't guess the frontmatter or mechanics from memory.
 
 # Tooling preferences
 
