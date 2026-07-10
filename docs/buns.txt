@@ -1,18 +1,18 @@
-/Users/bstemmildt/.bun/install/global node_modules (1922)
+$HOME/.bun/install/global node_modules (1922)
 ├── @augmentcode/auggie@0.32.0
-├── @earendil-works/pi-coding-agent@0.80.3
+├── @earendil-works/pi-coding-agent@0.80.6
 ├── @es4x/create@0.22.0
-├── @github/copilot@1.0.68
-├── @google/gemini-cli@0.49.0
+├── @github/copilot@1.0.70
+├── @google/gemini-cli@0.50.0
 ├── @googleworkspace/cli@0.22.5
-├── @openai/codex@0.142.5
-├── ccusage@20.0.14
+├── @openai/codex@0.144.1
+├── ccusage@20.0.17
 ├── codebuff@1.0.683
-├── command-code@0.41.1
+├── command-code@0.44.1
 ├── corepack@0.35.0
-├── freebuff@0.0.118
+├── freebuff@0.0.120
 ├── node-gyp@13.0.1
 ├── npm-check@6.0.1
-├── opencode-ai@1.17.13
+├── opencode-ai@1.17.18
 ├── task-master-ai@0.43.1
 └── yarn@1.22.22

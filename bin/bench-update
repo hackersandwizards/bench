@@ -31,15 +31,8 @@ have pipx && run "pipx apps" pipx upgrade-all
 have uv   && run "uv tools" uv tool upgrade --all
 have uv   && run "uv cache prune" env UV_LOCK_TIMEOUT=10 uv cache prune
 
-_pip_managed_names() {
-  # pip-managed installs have a RECORD file; brew-installed ones don't, so this
-  # filters brew's packages out.
-  python3 -c 'import importlib.metadata as m
-print("\n".join(d.metadata["Name"] for d in m.distributions() if d.read_text("RECORD")))' 2>/dev/null
-}
-
 _pip_global_upgrade() {
-  local managed; managed=$(_pip_managed_names)
+  local managed; managed=$(pip_managed_names)
   [[ -z "$managed" ]] && return 0
   pip list --outdated --format=json 2>/dev/null \
     | jaq -r '.[].name' \
@@ -64,10 +57,9 @@ fi
 source_sdkman || true
 if have sdk; then
   # Never block an unattended run on a prompt: auto-answer "yes" (newest as
-  # default), regardless of the machine's etc/config. `sdk` is a function in
-  # this shell, so it reads this variable directly.
-  # shellcheck disable=SC2034  # consumed by the sourced `sdk` function
-  sdkman_auto_answer=true
+  # default), regardless of the machine's etc/config. Export it for the Bash 3
+  # compatibility wrapper, which runs SDKMAN in a Homebrew Bash child.
+  export sdkman_auto_answer=true
   run "SDKMAN selfupdate" sdk_run selfupdate
   run "SDKMAN update"     sdk_run update
   run "SDKMAN upgrade"    sdk_run upgrade

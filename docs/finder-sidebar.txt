@@ -1,5 +1,5 @@
-iCloud -> x-apple-finder:icloud
 Applications -> file:///Applications/
+Desktop -> file://$HOME/Desktop/
 Downloads -> file://$HOME/Library/Mobile%20Documents/com~apple~CloudDocs/Downloads/
 Downloads -> file://$HOME/Downloads/
-Desktop -> file://$HOME/Desktop/
+iCloud -> x-apple-finder:icloud

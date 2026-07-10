@@ -15,8 +15,6 @@ BreuningerPlus8-Medium.ttf
 BreuningerPlus8-Regular.ttf
 BreuningerPlus8-Thin.ttf
 BundesSans-Regular.ttf
-collegiateHeavyOutline Medium.ttf
-coolvetica rg.ttf
 Dyslexie-Bold.ttf
 Dyslexie-BoldItalic.ttf
 Dyslexie-Italic.ttf
@@ -39,6 +37,10 @@ FiraSans-SemiBold.ttf
 FiraSans-SemiBoldItalic.ttf
 FiraSans-Thin.ttf
 FiraSans-ThinItalic.ttf
+GLYPHICONS-Filetypes-Regular.otf
+GLYPHICONS-Halflings-Regular.otf
+GLYPHICONS-Regular.otf
+GLYPHICONS-Social-Regular.otf
 Gilroy-Black.ttf
 Gilroy-BlackItalic.ttf
 Gilroy-Bold.ttf
@@ -59,10 +61,6 @@ Gilroy-Thin.ttf
 Gilroy-ThinItalic.ttf
 Gilroy-UltraLight.ttf
 Gilroy-UltraLightItalic.ttf
-GLYPHICONS-Filetypes-Regular.otf
-GLYPHICONS-Halflings-Regular.otf
-GLYPHICONS-Regular.otf
-GLYPHICONS-Social-Regular.otf
 InputMono-Black.ttf
 InputMono-BlackItalic.ttf
 InputMono-Bold.ttf
@@ -257,14 +255,12 @@ Moon Flower.ttf
 NotoSans_Bold.ttf
 NotoSans_gdi.ttf
 OTTO Script.otf
-otto-sans-bold.ttf
-otto-sans-thin.ttf
-otto-sans.ttf
 PayPalSansBig-Light-Klim.ttf
 PayPalSansBig-Regular-Klim.ttf
 PayPalSansSmall-Medium-Klim.ttf
 PayPalSansSmall-Regular-Klim.ttf
 Perfect DOS VGA 437.ttf
+RW_BLUME2000.ttf
 Roboto-Black.ttf
 Roboto-BlackItalic.ttf
 Roboto-Bold.ttf
@@ -288,7 +284,6 @@ Rubik-Light.ttf
 Rubik-LightItalic.ttf
 Rubik-SemiBold.ttf
 Rubik-SemiBoldItalic.ttf
-RW_BLUME2000.ttf
 SFDisplay-Black.otf
 SFDisplay-Bold.otf
 SFDisplay-Heavy.otf
@@ -323,12 +318,17 @@ SFText-RegularItalic.otf
 SFText-Semibold.otf
 SFText-SemiboldItalic.otf
 SOBLUME2000-DarkShade.otf
-soblume2000-filled.otf
 SOBLUME2000-Outline.otf
 SOBLUME2000-Shade.otf
+SpaceMono-Bold.ttf
+SpaceMono-Regular.ttf
+collegiateHeavyOutline Medium.ttf
+coolvetica rg.ttf
+otto-sans-bold.ttf
+otto-sans-thin.ttf
+otto-sans.ttf
+soblume2000-filled.otf
 sofiapro-light.otf
 sofiapro-regular.otf
 sofiapro-semibold.otf
-SpaceMono-Bold.ttf
-SpaceMono-Regular.ttf
 weathericons-regular-webfont.ttf

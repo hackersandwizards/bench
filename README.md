@@ -51,7 +51,7 @@ New team member, fresh machine. Provision these before running `install.sh`. The
 | Qonto            | `QONTO_API_KEY`, `QONTO_ORGANIZATION_ID`, `QONTO_THIRDPARTY_HOST` in `secrets.zsh`               |
 | Circle           | Community platform                                                                               |
 
-Optional, per person: Fathom (`FATHOM_API_KEY` in `secrets.zsh`), OpenAI (Codex CLI, ChatGPT), Cloudflare, Namecheap, AWS, Google Cloud (Workspace sign-in). JetBrains Toolbox, Cursor, Warp, CleanMyMac, DaisyDisk, CrossOver, and superwhisper bring their own licenses.
+Optional, per person: Fathom (`FATHOM_API_KEY` in `secrets.zsh`), Todoist (`TODOIST_API_KEY`), OpenAI (Codex CLI, ChatGPT), Cloudflare, Namecheap, AWS, Google Cloud (Workspace sign-in). JetBrains Toolbox, Cursor, Warp, CleanMyMac, DaisyDisk, CrossOver, and superwhisper bring their own licenses.
 
 ## New-machine checklist (manual)
 
@@ -90,7 +90,7 @@ secrets.zsh           Untracked, gitignored. API keys go here
 bin/
   _lib.sh               Shared helpers (step/ok/warn/skip/have, STOW_FILES, ANTIDOTE_SH, REPO_ROOT)
   bench-update          Update brew, antidote, language tools, globals
-  bench-export          Refresh Brewfile + docs/ snapshots + sync home/ from $HOME
+  bench-export          Check Brewfile + refresh docs/ snapshots + sync home/ from $HOME
   bench-doctor          Health check
   bench-prefs-diff      Capture a settings change as defaults keys for macos.sh
   bench-clean           Reclaim disk: caches, .DS_Store, VS Code extension dedup

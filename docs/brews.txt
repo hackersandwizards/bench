@@ -20,6 +20,7 @@ cairo
 certifi
 cffi
 claude-squad
+cmake
 composer
 coreutils
 cryptography
@@ -29,6 +30,8 @@ dav1d
 deno
 diffutils
 direnv
+dockutil
+duti
 ed
 elixir
 erlang
@@ -83,6 +86,7 @@ jaq
 jpeg-turbo
 jpeg-xl
 jq
+json-c
 just
 k9s
 kafka
@@ -146,6 +150,7 @@ mongodb-database-tools
 mongosh
 mpdecimal
 mpfr
+mpg123
 mtplx
 mysql
 nano
@@ -154,6 +159,7 @@ ncurses
 neo4j
 net-snmp
 nettle
+ninja
 nmap
 node
 npth

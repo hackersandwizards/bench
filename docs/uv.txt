@@ -1,4 +1,4 @@
-scrapling v0.4.9
+scrapling v0.4.10
 - scrapling
-yt-dlp v2026.6.9
+yt-dlp v2026.7.4
 - yt-dlp

@@ -390,15 +390,8 @@ fi
 # failure handling lives in replay_globals above).
 istep "Install language-ecosystem global CLIs (uv, npm, bun, cargo, gem, pip)"
 if ask "Install uv / npm / bun / cargo / gem / pip global CLIs from docs/ snapshots?"; then
-  # brew ruby and python are keg-only, so their gem/pip aren't on PATH until
-  # exports.zsh runs, which it hasn't on a fresh machine. Without this the replay
-  # would use /usr/bin/gem (system ruby, wrong ABI) and never find `pip` (brew
-  # links only pip3). Mirror exports.zsh so the replay uses brew's gem and pip.
-  # python3 is brew's alias for the current default python: version-agnostic, so
-  # it tracks upgrades instead of pinning python@3.14.
-  export PATH="/opt/homebrew/opt/ruby/bin:/opt/homebrew/opt/python3/libexec/bin:$PATH"
   # The six managers come from brew bundle, not installed here. The replay only
-  # needs them on PATH: gem/pip via the keg-only fix, the rest linked in bin.
+  # needs them on PATH; _lib.sh selects the keg-only Ruby and Python tools.
   replay_ecosystem uv    uv.txt    parse_uv    uv tool install
   replay_ecosystem npm   npms.txt  parse_node  npm install -g
   replay_ecosystem bun   buns.txt  parse_node  bun add -g

@@ -12,6 +12,9 @@ skip() { printf '\033[2m·\033[0m %s\n' "$1"; }
 have() { command -v "$1" >/dev/null 2>&1; }
 indent() { sed 's/^/    /'; }
 
+# Scripts must not fall back to Apple's Ruby or bypass Homebrew's Python tools.
+export PATH="/opt/homebrew/opt/ruby/bin:/opt/homebrew/opt/python3/libexec/bin:$PATH"
+
 check() {
   local label="$1"; shift
   if "$@" >/dev/null 2>&1; then ok "$label"; else fail "$label"; fi
@@ -106,6 +109,19 @@ SDKMAN_CONFIG="$HOME/.sdkman/etc/config"
 # wraps it.
 source_sdkman() {
   [[ -s "$SDKMAN_INIT" ]] || return 1
+  if (( BASH_VERSINFO[0] < 4 )); then
+    [[ -x /opt/homebrew/bin/bash ]] || return 1
+    # shellcheck disable=SC2329
+    sdk() {
+      /opt/homebrew/bin/bash -c '
+        set +u
+        source "$1"
+        shift
+        sdk "$@"
+      ' bash "$SDKMAN_INIT" "$@"
+    }
+    return 0
+  fi
   set +u
   # shellcheck disable=SC1090
   source "$SDKMAN_INIT"
@@ -167,6 +183,16 @@ parse_sdk()   { awk 'NF == 2 { print $1, $2 }' "$1"; }
 parse_gem()   { awk -F' *[()] *' 'NF > 1 && $2 !~ /^default:/ { print $1 }' "$1"; }
 # Drop `npm` itself: reinstalling the package manager is a no-op.
 parse_node()  { awk 'NF && $NF ~ /@/ { n=$NF; sub(/@[^@]*$/, "", n); if (n != "npm") print n }' "$1"; }
+
+pip_managed_freeze() {
+  /opt/homebrew/bin/python3 -c 'import importlib.metadata as m
+rows = {(d.metadata["Name"], d.version) for d in m.distributions()
+        if d.metadata["Name"] and d.read_text("RECORD") is not None}
+for name, version in sorted(rows, key=lambda row: row[0].lower()):
+    print(f"{name}=={version}")'
+}
+
+pip_managed_names() { pip_managed_freeze | sed 's/==.*//'; }
 # `dockutil --list` TSV -> one absolute path per line. Field 2 is a file:// URL
 # natively but a plain path for entries dockutil itself wrote, so both forms
 # must parse or an export-after-replay yields an empty snapshot. %XX-decode

@@ -28,6 +28,8 @@ brew "freetype"
 brew "cairo"
 # Manage multiple AI agents like Claude Code, Aider and Codex in your terminal
 brew "claude-squad"
+# Cross-platform make
+brew "cmake"
 # Get a file from an HTTP, HTTPS or FTP server
 brew "curl"
 # General-purpose scripting language
@@ -118,6 +120,8 @@ brew "lazygit"
 brew "lefthook"
 # Pager program similar to more
 brew "less"
+# Next-gen compiler infrastructure
+brew "llvm"
 # Mac App Store command-line interface
 brew "mas"
 # Deep clean and optimize your Mac
@@ -132,6 +136,8 @@ brew "mysql"
 brew "nano"
 # Robust (fully ACID) transactional property graph database
 brew "neo4j"
+# Small build system for use with gyp or CMake
+brew "ninja"
 # Port scanning utility for large networks
 brew "nmap"
 # 7-Zip (high compression file archiver) implementation
@@ -157,7 +163,7 @@ brew "ripgrep"
 # Utility that provides fast incremental file transfer
 brew "rsync"
 # Powerful, clean, object-oriented scripting language
-brew "ruby"
+brew "ruby", link: false
 # Safe, concurrent, practical language. Not rustup: the two conflict (both
 # link cargo/rustc), and brew upgrade already covers toolchain updates.
 brew "rust"

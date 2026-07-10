@@ -18,7 +18,8 @@ $HOME/Library/Application Support/JetBrains/Toolbox/scripts:\
 /opt/homebrew/share/google-cloud-sdk/bin:\
 /opt/homebrew/bin:\
 /opt/homebrew/sbin:\
-$PATH"
+$PATH:\
+/opt/homebrew/opt/llvm/bin"
 
 # --- Ruby ---
 if [[ -n "$RUBY_API" ]]; then

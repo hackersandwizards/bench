@@ -16,6 +16,6 @@ Keynote Creator Studio	file:///Applications/Keynote%20Creator%20Studio.app/	pers
 Numbers Creator Studio	file:///Applications/Numbers%20Creator%20Studio.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.Numbers
 Pages Creator Studio	file:///Applications/Pages%20Creator%20Studio.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.Pages
 App Store	file:///System/Applications/App%20Store.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.AppStore
-Campo	file:///System/Applications/Campo.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.campo
+Siri	file:///System/Applications/Siri%20AI.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.campo
 System Settings	file:///System/Applications/System%20Settings.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.systempreferences
 Downloads	file://$HOME/Library/Mobile%20Documents/com~apple~CloudDocs/Downloads/	persistentOthers	$HOME/Library/Preferences/com.apple.dock.plist	
