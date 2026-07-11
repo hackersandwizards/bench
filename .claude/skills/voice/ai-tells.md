@@ -97,7 +97,7 @@ When a paragraph follows this skeleton end-to-end, the reader clocks it as AI re
 ### Crutch metaphors
 
 - Banned: "load-bearing" ("load-bearing skill / line / assumption / convention"). Overused AI metaphor, reads as a tell within seconds.
-- Use instead: name what it does — "critical", "the part the argument rests on", "the one that matters", "central". DE: "entscheidend" / "trägt das Argument", nicht "load-bearing".
+- Use instead: name what it does, "critical", "the part the argument rests on", "the one that matters", "central". DE: "entscheidend" / "trägt das Argument", nicht "load-bearing".
 
 ## 2. Opener / hook patterns
 

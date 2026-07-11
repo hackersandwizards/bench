@@ -67,6 +67,10 @@ Lead with the claim, the conflict, or a concrete scene. Do not open with the yea
 
 Failure mode: openers like "In today's fast-paced world ..." or "Seit jeher beschäftigt die Menschheit ..." mark the writer as corporate, and the reader bails before the content arrives.
 
+## German orthography
+
+Always use proper German Umlaute and Sonderzeichen (ä, ö, ü, ß, Ä, Ö, Ü) in emails, messages, and all German text. Keep the original characters intact; ASCII fallbacks like `ae`, `oe`, `ue`, `ss` belong to legacy systems only. Ensure UTF-8 encoding. Example: `grüße`, not `gruesse`.
+
 ## Foreign words, jargon, Anglizismen
 
 Use them when they do work the local language can't. Cut them when an everyday word means the same.

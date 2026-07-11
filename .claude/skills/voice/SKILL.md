@@ -1,7 +1,7 @@
 ---
 name: voice
 description: >-
-  MUST be loaded before drafting, writing, composing, editing, or rewriting any human-readable prose that represents h&w or the user: emails, replies, Slack messages, LinkedIn posts, proposals, quotes, talks, abstracts, speaker outreach, client comms, blog posts, articles, headlines, captions, slide decks, README copy, announcements, summaries, documentation prose, FAQs, surveys, notes for review. Skip only for code, code comments, command output, raw data, internal commit messages, log lines, and machine-readable config.
+  MUST be loaded before drafting, writing, composing, editing, or rewriting any human-readable prose that represents h&w or the user: emails, replies, Slack messages, WhatsApp and other personal messages, LinkedIn posts, proposals, quotes, talks, abstracts, speaker outreach, client comms, blog posts, articles, headlines, captions, slide decks, README copy, announcements, summaries, documentation prose, FAQs, surveys, notes for review. Skip only for code, code comments, command output, raw data, internal commit messages, log lines, and machine-readable config.
 allowed-tools: Read, Glob, Grep, Bash
 ---
 
@@ -11,21 +11,20 @@ Everything needed to draft prose that represents h&w and the user.
 
 ## How to use
 
-1. **Pick layers by situation.** Drafting prose -> all five base layers. Cold pitch -> add `pitch-framework.md`. Self-intro -> add `intro-framework.md`. Slack -> add `slack-channel.md`. Need verbatim phrases, competitive frame, or LLM-rewrite examples -> add `brand-vocabulary.md`.
+1. **Pick layers by situation.** Drafting prose -> all four base layers. Cold pitch -> add `pitch-framework.md`. Self-intro -> add `intro-framework.md`. Slack -> add `slack-channel.md`. Need verbatim phrases, competitive frame, or LLM-rewrite examples -> add `brand-vocabulary.md`.
 2. **Conflicts: specificity wins, with two fixed precedences.** `prose-style.md` outranks `personal-voice.md` on sentence mechanics (length, shape, filler). Channel beats brand/personal where it explicitly carves out (Slack format quirks live in `slack-channel.md`).
 3. **Rules serve clarity.** `prose-style.md` ends with Orwell's sixth: break any rule before barbarism. When following the rule reduces clarity, the rule loses.
 
-## The five base layers (apply in order)
+## The four base layers (apply in order)
 
-Each layer constrains the next; the more concrete rule beats the more abstract one. Layers 1-4 are positive (write *from* them). Layer 5 is a filter (check *against* it after drafting).
+Each layer constrains the next; the more concrete rule beats the more abstract one. Layers 1-3 are positive (write *from* them). Layer 4 is a filter (check *against* it after drafting).
 
 | Layer | File | Owns |
 |-------|------|------|
 | 1. Brand | `brand-voice.md` | h&w-as-a-company: positioning principles, canonical banned-words list, performance-language standards, banned Unicode/style, Schwartz awareness-stage messaging, audience, sender identity |
 | 2. The user's voice | `personal-voice.md` | The user specifically: rhythm, hedges, Konjunktiv, openings/closings matrices, channel calibration table, anti-patterns, inline verbatim quotes. Defers to `prose-style.md` on sentence mechanics. |
-| 3. Prose | `prose-style.md` | Sentence mechanics (DE/EN): short sentences, strong verbs over nominalizations, no filler, concrete over abstract. Authority on mechanics; outranks `personal-voice.md` on conflict. Schneider, Reiners, Strunk & White, Orwell. |
-| 4. Orthography | `german-text.md` | UTF-8 encoding for German Umlaute (`ä ö ü ß`). |
-| 5. AI-tells filter | `ai-tells.md` | Pure detector list of sentence structures, openers, transitions, copula dodges, and formatting tics that mark prose as LLM-generated. Run the draft against it after layers 1-4 and rewrite anything that triggers. Writing rules themselves live in `prose-style.md`. |
+| 3. Prose | `prose-style.md` | Sentence mechanics (DE/EN): short sentences, strong verbs over nominalizations, no filler, concrete over abstract, German orthography (UTF-8 Umlaute). Authority on mechanics; outranks `personal-voice.md` on conflict. Schneider, Reiners, Strunk & White, Orwell. |
+| 4. AI-tells filter | `ai-tells.md` | Pure detector list of sentence structures, openers, transitions, copula dodges, and formatting tics that mark prose as LLM-generated. Run the draft against it after layers 1-3 and rewrite anything that triggers. Writing rules themselves live in `prose-style.md`. |
 
 ## Channel overlays: apply when the channel matches
 

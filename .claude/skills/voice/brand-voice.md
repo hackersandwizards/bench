@@ -210,7 +210,7 @@ Screen readers can't read decorative Unicode. Customer-facing text (LinkedIn pos
 
 **Carve-outs:**
 - Pictograph emojis (📅 ✅ 🚀) are technically accessible but absent from the user's real writing, skip them in customer-facing copy.
-- German Umlaute (`ä ö ü ß`) are language characters, not decoration. Always preserve. See `german-text.md`.
+- German Umlaute (`ä ö ü ß`) are language characters, not decoration. Always preserve. See `prose-style.md` (German orthography).
 - ASCII emoticons (`:)` `;)` `xD`) where a real Slack message would land them.
 - Slack format quirks (incl. the `•` bullet the Slack API requires): see `slack-channel.md`.
 
