@@ -42,6 +42,7 @@ export HOMEBREW_REQUIRE_TAP_TRUST=1
 # default in recent Homebrew; HOMEBREW_NO_ASK is the documented opt-out so update
 # runs (`ua`) and manual upgrades proceed unattended. A bare `--ask` still overrides.
 export HOMEBREW_NO_ASK=1
+export HOMEBREW_NO_ENV_HINTS=1
 
 # --- Locale ---
 export LANG="en_US.UTF-8"
