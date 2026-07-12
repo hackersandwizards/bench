@@ -9,7 +9,7 @@
 - Enter plan mode for non-trivial tasks (3+ steps, architectural decisions, verification work).
 - Plan at two levels: high-level (overall goals and flow), then task-level (specific files or features). Implement only after the user approves both levels.
 - Before planning anything complex, list every source document, methodology file, and reference you intend to use. Wait for the user to add or remove items before producing the plan.
-- Bundle clarifying questions into one AskUserQuestion call (see communication.md), don't drip them one at a time.
+- Bundle clarifying questions into one AskUserQuestion call (see collaboration.md), don't drip them one at a time.
 - When something goes sideways mid-execution, stop and re-plan.
 
 **Iterative Work:**
@@ -20,7 +20,7 @@
 
 **Conform Before Creating:**
 - Before adding new code, find 2-3 examples of similar code in the codebase. Match their naming, file structure, error handling, and test style.
-- **Priority:** architecture docs & ADRs (CLAUDE.md, /docs/) outrank existing code. Documented intent wins when current code contradicts it.
+- **Priority:** architecture docs (CLAUDE.md, rules) outrank existing code. Documented intent wins when current code contradicts it.
 - Without a target doc, follow established codebase conventions. Consistency beats personal preference.
 
 **One Feature at a Time:**
