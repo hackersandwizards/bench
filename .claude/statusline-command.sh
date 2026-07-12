@@ -6,7 +6,7 @@
 # Claude Code Status Line
 #
 # Renders a colored, single-line status bar:
-#   [Project |] [Branch* |] [(REBASING 3/7) |] [ahead/behind |] [Agent |] Model | [Effort |] context bar XX% | [rate-limit bar XX% Xh Xm] [| status]
+#   [Project ·] [Branch* ·] [(REBASING 3/7) ·] [ahead/behind ·] [Agent ·] Model · [Effort ·] context bar XX% · [rate-limit bar XX% Xh Xm] [· status]
 #
 # Colors match starship prompt: cyan=directory, gray=branch, red=dirty, yellow=git state.
 # Effort badge colors match Claude's UI: low=yellow, medium=green, high=blue, xhigh=magenta, max=gradient.
@@ -32,7 +32,7 @@ SKY="${ESC}[38;2;110;180;200m"
 
 FILLED="██████████"
 EMPTY="░░░░░░░░░░"
-SEP="${GRAY}|${RESET}"
+SEP="${GRAY}·${RESET}"
 
 # Context window: Claude reports "% context used" against the auto-compact threshold,
 # not the full window. As of cli v2.1.156 the threshold is:
