@@ -49,7 +49,6 @@ CTX_BAR_RED=76  CTX_BAR_YELLOW=52
 # 5-hour rate limit thresholds (raw %, no rescaling).
 RL5_RED=80   RL5_YELLOW=50
 
-# Service status: how long to trust the cache, and the curl timeout for refreshes.
 STATUS_CACHE_TTL=300   STATUS_FETCH_TIMEOUT=5
 
 format_countdown() {
@@ -183,7 +182,6 @@ fi
 bar_idx=$(( pct / 10 ))
 pct_color "$pct" "$CTX_BAR_RED" "$CTX_BAR_YELLOW" bar_color
 
-# --- Build output ---
 # Convention: trailing " ${SEP} " on a section means "more sections may follow."
 # Leading " ${SEP} " (used by the rl5 bar and the status badge) means "only joins
 # when something rendered before us". The load-bearing inconsistency is intentional.
