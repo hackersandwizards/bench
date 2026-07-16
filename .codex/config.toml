@@ -4,6 +4,10 @@ plan_mode_reasoning_effort = "high"
 project_doc_fallback_filenames = ["CLAUDE.md"]
 tui.status_line = ["current-dir", "git-branch", "model-with-reasoning", "context-remaining", "five-hour-limit"]
 
+[mcp_servers.chrome-devtools]
+command = "bunx"
+args = ["chrome-devtools-mcp@latest", "--headless", "--isolated", "--viewport=1920x1080", "--no-performance-crux", "--no-usage-statistics"]
+
 [features]
 js_repl = false
 apps = false
@@ -24,13 +28,19 @@ inherit = "core"
 DISABLE_ERROR_REPORTING = "1"
 
 [plugins."computer-use@openai-bundled"]
-enabled = true
+enabled = false
 
 [plugins."chrome@openai-bundled"]
-enabled = true
+enabled = false
 
 [plugins."visualize@openai-bundled"]
 enabled = true
 
+[plugins."github@openai-curated"]
+enabled = false
+
+[plugins."github@openai-curated-remote"]
+enabled = false
+
 [plugins."browser@openai-bundled"]
-enabled = true
+enabled = false
