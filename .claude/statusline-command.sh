@@ -43,8 +43,9 @@ SEP="${GRAY}·${RESET}"
 # Not exposed in the statusline JSON: re-sync this if Anthropic changes the constants.
 CTX_RESERVE_TOKENS=21000
 # % of the usable window at which the context bar turns red / yellow (how far toward
-# auto-compact we are). Percentage-based, so the same pair holds for any window size.
-CTX_BAR_RED=76  CTX_BAR_YELLOW=52
+# auto-compact we are). Calibrated to warn at ~150k and ~250k live tokens in a 1M
+# window; percentage-based, so the same pair scales with every window size.
+CTX_BAR_RED=26  CTX_BAR_YELLOW=16
 
 # 5-hour rate limit thresholds (raw %, no rescaling).
 RL5_RED=80   RL5_YELLOW=50
