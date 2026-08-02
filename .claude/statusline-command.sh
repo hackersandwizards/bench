@@ -1,20 +1,11 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2154
-# (extract/pct_color/time_color/render_bar all assign via `printf -v "$var"`,
-#  which shellcheck can't trace, so it flags every consumer as unset.)
+# (extract/pct_color/time_color/render_bar assign via `printf -v "$var"`, which
+#  the linter cannot trace, so it flags every consumer as unset.)
 #
-# Claude Code Status Line
-#
-# Renders a colored, single-line status bar:
 #   [Project ·] [Branch* ·] [(REBASING 3/7) ·] [ahead/behind ·] [Agent ·] Model · [Effort ·] context bar XX% · [rate-limit bar XX% Xh Xm] [· status]
 #
-# Colors match starship prompt: cyan=directory, gray=branch, red=dirty, yellow=git state.
-# Effort badge colors match Claude's UI: low=yellow, medium=green, high=blue, xhigh=magenta, max=gradient.
-#
-# Performance: hot path forks `git status` once when in a git repo; pure bash
-# otherwise. `env bash` picks up bash 5+ for $EPOCHSECONDS (no `date` fork).
-# Service status fetched in a backgrounded curl every 5min and cached as a tiny
-# derived file (just the component status string), with a sidecar epoch for freshness.
+# Colors match the starship prompt; effort badges match Claude's UI.
 
 ESC=$'\033'
 RESET="${ESC}[0m"
@@ -25,7 +16,6 @@ BLUE="${ESC}[34m"
 RED="${ESC}[31m"
 MAGENTA="${ESC}[35m"
 GRAY="${ESC}[90m"
-# Truecolor for the `max` effort gradient: m=orange, a=gold, x=sky.
 ORANGE="${ESC}[38;2;230;130;50m"
 GOLD="${ESC}[38;2;220;200;60m"
 SKY="${ESC}[38;2;110;180;200m"
@@ -34,20 +24,14 @@ FILLED="██████████"
 EMPTY="░░░░░░░░░░"
 SEP="${GRAY}·${RESET}"
 
-# Context window: Claude reports "% context used" against the auto-compact threshold,
-# not the full window. As of cli v2.1.156 the threshold is:
-#   context_window_size - reservedForSummary - 13000(buffer)
-# where reservedForSummary = min(maxOutputTokens, 20000) and the default maxOutput is
-# capped at 8000, so the reserve is a fixed 8000 + 13000 = 21000 tokens. It's a token
-# count (not a %), so the same value is correct for any window size (200k, 1M, ...).
-# Not exposed in the statusline JSON: re-sync this if Anthropic changes the constants.
+# Claude reports "% context used" against the auto-compact threshold, not the full
+# window. As of cli v2.1.156: window - min(maxOutput, 20000) - 13000, and maxOutput
+# caps at 8000, so the reserve is a fixed 21000 tokens at any window size. Not in the
+# statusline JSON: re-sync if Anthropic changes the constants.
 CTX_RESERVE_TOKENS=21000
-# % of the usable window at which the context bar turns red / yellow (how far toward
-# auto-compact we are). Calibrated to warn at ~150k and ~250k live tokens in a 1M
-# window; percentage-based, so the same pair scales with every window size.
+# Calibrated to warn at ~150k and ~250k live tokens in a 1M window.
 CTX_BAR_RED=26  CTX_BAR_YELLOW=16
 
-# 5-hour rate limit thresholds (raw %, no rescaling).
 RL5_RED=80   RL5_YELLOW=50
 
 STATUS_CACHE_TTL=300   STATUS_FETCH_TIMEOUT=5
@@ -61,7 +45,6 @@ format_countdown() {
     fi
 }
 
-# Capture group 1 of $pat from $src (default: $input) into $var; fall back to $def.
 extract() {
     local pat="$1" var="$2" def="$3" src="${4-$input}"
     if [[ $src =~ $pat ]]; then printf -v "$var" '%s' "${BASH_REMATCH[1]}"
@@ -69,7 +52,6 @@ extract() {
     fi
 }
 
-# Render "[colored filled][empty] [colored pct%]" into $var.
 render_bar() {
     local color="$1" idx="$2" pct="$3" var="$4"
     printf -v "$var" '%s%s%s%s %s%s%%%s' \
@@ -85,11 +67,8 @@ pct_color() {
     fi
 }
 
-# Color the rate-limit countdown by how alarming the burn rate is.
-# Matrix (pct used x seconds left):
-#   high pct (>=80) + lots of time left -> red (burning too fast)
-#   mid  pct (>=50) + lots of time left -> yellow; <=30min left -> green (almost reset)
-#   low  pct (<50)                      -> gray (no concern, ignore time)
+# Color the rate-limit countdown by how alarming the burn rate is: high usage with
+# hours still to burn is the alarming case, near-reset is not.
 time_color() {
     local pct="$1" secs="$2" var="$3"
     if (( pct >= 80 )); then
@@ -109,7 +88,6 @@ time_color() {
 
 IFS= read -r -d '' input
 
-# bash 5+ exposes $EPOCHSECONDS as a no-fork builtin; `date +%s` is the bash 3-4 fallback.
 now=${EPOCHSECONDS:-$(date +%s)}
 
 extract '"project_dir":"([^"]+)"'                       project_dir ""
@@ -121,17 +99,15 @@ extract '"effort":\{[^}]*"level":"([^"]+)"'             effort      ""
 extract '"five_hour":\{[^}]*"used_percentage":([0-9]+)' rl5_pct     ""
 extract '"five_hour":\{[^}]*"resets_at":([0-9]+)'       rl5_resets  ""
 
-# Context usage: sum the live token counts from context_window.current_usage
-# (input + cache_creation + cache_read; Claude excludes output_tokens). Strip rate_limits
-# first so the token regexes only ever see the context-window block. "input_tokens" does
-# not match inside "total_input_tokens"/"cache_*_input_tokens" (no leading quote there).
+# Claude excludes output_tokens from context usage. Strip rate_limits first so the token
+# regexes only see the context-window block; "input_tokens" does not match inside
+# "total_input_tokens"/"cache_*_input_tokens" (no leading quote there).
 ctx_only="${input%%\"rate_limits\"*}"
 extract '"input_tokens":([0-9]+)'                tok_input  0  "$ctx_only"
 extract '"cache_creation_input_tokens":([0-9]+)' tok_cc     0  "$ctx_only"
 extract '"cache_read_input_tokens":([0-9]+)'     tok_cr     0  "$ctx_only"
 tokens=$(( tok_input + tok_cc + tok_cr ))
 
-# Find .git in $PWD or an ancestor without forking; resolve worktree pointer files inline.
 git_dir="" git_state=""
 branch="" dirty="" ahead="" behind=""
 dir=$PWD
@@ -141,7 +117,6 @@ while [[ $dir && $dir != / ]]; do
     elif [[ -f $dir/.git ]]; then
         gitdir_pointer=$(< "$dir/.git")
         git_dir=${gitdir_pointer#gitdir: }
-        # Relative gitdir -> absolute (worktrees can use either form).
         [[ $git_dir == /* ]] || git_dir=$dir/$git_dir
         break
     fi
@@ -152,8 +127,7 @@ if [[ -n $git_dir ]]; then
     # --no-optional-locks: runs every render; don't take index.lock under foreground git.
     git_status=$(git --no-optional-locks status --porcelain -b 2>/dev/null)
     if [[ -n $git_status ]]; then
-        # Capture the whole line; %%...* strips the upstream half. A "." in
-        # the exclusion class would truncate dotted branches (release-1.2).
+        # A "." in the exclusion class would truncate dotted branches (release-1.2).
         [[ $git_status =~ ^##\ ([^$'\n']+) ]] && branch="${BASH_REMATCH[1]%%...*}"
         [[ $git_status == *$'\n'* ]] && dirty=1
         [[ $git_status =~ ahead\ ([0-9]+) ]] && ahead="${BASH_REMATCH[1]}"
@@ -170,8 +144,7 @@ if [[ -n $git_dir ]]; then
     fi
 fi
 
-# "% context used" exactly as Claude renders it: round against the usable window
-# (full window minus the auto-compact reserve), mirroring 100 - round(remaining/usable).
+# "% context used" exactly as Claude renders it: 100 - round(remaining/usable).
 usable=$(( ctx_size - CTX_RESERVE_TOKENS ))
 (( usable < 1 )) && usable=1
 if (( tokens >= usable )); then
@@ -183,9 +156,8 @@ fi
 bar_idx=$(( pct / 10 ))
 pct_color "$pct" "$CTX_BAR_RED" "$CTX_BAR_YELLOW" bar_color
 
-# Convention: trailing " ${SEP} " on a section means "more sections may follow."
-# Leading " ${SEP} " (used by the rl5 bar and the status badge) means "only joins
-# when something rendered before us". The load-bearing inconsistency is intentional.
+# Trailing " ${SEP} " means "more may follow"; leading means "only join if something
+# rendered before us". The inconsistency is load-bearing.
 
 out=""
 
@@ -229,10 +201,8 @@ if [[ -n $rl5_pct ]]; then
     out+=" ${SEP} ${rl5_bar} ${rl5_time_color}${rl5_time}${RESET}"
 fi
 
-# Service status: background curl every 5min stores just the Claude Code component
-# status string (~20 bytes), so the hot path doesn't have to regex a 30 KB summary JSON.
-# $TMPDIR is a private, per-user dir on macOS (mode 700); prefer it over the
-# world-writable /tmp so another user can't pre-create or symlink the cache path.
+# Caches the component status string alone, so the hot path never regexes a 30 KB
+# JSON. $TMPDIR over /tmp: mode 700 on macOS, so nobody can pre-create the path.
 status_dir="${TMPDIR:-/tmp}"
 status_cache="${status_dir%/}/claude-statusline-status.cc"
 status_expiry_file="${status_dir%/}/claude-statusline-status.expiry"
