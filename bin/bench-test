@@ -65,6 +65,16 @@ urllib3" "$(parse_pip "$fix")"
 printf 'Current default versions:\ngradle 9.5.1\njava 26.0.1-tem\n' > "$fix"
 assert_eq "parse_sdk: candidate + version" "gradle 9.5.1
 java 26.0.1-tem" "$(parse_sdk "$fix")"
+
+# sdk_line decides what bench-update's prune deletes: a version is only removed
+# when a newer install shares its line, so a wrong grouping deletes a live JDK.
+step "sdk_line()"
+assert_eq "vendor suffix kept, patch dropped" "26-tem" "$(sdk_line 26.0.2-tem)"
+assert_eq "no suffix"                         "9"      "$(sdk_line 9.7.0)"
+assert_eq "same line despite patch bump"      "$(sdk_line 17.0.19-tem)" "$(sdk_line 17.0.20-tem)"
+assert_eq "major bump is a different line"    "25-tem" "$(sdk_line 25.0.4-tem)"
+assert_fail "25 and 26 never share a line" \
+  test "$(sdk_line 25.0.4-tem)" = "$(sdk_line 26.0.2-tem)"
 # `json (2.19.8, default: 2.18.0)` is the dominant real shape: a user-updated
 # version alongside the bundled one. It must be kept: the `^` anchor in the
 # parser (`$2 !~ /^default:/`) is what distinguishes it from a `(default: X)`
@@ -93,6 +103,16 @@ $HOME/Downloads" "$(parse_dock "$fix")"
 printf '# comment line\ndev/x/y https://github.com/org/y.git\n\nbadline\nopt/z https://gitlab.com/org/z.git\n' > "$fix"
 assert_eq "parse_repos: target+url, drops comments and malformed lines" "dev/x/y https://github.com/org/y.git
 opt/z https://gitlab.com/org/z.git" "$(parse_repos "$fix")"
+
+# repo_slug is how bench-doctor recognises a moved clone: the checkout's origin
+# is ssh, docs/repos.txt is https, and the two must reduce to the same identity.
+step "repo_slug()"
+assert_eq "ssh and https forms agree" \
+  "$(repo_slug https://gitlab.com/org/z.git)" "$(repo_slug git@gitlab.com:org/z.git)"
+assert_eq "host/path, no scheme or .git" "github.com/org/y" "$(repo_slug https://github.com/org/y.git)"
+assert_eq "missing .git suffix is fine"  "github.com/org/y" "$(repo_slug https://github.com/org/y)"
+assert_fail "different repos stay different" \
+  test "$(repo_slug https://github.com/org/y.git)" = "$(repo_slug https://github.com/org/other.git)"
 # shellcheck disable=SC2016  # single quotes keep $HOME a literal token, as in real snapshots
 printf 'Applications -> file:///Applications/\nDownloads -> file://$HOME/Library/Mobile%%20Documents/com~apple~CloudDocs/Downloads/\niCloud -> x-apple-finder:icloud\n' > "$fix"
 assert_eq "parse_sidebar: name+url TSV, \$HOME expanded, built-ins dropped" "Applications	file:///Applications/

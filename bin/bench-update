@@ -53,10 +53,6 @@ if have pip && have jaq; then
   run "Python pip user-site" _pip_user_upgrade
 fi
 
-# Major version plus vendor suffix: 21-tem and 26-tem are separate lines, so the
-# last JDK of a line survives even when a newer line exists.
-sdk_line() { local v="$1" s=""; case "$v" in *-*) s="-${v##*-}";; esac; printf '%s%s' "${v%%.*}" "$s"; }
-
 # `sdk upgrade` installs the newer patch and leaves the old one on disk, so every
 # candidate grows without bound. Keep the newest install per line; never touch what
 # `current` points at. Uninstall is the one destructive step here, so it reports

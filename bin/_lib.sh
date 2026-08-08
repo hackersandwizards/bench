@@ -139,6 +139,11 @@ sdk_run() {
   return "$rc"
 }
 
+# An SDK version's "line": major version plus vendor suffix, so 21-tem and 26-tem
+# are distinct and bench-update's prune never removes the last JDK of a line.
+# Decides what gets deleted, so it lives here and bench-test covers it.
+sdk_line() { local v="$1" s=""; case "$v" in *-*) s="-${v##*-}";; esac; printf '%s%s' "${v%%.*}" "$s"; }
+
 # No `sed -i`: the temp-file edit works under both BSD and GNU sed. `cat >`
 # preserves perms and inode.
 sdkman_set_config() {
@@ -253,6 +258,12 @@ apply_sidebar() {
 }
 # docs/repos.txt ("<target-rel-$HOME> <url>", # comments) -> "target url" lines.
 parse_repos() { awk 'NF == 2 && $1 !~ /^#/ { print $1, $2 }' "$1"; }
+# A remote URL reduced to host/path, so the ssh and https forms of one repo
+# compare equal. The URL is a repo's identity when its checkout has moved.
+repo_slug() {
+  printf '%s' "$1" | sed -e 's|^git@|https://|' -e 's|^\(https://[^/]*\):|\1/|' \
+                         -e 's|\.git$||' -e 's|^https://||'
+}
 # Existing clones are left untouched, never pulled: local work must not be
 # touched by a replay.
 clone_repos() {

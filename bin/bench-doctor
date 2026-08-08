@@ -157,9 +157,16 @@ echo "=== Default repos (docs/repos.txt) ==="
 # A missing target is more often a moved clone than an uncloned repo, and
 # install.sh would then clone a stale path or a dead URL. So locate the clone by
 # its remote first: the URL is the repo's identity, the path is just where it sat.
-repo_slug() {
-  printf '%s' "$1" | sed -e 's|^git@|https://|' -e 's|^\(https://[^/]*\):|\1/|' \
-                         -e 's|\.git$||' -e 's|^https://||'
+# True only when the host answered and denied the repo. An offline run fails the
+# same call with "could not resolve host", and calling that dead would retire a
+# good entry, so anything but an explicit denial falls through to install.sh.
+# GIT_TERMINAL_PROMPT=0 because an unattended run must fail, never wait for input.
+# A private repo whose credentials are missing also reads as gone; the gh/glab
+# auth checks above are what make that unlikely here.
+remote_gone() {
+  local out
+  out=$(GIT_TERMINAL_PROMPT=0 git ls-remote "$1" 2>&1 >/dev/null) && return 1
+  printf '%s' "$out" | grep -qiE 'not found|does not exist|access denied|403|404'
 }
 find_clone() {  # find_clone <url> -> path relative to $HOME, or non-zero
   local want d
@@ -178,6 +185,8 @@ if [[ -s "$REPO_ROOT/docs/repos.txt" ]]; then
       ok "repo: $target"
     elif moved=$(find_clone "$url"); then
       warn "repo: $target missing, but its remote is cloned at $moved — fix the path in docs/repos.txt"
+    elif remote_gone "$url"; then
+      warn "repo: $target missing and $url is gone — the docs/repos.txt entry is dead"
     else
       warn "repo: $target missing — run install.sh"
     fi
