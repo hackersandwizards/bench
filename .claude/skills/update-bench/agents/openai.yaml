@@ -1,0 +1,4 @@
+interface:
+  display_name: "Update Bench"
+  short_description: "Daily sweep: update the machine, refresh the repo, triage what needs a human"
+  default_prompt: "Use $update-bench to run the daily maintenance sweep."

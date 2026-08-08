@@ -155,7 +155,7 @@ if [[ -s "$REPO_ROOT/docs/repos.txt" ]]; then
     if [[ -d "$HOME/$target/.git" ]]; then
       ok "repo: $target"
     else
-      warn "repo: $target missing — run install.sh or bench-update"
+      warn "repo: $target missing — run install.sh"
     fi
   done < <(parse_repos "$REPO_ROOT/docs/repos.txt")
 else

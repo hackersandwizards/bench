@@ -138,6 +138,11 @@ bench-test                     # run unit tests for bin/_lib.sh helpers
 ZSH_PROFILE=1 zsh -i -c exit   # profile shell startup (zprof report)
 ```
 
+The daily loop is the `update-bench` skill (`.claude/skills/update-bench/`): it runs those commands in
+order, triages what `bench-doctor` reports into fixed, needs-a-human, and export-resolved, then commits
+the refreshed snapshots. The `update-bench-daily` scheduled task fires it at 06:00, which is why `docs/`
+changes most days.
+
 ## Pre-commit hook
 
 `.githooks/pre-commit` runs gitleaks (secrets), shellcheck (`*.sh`), and `zsh -n` (`*.zsh`) on staged files. Repo-local: it does not affect other projects. The install wizard activates it.
