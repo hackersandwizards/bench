@@ -53,6 +53,41 @@ if have pip && have jaq; then
   run "Python pip user-site" _pip_user_upgrade
 fi
 
+# Major version plus vendor suffix: 21-tem and 26-tem are separate lines, so the
+# last JDK of a line survives even when a newer line exists.
+sdk_line() { local v="$1" s=""; case "$v" in *-*) s="-${v##*-}";; esac; printf '%s%s' "${v%%.*}" "$s"; }
+
+# `sdk upgrade` installs the newer patch and leaves the old one on disk, so every
+# candidate grows without bound. Keep the newest install per line; never touch what
+# `current` points at. Uninstall is the one destructive step here, so it reports
+# each removal by name and refuses anything it cannot prove is superseded.
+sdk_prune() {
+  local dir cand cur v line newest
+  for dir in "$HOME/.sdkman/candidates"/*/; do
+    [[ -d "$dir" ]] || continue
+    cand=$(basename "$dir")
+    cur=$(basename "$(readlink "$dir/current" 2>/dev/null)" 2>/dev/null)
+    local versions=()
+    for v in "$dir"*/; do
+      v=$(basename "$v")
+      [[ "$v" == current ]] || versions+=("$v")
+    done
+    (( ${#versions[@]} > 1 )) || continue
+    for v in "${versions[@]}"; do
+      line=$(sdk_line "$v")
+      newest=$(printf '%s\n' "${versions[@]}" \
+        | while read -r c; do [[ "$(sdk_line "$c")" == "$line" ]] && printf '%s\n' "$c"; done \
+        | sort -V | tail -1)
+      [[ "$v" == "$newest" || "$v" == "$cur" ]] && continue
+      if sdk_run uninstall "$cand" "$v" >/dev/null 2>&1; then
+        ok "pruned $cand $v (superseded by $newest)"
+      else
+        warn "prune $cand $v failed"
+      fi
+    done
+  done
+}
+
 # `sdk` is a shell function, so `have sdk` is false until its init is sourced.
 source_sdkman || true
 if have sdk; then
@@ -63,6 +98,7 @@ if have sdk; then
   run "SDKMAN selfupdate" sdk_run selfupdate
   run "SDKMAN update"     sdk_run update
   run "SDKMAN upgrade"    sdk_run upgrade
+  run "SDKMAN prune"      sdk_prune
 fi
 
 if have bun; then

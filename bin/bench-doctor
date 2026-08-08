@@ -10,7 +10,14 @@ echo "=== Environment ==="
 if [[ -n "${ZSH_SETTINGS_DIR:-}" ]]; then
   ok "ZSH_SETTINGS_DIR=$ZSH_SETTINGS_DIR"
 else
-  warn "ZSH_SETTINGS_DIR not set in current shell (only set by init.zsh)"
+  # This script is bash, so the var is unset by construction and warning about it
+  # would fire on every unattended run. Ask the shell that actually sets it.
+  zdir=$(have zsh && zsh -ic 'print -r -- ${ZSH_SETTINGS_DIR:-}' 2>/dev/null | tail -1)
+  if [[ -n "$zdir" ]]; then
+    ok "ZSH_SETTINGS_DIR=$zdir (interactive zsh)"
+  else
+    warn "ZSH_SETTINGS_DIR unset even in an interactive zsh — is init.zsh sourced from ~/.zshrc?"
+  fi
 fi
 
 echo
@@ -111,12 +118,9 @@ if [[ "$(defaults read com.apple.AppleMultitouchTrackpad Clicking 2>/dev/null)" 
 else
   warn "tap-to-click off — run ./macos.sh, then log out/restart"
 fi
-pic=$(osascript -e 'tell application "System Events" to get picture of current desktop' 2>/dev/null)
-if [[ "$pic" == "$WALLPAPER" ]]; then
-  ok "wallpaper = assets/wallpaper.png"
-else
-  warn "wallpaper is ${pic:-unreadable (System Events / Automation permission?)} — run ./macos.sh"
-fi
+# No second sentinel for the same macos.sh run: the desktop picture is the one
+# macos.sh setting macOS itself keeps rewriting (a Photos wallpaper source swaps
+# the file underneath), so it warned every day about a state that is fine.
 # Stderr flows through on purpose: the script's own message (Full Disk Access,
 # Safari never launched, corrupt plist) is the diagnosis, not a guess here.
 if ! missing_favs=$("$REPO_ROOT/bin/safari-favorites" missing "$REPO_ROOT/docs/safari-favorites.txt"); then
@@ -150,16 +154,59 @@ fi
 
 echo
 echo "=== Default repos (docs/repos.txt) ==="
+# A missing target is more often a moved clone than an uncloned repo, and
+# install.sh would then clone a stale path or a dead URL. So locate the clone by
+# its remote first: the URL is the repo's identity, the path is just where it sat.
+repo_slug() {
+  printf '%s' "$1" | sed -e 's|^git@|https://|' -e 's|^\(https://[^/]*\):|\1/|' \
+                         -e 's|\.git$||' -e 's|^https://||'
+}
+find_clone() {  # find_clone <url> -> path relative to $HOME, or non-zero
+  local want d
+  have fd || return 1
+  want=$(repo_slug "$1")
+  while read -r d; do
+    d=${d%/}; d=${d%/.git}
+    [[ "$(repo_slug "$(git -C "$d" remote get-url origin 2>/dev/null)")" == "$want" ]] || continue
+    printf '%s' "${d#"$HOME"/}"; return 0
+  done < <(fd -H -t d -d 6 '^\.git$' "$HOME/dev" "$HOME/opt" 2>/dev/null)
+  return 1
+}
 if [[ -s "$REPO_ROOT/docs/repos.txt" ]]; then
-  while read -r target _; do
+  while read -r target url; do
     if [[ -d "$HOME/$target/.git" ]]; then
       ok "repo: $target"
+    elif moved=$(find_clone "$url"); then
+      warn "repo: $target missing, but its remote is cloned at $moved — fix the path in docs/repos.txt"
     else
       warn "repo: $target missing — run install.sh"
     fi
   done < <(parse_repos "$REPO_ROOT/docs/repos.txt")
 else
   warn "docs/repos.txt missing/empty"
+fi
+
+echo
+echo "=== IntelliJ JDK pins ==="
+# bench-update prunes superseded SDKs; IntelliJ pins JDKs by absolute path, so a
+# prune silently leaves dangling project SDKs. IntelliJ rewrites this file on
+# exit, so this only reports: repoint it in the IDE, never from a script.
+shopt -s nullglob
+jdk_tables=("$HOME/Library/Application Support/JetBrains"/*/options/jdk.table.xml)
+shopt -u nullglob
+if (( ${#jdk_tables[@]} == 0 )); then
+  skip "no IntelliJ jdk.table.xml"
+else
+  for t in "${jdk_tables[@]}"; do
+    ide=$(basename "$(dirname "$(dirname "$t")")")
+    dangling=$(grep -o 'candidates/[^"!/]*/[^"!/]*' "$t" | sort -u \
+      | while read -r rel; do [[ -d "$HOME/.sdkman/$rel" ]] || printf '%s ' "${rel#candidates/}"; done)
+    if [[ -z "$dangling" ]]; then
+      ok "$ide JDK pins all resolve"
+    else
+      warn "$ide pins missing SDKs: ${dangling% } — repoint the project SDK in IntelliJ"
+    fi
+  done
 fi
 
 echo

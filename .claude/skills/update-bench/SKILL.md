@@ -72,6 +72,11 @@ memory loses them. Three shapes to read correctly:
 - Every step failing at once is one network problem, not fifteen findings. Say that instead.
 - A skipped Homebrew block is `brew_bottles_supported` false: macOS is newer than the bottles brew
   ships. Nothing to fix, and it clears itself when brew catches up.
+- `SDKMAN prune` is the one step that deletes an installed tool rather than a cache. It removes only a
+  version superseded by a newer install of the same major line, never what `current` points at, so the
+  last JDK of a line survives. It names every removal; repeat those in the report. What it cannot
+  decide is whether to adopt a newer line at all: `sdk upgrade` tracks SDKMAN's own default, so a new
+  feature release is a human's call, not a silent install.
 
 ### 3. Refresh the repo's picture of the machine
 
@@ -92,9 +97,13 @@ Never prune `docs/fonts.txt`, and never `brew bundle dump --force`. `bin/bench-e
 the report.
 
 **Fixed by the run.** Only what is non-interactive, reversible, and free of judgment about what the
-baseline should be. Today exactly two warns qualify: `core.hooksPath` not `.githooks`, without which
-this run's own commit skips gitleaks on a public repo, and `secrets.zsh` not mode 600. Each doctor warn
-already names its own remedy and stays the owner of it; apply the test, do not keep a catalogue here.
+baseline should be. Today exactly three warns qualify: `core.hooksPath` not `.githooks`, without which
+this run's own commit skips gitleaks on a public repo; `secrets.zsh` not mode 600; and a
+`docs/repos.txt` target whose clone doctor found elsewhere by matching remote, where only the path
+moved. The remote URL is the repo's identity, so that edit carries no judgment. A repo that was
+renamed or retired is not that case: doctor cannot find it, and the new URL is a human's. Each doctor
+warn already names its own remedy and stays the owner of it; apply the test, do not keep a catalogue
+here.
 
 **Needs a human.** Anything wanting a password, a browser login, a UI action, a font backup or a
 logout, and anything whose remedy is `install.sh`, `macos.sh` or `brew bundle`, because those replay a
