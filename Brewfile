@@ -156,6 +156,8 @@ brew "pkgconf"
 brew "poppler"
 # Object-relational database system
 brew "postgresql@18"
+# Cross-platform application and UI framework
+brew "qt"
 # Perl-powered file rename script with many helpful built-ins
 brew "rename"
 # Search tool like grep and The Silver Searcher

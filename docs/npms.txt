@@ -1,5 +1,5 @@
 /opt/homebrew/lib
-├── @straion/cli@0.0.20
-├── @sylphai/adal-cli@1.4.5
-└── npm@12.0.1
++-- @straion/cli@0.0.24
++-- @sylphai/adal-cli@1.5.7
+`-- npm@12.0.2
 

@@ -67,6 +67,7 @@ parallel
 pipx
 poppler
 postgresql@18
+qt
 redpanda-data/tap/redpanda
 rename
 ripgrep
