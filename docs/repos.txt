@@ -3,7 +3,7 @@
 # home/.gitconfig routes credentials through gh (github) and glab (gitlab).
 dev/hackersandwizards/internal/company-os https://github.com/hackersandwizards/company-os.git
 dev/hackersandwizards/internal/talks/talks https://github.com/hackersandwizards/talks.git
-dev/hackersandwizards/internal/factory-landingpage https://gitlab.com/hackersandwizards/dark-factory.git
+dev/hackersandwizards/internal/company-website https://gitlab.com/hackersandwizards/website.git
 dev/hackersandwizards/internal/agentic-engineering-trainer-base https://github.com/hackersandwizards/agentic-engineering-trainer-base.git
 dev/hackersandwizards/internal/trainings/agentic-engineering-training-nextjs https://github.com/hackersandwizards/agentic-engineering-training-nextjs.git
 opt/local-mlx-stack https://github.com/hackersandwizards/local-mlx-stack.git
