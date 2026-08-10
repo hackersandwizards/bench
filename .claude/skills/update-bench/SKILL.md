@@ -65,7 +65,11 @@ script sources. Stop before anything touches the machine and report which assert
 `bench-update`, then `bench-clean`. That is `ua && cleanup`.
 
 Keep the full output. The per-step warn lines are the product of this step, and a summary written from
-memory loses them. Three shapes to read correctly:
+memory loses them. Four shapes to read correctly:
+
+- A remedy an earlier step of this run re-creates is not a remedy. Before naming one for an updater's
+  warn, check whether that updater reinstates the condition on the next run. Where it does, report the
+  recurring cause and name the step feeding it.
 
 - A failed cask upgrade is a pkg installer or a privileged helper asking for a password an unattended
   run has no way to answer. Report `brew upgrade --cask <name>` for a terminal and move on.
