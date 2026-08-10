@@ -65,11 +65,7 @@ script sources. Stop before anything touches the machine and report which assert
 `bench-update`, then `bench-clean`. That is `ua && cleanup`.
 
 Keep the full output. The per-step warn lines are the product of this step, and a summary written from
-memory loses them. Four shapes to read correctly:
-
-- A remedy an earlier step of this run re-creates is not a remedy. Before naming one for an updater's
-  warn, check whether that updater reinstates the condition on the next run. Where it does, report the
-  recurring cause and name the step feeding it.
+memory loses them. Three shapes to read correctly:
 
 - A failed cask upgrade is a pkg installer or a privileged helper asking for a password an unattended
   run has no way to answer. Report `brew upgrade --cask <name>` for a terminal and move on.
@@ -100,9 +96,8 @@ Never prune `docs/fonts.txt`, and never `brew bundle dump --force`. `bin/bench-e
 `bench-doctor`. Sort every warn from steps 2 and 3 into three buckets, all three of which appear in
 the report.
 
-A warn carrying no remedy of its own is not a human's by default. Establish its mechanism first, from
-the failing command's own output, and sort it by what that shows. Report the mechanism beside the
-finding. A warn whose mechanism resisted the attempt stays a human's, and names what was tried.
+Find a warn's cause before naming its fix, and check that the next run of the same step does not
+undo that fix.
 
 **Fixed by the run.** Only what is non-interactive, reversible, and free of judgment about what the
 baseline should be. Of the warns doctor names, three qualify today: `core.hooksPath` not
