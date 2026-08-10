@@ -100,9 +100,14 @@ Never prune `docs/fonts.txt`, and never `brew bundle dump --force`. `bin/bench-e
 `bench-doctor`. Sort every warn from steps 2 and 3 into three buckets, all three of which appear in
 the report.
 
+A warn carrying no remedy of its own is not a human's by default. Establish its mechanism first, from
+the failing command's own output, and sort it by what that shows. Report the mechanism beside the
+finding. A warn whose mechanism resisted the attempt stays a human's, and names what was tried.
+
 **Fixed by the run.** Only what is non-interactive, reversible, and free of judgment about what the
-baseline should be. Today exactly three warns qualify: `core.hooksPath` not `.githooks`, without which
-this run's own commit skips gitleaks on a public repo; `secrets.zsh` not mode 600; and a
+baseline should be. Of the warns doctor names, three qualify today: `core.hooksPath` not
+`.githooks`, without which this run's own commit skips gitleaks on a public repo; `secrets.zsh` not
+mode 600; and a
 `docs/repos.txt` target whose clone doctor found elsewhere by matching remote, where only the path
 moved. The remote URL is the repo's identity, so that edit carries no judgment. A repo that was
 renamed or retired is not that case: doctor cannot find it, and the new URL is a human's. Each doctor
