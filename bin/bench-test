@@ -113,6 +113,16 @@ assert_eq "host/path, no scheme or .git" "github.com/org/y" "$(repo_slug https:/
 assert_eq "missing .git suffix is fine"  "github.com/org/y" "$(repo_slug https://github.com/org/y)"
 assert_fail "different repos stay different" \
   test "$(repo_slug https://github.com/org/y.git)" = "$(repo_slug https://github.com/org/other.git)"
+
+# canonical_url resolves a rename through the host API, so the cases that reach
+# one are not testable offline. What is: every path that must hand the URL back
+# untouched, since bench-doctor treats the return value as a repo's identity and
+# a mangled one would send it looking for a clone nobody has.
+step "canonical_url()"
+assert_eq "unknown host falls through verbatim" \
+  "https://example.com/org/y.git" "$(canonical_url https://example.com/org/y.git)"
+assert_eq "ssh form on an unknown host is not rewritten" \
+  "git@example.com:org/y.git" "$(canonical_url git@example.com:org/y.git)"
 # shellcheck disable=SC2016  # single quotes keep $HOME a literal token, as in real snapshots
 printf 'Applications -> file:///Applications/\nDownloads -> file://$HOME/Library/Mobile%%20Documents/com~apple~CloudDocs/Downloads/\niCloud -> x-apple-finder:icloud\n' > "$fix"
 assert_eq "parse_sidebar: name+url TSV, \$HOME expanded, built-ins dropped" "Applications	file:///Applications/

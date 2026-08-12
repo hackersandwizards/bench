@@ -264,6 +264,23 @@ repo_slug() {
   printf '%s' "$1" | sed -e 's|^git@|https://|' -e 's|^\(https://[^/]*\):|\1/|' \
                          -e 's|\.git$||' -e 's|^https://||'
 }
+# The current URL of a repo renamed on its host. Both GitHub and GitLab keep
+# serving the old name, so nothing local notices: git ls-remote answers the old
+# URL without a redirect, and these repos are private, so an anonymous HTTP probe
+# only sees a 404 or a login page. The authenticated host API is the one thing
+# that names the new repo. Anything unresolvable — another host, CLI missing or
+# logged out, offline — returns the input unchanged, which is what every caller
+# already assumed.
+canonical_url() {
+  local slug host path now=
+  slug=$(repo_slug "$1"); host=${slug%%/*}; path=${slug#*/}
+  case "$host" in
+    github.com) have gh && now=$(gh api "repos/$path" --jq .full_name 2>/dev/null) ;;
+    gitlab.com) have glab && have jq &&
+      now=$(glab api "projects/${path//\//%2F}" 2>/dev/null | jq -r '.path_with_namespace // empty') ;;
+  esac
+  [[ -n "$now" ]] && printf 'https://%s/%s.git' "$host" "$now" || printf '%s' "$1"
+}
 # Existing clones are left untouched, never pulled: local work must not be
 # touched by a replay.
 clone_repos() {
