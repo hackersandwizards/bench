@@ -31,7 +31,7 @@ fonts/                # Only fonts with verified redistribution rights (repo is 
 .codex/               # Codex CLI config
 ghostty/              # Ghostty terminal config
 home/                 # Dotfile templates symlinked via Stow
-docs/                 # Package + machine-state snapshots, replayed by install.sh (offline-readable); fonts.txt (restore checklist), secret-keys.txt (expected key names), and repos.txt (default clones) are hand-maintained, never dumped by bench-export
+docs/                 # Package + machine-state snapshots, replayed by install.sh (offline-readable); fonts.txt (restore checklist) and secret-keys.txt (expected key names) are hand-maintained, never dumped by bench-export; repos.txt (default clones) is hand-maintained in its selection, with bench-export repointing an entry whose clone moved or was renamed
 ```
 
 ## Conventions

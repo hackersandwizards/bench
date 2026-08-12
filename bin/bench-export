@@ -93,6 +93,38 @@ else
   warn "fonts.txt failed"
 fi
 
+# Only one thing in docs/repos.txt is a choice: which repos a fresh machine gets.
+# Where each one sits and what its host calls it are facts of this machine, and a
+# reorg or a rename leaves the entry describing a layout that is gone — install.sh
+# would rebuild the old one. So correct located entries and never touch the
+# selection: nothing is added, nothing is removed, and an entry whose clone is
+# nowhere is left alone for doctor to report.
+step "docs/repos.txt (paths and renames follow the machine)"
+if [[ -s "$DOCS/repos.txt" ]] && have fd; then
+  moved_any=0
+  # Read the entries out before the first rewrite: the loop truncates the file
+  # a process substitution would still be streaming from.
+  entries=$(parse_repos "$DOCS/repos.txt")
+  while read -r target url; do
+    [[ -d "$HOME/$target/.git" ]] && continue
+    moved=$(find_clone "$url") || continue
+    if [[ "$moved" == *$'\n'* ]]; then
+      warn "repos.txt: $url is cloned more than once — pick one by hand:"
+      printf '%s\n' "$moved" | indent
+      continue
+    fi
+    now="https://$(repo_slug "$(git -C "$HOME/$moved" remote get-url origin 2>/dev/null)").git"
+    if repos_repoint "$DOCS/repos.txt" "$target" "$url" "$moved" "$now"; then
+      moved_any=1
+      if [[ "$now" == "$url" ]]; then ok "repos.txt: $target -> $moved"
+      else ok "repos.txt: $target -> $moved (renamed to $now)"; fi
+    else
+      warn "repos.txt: could not rewrite the entry for $target — fix it by hand"
+    fi
+  done <<<"$entries"
+  (( moved_any )) || ok "repos.txt: every entry points at its clone"
+fi
+
 step "home/ sync (Symlinks → skip, real files → copy back)"
 for rel in "${STOW_FILES[@]}"; do
   src="$HOME/$rel"

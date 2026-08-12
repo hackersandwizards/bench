@@ -87,10 +87,9 @@ the report.
 Find a warn's cause before naming its fix, and check that the next run of the same step does not
 undo that fix.
 
-**Fixed by the run.** What passes the test this skill opens with. Of the warns doctor names, three
-qualify today: `core.hooksPath` not `.githooks`, `secrets.zsh` not mode 600, and a `docs/repos.txt`
-target doctor matched by remote at another path. Each doctor warn names its own remedy and stays
-the owner of it; apply the test, do not keep a catalogue here.
+**Fixed by the run.** What passes the test this skill opens with. Of the warns doctor names, two
+qualify today: `core.hooksPath` not `.githooks` and `secrets.zsh` not mode 600. Each doctor warn
+names its own remedy and stays the owner of it; apply the test, do not keep a catalogue here.
 
 **Needs a human.** Anything wanting a password, a browser login, a UI action, a font backup or a
 logout; anything whose remedy is `install.sh`, `macos.sh` or `brew bundle`, which replay a whole
@@ -98,7 +97,8 @@ machine; a stopped `skhd`, which may have been stopped on purpose; leftover rust
 uninstall is not this run's call. One line each, with the command doctor gave.
 
 **Resolved by the export.** `bench-export` settles Dock, Finder sidebar and Safari favorites drift
-machine-is-truth, which `README.md` pre-authorizes. Report which way each snapshot went, from
+machine-is-truth, which `README.md` pre-authorizes, and repoints a `docs/repos.txt` entry whose
+clone it locates at another path or under a new name. Report which way each snapshot went, from
 `git diff --stat -- docs/`. Step 5 owns the case where that direction is wrong.
 
 Fix the cause, never the check. Do not start `sync-agent-config.sh`: it pushes into fifteen repos,

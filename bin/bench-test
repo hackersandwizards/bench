@@ -123,6 +123,26 @@ assert_eq "unknown host falls through verbatim" \
   "https://example.com/org/y.git" "$(canonical_url https://example.com/org/y.git)"
 assert_eq "ssh form on an unknown host is not rewritten" \
   "git@example.com:org/y.git" "$(canonical_url git@example.com:org/y.git)"
+
+# bench-export repoints a moved or renamed entry instead of asking a human to.
+# The write is what makes a wrong match expensive, so the pair match and the
+# refusal to write on no match are the two things worth pinning down.
+step "repos_repoint()"
+printf '# keep me\ndev/x/y https://github.com/org/y.git\nopt/z https://gitlab.com/org/z.git\n' > "$fix"
+assert_ok "repoints the matching entry" \
+  repos_repoint "$fix" dev/x/y https://github.com/org/y.git dev/a/y https://github.com/org/renamed.git
+assert_eq "rewrites that line only, comment and neighbour intact" "# keep me
+dev/a/y https://github.com/org/renamed.git
+opt/z https://gitlab.com/org/z.git" "$(cat "$fix")"
+assert_fail "no matching entry is non-zero" \
+  repos_repoint "$fix" dev/nope https://github.com/org/nope.git dev/a https://github.com/org/a.git
+assert_eq "and leaves the file untouched" "# keep me
+dev/a/y https://github.com/org/renamed.git
+opt/z https://gitlab.com/org/z.git" "$(cat "$fix")"
+# The target alone must not match: two entries can share a URL under different
+# paths while a reorg is half-done, and rewriting the wrong one is silent.
+assert_fail "target without its URL does not match" \
+  repos_repoint "$fix" opt/z https://github.com/org/y.git opt/q https://github.com/org/y.git
 # shellcheck disable=SC2016  # single quotes keep $HOME a literal token, as in real snapshots
 printf 'Applications -> file:///Applications/\nDownloads -> file://$HOME/Library/Mobile%%20Documents/com~apple~CloudDocs/Downloads/\niCloud -> x-apple-finder:icloud\n' > "$fix"
 assert_eq "parse_sidebar: name+url TSV, \$HOME expanded, built-ins dropped" "Applications	file:///Applications/

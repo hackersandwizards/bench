@@ -168,36 +168,20 @@ remote_gone() {
   out=$(GIT_TERMINAL_PROMPT=0 git ls-remote "$1" 2>&1 >/dev/null) && return 1
   printf '%s' "$out" | grep -qiE 'not found|does not exist|access denied|403|404'
 }
-find_clone() {  # find_clone <url> [retried] -> path relative to $HOME, or non-zero
-  local want d now
-  have fd || return 1
-  want=$(repo_slug "$1")
-  while read -r d; do
-    d=${d%/}; d=${d%/.git}
-    [[ "$(repo_slug "$(git -C "$d" remote get-url origin 2>/dev/null)")" == "$want" ]] || continue
-    printf '%s' "${d#"$HOME"/}"; return 0
-  done < <(fd -H -t d -d 6 '^\.git$' "$HOME/dev" "$HOME/opt" 2>/dev/null)
-  # No clone carries this URL. A rename on the host leaves docs/repos.txt on the
-  # old name while the clone already carries the new one, so ask the host once
-  # and look again — the second argument is what stops that from recurring.
-  [[ -z "${2:-}" ]] || return 1
-  now=$(canonical_url "$1")
-  [[ "$now" != "$1" ]] && find_clone "$now" retried
-}
 if [[ -s "$REPO_ROOT/docs/repos.txt" ]]; then
   while read -r target url; do
     if [[ -d "$HOME/$target/.git" ]]; then
       ok "repo: $target"
     elif moved=$(find_clone "$url"); then
-      # Reached through a rename, the entry's URL is stale too, and saying only
-      # "fix the path" would leave it pointing at a name the host serves today
-      # and drops the day something else claims it. The clone's own origin is
-      # the answer, put back in the https form docs/repos.txt is written in.
-      origin=$(repo_slug "$(git -C "$HOME/$moved" remote get-url origin 2>/dev/null)")
-      if [[ "$origin" == "$(repo_slug "$url")" ]]; then
-        warn "repo: $target missing, but its remote is cloned at $moved — fix the path in docs/repos.txt"
+      # The repo is here, so nothing is missing: the entry describes a layout
+      # this machine has left. bench-export owns that, the same way it owns Dock
+      # and sidebar drift — except when several clones answer to the URL, where
+      # there is a choice to make and no export may make it.
+      if [[ "$moved" == *$'\n'* ]]; then
+        warn "repo: $target — its remote is cloned more than once, so docs/repos.txt needs a hand-picked target:"
+        printf '%s\n' "$moved" | indent
       else
-        warn "repo: $target missing; $url was renamed and is cloned at $moved — set both to https://$origin.git in docs/repos.txt"
+        warn "repo: $target moved to $moved — bench-export to update docs/repos.txt"
       fi
     elif remote_gone "$url"; then
       warn "repo: $target missing and $url is gone — the docs/repos.txt entry is dead"

@@ -281,6 +281,37 @@ canonical_url() {
   esac
   [[ -n "$now" ]] && printf 'https://%s/%s.git' "$host" "$now" || printf '%s' "$1"
 }
+# Where a repos.txt URL is actually cloned, one path per line relative to $HOME.
+# A repo's identity is its remote; the path is only where it last sat. Callers
+# get every match rather than the first, because rewriting an entry to one of
+# several copies picks a winner nobody chose.
+find_clone() {  # find_clone <url> [retried] -> paths, or non-zero when none
+  local want d hits now
+  have fd || return 1
+  want=$(repo_slug "$1")
+  hits=$(while read -r d; do
+    d=${d%/}; d=${d%/.git}
+    [[ "$(repo_slug "$(git -C "$d" remote get-url origin 2>/dev/null)")" == "$want" ]] || continue
+    printf '%s\n' "${d#"$HOME"/}"
+  done < <(fd -H -t d -d 6 '^\.git$' "$HOME/dev" "$HOME/opt" 2>/dev/null))
+  [[ -n "$hits" ]] && { printf '%s' "$hits"; return 0; }
+  # No clone carries this URL. A rename on the host leaves docs/repos.txt on the
+  # old name while the clone already carries the new one, so ask the host once
+  # and look again — the second argument is what stops that from recurring.
+  [[ -z "${2:-}" ]] || return 1
+  now=$(canonical_url "$1")
+  [[ "$now" != "$1" ]] && find_clone "$now" retried
+}
+# Repoint one repos.txt entry, matching target and URL as a pair so a comment or
+# an entry sharing either field alone is never touched. Non-zero without writing
+# unless exactly one line matched: a caller that reported a correction it never
+# made is worse than one that reports it could not make it.
+repos_repoint() {  # repos_repoint <file> <target> <url> <new-target> <new-url>
+  local out
+  out=$(awk -v t="$2" -v u="$3" -v nt="$4" -v nu="$5" \
+    '$1 == t && $2 == u { $1 = nt; $2 = nu; n++ } { print } END { exit n == 1 ? 0 : 1 }' "$1") || return 1
+  printf '%s\n' "$out" > "$1"
+}
 # Existing clones are left untouched, never pulled: local work must not be
 # touched by a replay.
 clone_repos() {

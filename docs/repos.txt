@@ -1,5 +1,6 @@
 # Default clones for a fresh machine: "<target dir relative to $HOME> <url>".
-# Hand-maintained, never dumped by bench-export. https URLs on purpose —
+# Which repos are listed is hand-maintained; bench-export never adds or removes
+# one, and only repoints an entry whose clone it finds. https URLs on purpose —
 # home/.gitconfig routes credentials through gh (github) and glab (gitlab).
 dev/hackersandwizards/internal/company/os https://github.com/hackersandwizards/os.git
 dev/hackersandwizards/internal/company/talks https://github.com/hackersandwizards/talks.git
