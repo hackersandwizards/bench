@@ -5,7 +5,7 @@
 dev/hackersandwizards/internal/company/os https://github.com/hackersandwizards/os.git
 dev/hackersandwizards/internal/company/talks https://github.com/hackersandwizards/talks.git
 dev/hackersandwizards/internal/company/website https://gitlab.com/hackersandwizards/website.git
-dev/hackersandwizards/internal/company/trainer-base https://github.com/hackersandwizards/trainer-base.git
+dev/hackersandwizards/internal/company/trainer-hub https://github.com/hackersandwizards/trainer-hub.git
 dev/hackersandwizards/internal/trainings/agentic-engineering-training-nextjs https://github.com/hackersandwizards/agentic-engineering-training-nextjs.git
 opt/local-mlx-stack https://github.com/hackersandwizards/local-mlx-stack.git
 opt/mcp-fathom-server https://github.com/hackersandwizards/mcp-fathom-server.git
