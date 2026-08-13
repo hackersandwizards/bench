@@ -8,11 +8,11 @@ $HOME/.bun/install/global node_modules (1945)
 ├── @openai/codex@0.147.0
 ├── ccusage@20.0.19
 ├── codebuff@1.0.685
-├── command-code@1.19.0
+├── command-code@1.22.0
 ├── corepack@0.35.0
-├── freebuff@0.0.146
+├── freebuff@0.0.149
 ├── node-gyp@13.0.1
 ├── npm-check@6.0.1
-├── opencode-ai@1.18.16
+├── opencode-ai@1.18.18
 ├── task-master-ai@0.43.1
 └── yarn@1.22.22
