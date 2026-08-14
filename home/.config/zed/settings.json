@@ -28,24 +28,6 @@
   },
   "language_models": {
     "openai_compatible": {
-      "local-mlx": {
-        "api_url": "http://127.0.0.1:8080/v1",
-        "available_models": [
-          {
-            "name": "qwen3.6-35b",
-            "display_name": "Qwen 3.6 (35B-A3B) — local",
-            "max_tokens": 262144,
-            "capabilities": {
-              "tools": true,
-              "images": false,
-              "parallel_tool_calls": true,
-              "prompt_cache_key": false,
-              "chat_completions": true,
-              "interleaved_reasoning": true
-            }
-          }
-        ]
-      },
       "local-mlx-mtplx": {
         "api_url": "http://127.0.0.1:8001/v1",
         "available_models": [
