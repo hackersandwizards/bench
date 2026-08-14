@@ -1,6 +1,5 @@
 tap "asmvik/formulae" # maintained skhd fork; koekeishiya/skhd upstream is unmaintained
 tap "hashicorp/tap"
-tap "jundot/omlx", "https://github.com/jundot/omlx"
 tap "mongodb/brew"
 tap "redpanda-data/tap"
 tap "youssofal/mtplx"
@@ -217,8 +216,6 @@ brew "zsh"
 brew "asmvik/formulae/skhd"
 # Infrastructure-as-code CLI
 brew "hashicorp/tap/terraform"
-# LLM inference server optimized for Apple Silicon
-brew "jundot/omlx/omlx"
 # High-performance, schema-free, document-oriented database
 brew "mongodb/brew/mongodb-community"
 # Redpanda CLI & toolbox
