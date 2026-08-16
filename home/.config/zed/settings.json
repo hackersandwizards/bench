@@ -23,7 +23,7 @@
     "model_parameters": [],
     "default_model": {
       "provider": "local-mlx-mtplx",
-      "model": "qwen3.6-27b"
+      "model": "qwen3.8-27b"
     }
   },
   "language_models": {
@@ -32,8 +32,8 @@
         "api_url": "http://127.0.0.1:8001/v1",
         "available_models": [
           {
-            "name": "qwen3.6-27b",
-            "display_name": "Qwen 3.6 (27B) — local MTPLX",
+            "name": "qwen3.8-27b",
+            "display_name": "Qwen 3.8 (27B) — local MTPLX",
             "max_tokens": 262144,
             "capabilities": {
               "tools": true,
