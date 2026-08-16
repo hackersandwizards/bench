@@ -221,7 +221,11 @@ brew "mongodb/brew/mongodb-community"
 # Redpanda CLI & toolbox
 brew "redpanda-data/tap/redpanda"
 # Native MTP speculative decoding for Qwen3-Next on Apple Silicon
-brew "youssofal/mtplx/mtplx"
+# The formula installs the `server` extra without llguidance, so
+# `response_format: json_schema` fails closed at request time. Each install or
+# upgrade builds a fresh venv, which is exactly when postinstall fires.
+brew "youssofal/mtplx/mtplx",
+     postinstall: "\"$(mtplx status | awk '/^python:/ {print $2}')\" -m pip install llguidance"
 cask "adguard"
 cask "antigravity"
 cask "antigravity-cli"
