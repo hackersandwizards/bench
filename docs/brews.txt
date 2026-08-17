@@ -175,7 +175,6 @@ node
 npth
 nspr
 nss
-omlx
 oniguruma
 openexr
 openjdk
@@ -203,7 +202,6 @@ protobuf
 pycparser
 python-certifi
 python-cryptography
-python@3.11
 python@3.13
 python@3.14
 qt

@@ -44,7 +44,6 @@ helm
 hf
 jaq
 jq
-jundot/omlx/omlx
 just
 k9s
 kafka

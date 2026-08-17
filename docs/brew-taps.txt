@@ -1,6 +1,5 @@
 asmvik/formulae
 hashicorp/tap
-jundot/omlx
 mongodb/brew
 redpanda-data/tap
 youssofal/mtplx
