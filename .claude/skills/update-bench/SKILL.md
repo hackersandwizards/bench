@@ -110,11 +110,13 @@ and this run owns one.
 this run caused it; report it and stop if step 1 was already red.
 
 Its assertions run against fixtures, not against the snapshots `bench-export` just wrote, so read
-`git diff -- docs/ home/` as well. A version bump removes a line and adds one; a diff that only
-removes lines means state disappeared rather than changed. Do not commit that file. Revert it with
-`git checkout -- <path>`, commit the rest, and report the removal with its count and `bench-export`
-as the way to accept it deliberately. `docs/fonts.txt` cannot shrink by design, and
-`docs/moom.plist` is generated XML, so judge that one by size rather than by lines.
+`git diff -- docs/ home/` as well. Commit a removal like any other change: `dump_to` keeps the
+previous snapshot whenever a dumper exits non-zero, so a shorter file means the dumper ran and the
+entry is gone. What that leaves is a dumper that succeeds and enumerates almost nothing. Do not
+commit a snapshot that lost more than half its lines; revert it with `git checkout -- <path>`,
+commit the rest, and report it with its count. `docs/fonts.txt` is a union and cannot shrink at
+all, so any deletion there stops the same way. `docs/moom.plist` is generated XML, so judge that
+one by size rather than by lines.
 
 Never edit a file in the exclusion set to get past the gate, and never `--no-verify`. A gitleaks hit
 stops the commit and gets reported; an allowlist is a human's call.
