@@ -24,7 +24,9 @@ fi
 # `bun pm cache rm` demands a package.json in cwd, so target the cache dir
 # directly (covers bunx too; it lives under the same path).
 have bun  && bg 2 "Bun install cache" rm -rf "${BUN_INSTALL:-$HOME/.bun}/install/cache"
-have uv   && bg 3 "uv cache (full)"   env UV_LOCK_TIMEOUT=10 uv cache clean
+# No uv cache clean. It needs the cache lock, and this machine's Claude sessions hold it through
+# their uv-launched MCP children, so from inside one the step cannot succeed by construction: every
+# scheduled run reported the timeout. Clean it by hand from a plain shell if it ever needs it.
 have fd   && bg 4 "Sweep .DS_Store" bash -c "fd -H -I -t f -g '.DS_Store' / \
   --exclude '*BACKUP*' --exclude '*timemachine*' --exclude '*TimeMachine*' \
   --exclude '/System/Volumes/Data' -X rm 2>/dev/null; true"
