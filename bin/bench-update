@@ -29,7 +29,7 @@ fi
 
 have pipx && run "pipx apps" pipx upgrade-all
 have uv   && run "uv tools" uv tool upgrade --all
-have uv   && run "uv cache prune" env UV_LOCK_TIMEOUT=10 uv cache prune
+# No uv cache prune: same lock, same reason as the clean dropped from bin/bench-clean.
 
 _pip_global_upgrade() {
   local managed; managed=$(pip_managed_names)
