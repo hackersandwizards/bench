@@ -20,7 +20,7 @@
   "skipDangerousModePermissionPrompt": true,
   "skipAutoPermissionPrompt": true,
   "voiceEnabled": true,
-  "outputStyle": "truth-challenger",
+  "outputStyle": "clear-concise-actionable",
   "enabledMcpjsonServers": [],
   "model": "opus",
   "effortLevel": "high"
