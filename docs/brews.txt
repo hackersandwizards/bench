@@ -20,7 +20,6 @@ ca-certificates
 cairo
 certifi
 cffi
-claude-squad
 composer
 coreutils
 cryptography

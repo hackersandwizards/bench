@@ -6,7 +6,6 @@ bfs
 binutils
 btop
 bun
-claude-squad
 composer
 coreutils
 deno

@@ -25,8 +25,6 @@ brew "bun"
 brew "freetype"
 # Vector graphics library with cross-device output support
 brew "cairo"
-# Manage multiple AI agents like Claude Code, Aider and Codex in your terminal
-brew "claude-squad"
 # Get a file from an HTTP, HTTPS or FTP server
 brew "curl"
 # General-purpose scripting language
