@@ -89,6 +89,7 @@ icu4c@78
 imath
 jaq
 jasper
+jemalloc
 jpeg-turbo
 jpeg-xl
 jq
@@ -146,7 +147,7 @@ libzip
 litehtml
 little-cms2
 llhttp
-llvm
+llvm@22
 lua
 lz4
 lzo
@@ -288,7 +289,6 @@ xorgproto
 xxhash
 xz
 ykman
-z3
 zeromq
 zlib
 zlib-ng-compat
