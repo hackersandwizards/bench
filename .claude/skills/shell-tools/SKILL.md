@@ -27,7 +27,7 @@ Prefer these over their classic equivalents.
 
 **HTTP and data:**
 - `xh` over `curl` and `httpie`
-- `jaq` over `jq`, `pandoc` for document conversion
+- `jaq` over `jq`
 - `scrapling` to scrape web pages to markdown (`scrapling extract get <url> out.md`)
 
 **Git and code-host:**

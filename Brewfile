@@ -133,8 +133,6 @@ brew "neo4j"
 brew "nmap"
 # 7-Zip (high compression file archiver) implementation
 brew "p7zip"
-# Swiss-army knife of markup format conversion
-brew "pandoc"
 # Framework for layout and rendering of i18n text
 brew "pango"
 # Shell command parallelization utility
@@ -143,12 +141,8 @@ brew "parallel"
 brew "pipx"
 # Package compiler and linker metadata toolkit
 brew "pkgconf"
-# PDF rendering library (based on the xpdf-3.0 code base)
-brew "poppler"
 # Object-relational database system
 brew "postgresql@18"
-# Cross-platform application and UI framework
-brew "qt"
 # Perl-powered file rename script with many helpful built-ins
 brew "rename"
 # Search tool like grep and The Silver Searcher
@@ -170,8 +164,6 @@ brew "sslscan"
 brew "starship"
 # Organize software neatly under a single directory tree (e.g. /usr/local)
 brew "stow"
-# Modernized, complete, self-contained TeX/LaTeX engine
-brew "tectonic"
 # Terminal multiplexer
 brew "tmux"
 # Display directories as trees (with optional color/HTML output)

@@ -57,13 +57,10 @@ nano
 neo4j
 nmap
 p7zip
-pandoc
 pango
 parallel
 pipx
-poppler
 postgresql@18
-qt
 redpanda-data/tap/redpanda
 rename
 ripgrep
@@ -75,7 +72,6 @@ shellcheck
 sslscan
 starship
 stow
-tectonic
 tmux
 tree
 ugrep
