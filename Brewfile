@@ -119,8 +119,6 @@ brew "lazygit"
 brew "lefthook"
 # Pager program similar to more
 brew "less"
-# Next-gen compiler infrastructure
-brew "llvm"
 # Mac App Store command-line interface
 brew "mas"
 # Deep clean and optimize your Mac
