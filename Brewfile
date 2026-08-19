@@ -27,8 +27,6 @@ brew "freetype"
 brew "cairo"
 # Manage multiple AI agents like Claude Code, Aider and Codex in your terminal
 brew "claude-squad"
-# Cross-platform make
-brew "cmake"
 # Get a file from an HTTP, HTTPS or FTP server
 brew "curl"
 # General-purpose scripting language
@@ -133,8 +131,6 @@ brew "mysql"
 brew "nano"
 # Robust (fully ACID) transactional property graph database
 brew "neo4j"
-# Small build system for use with gyp or CMake
-brew "ninja"
 # Port scanning utility for large networks
 brew "nmap"
 # 7-Zip (high compression file archiver) implementation

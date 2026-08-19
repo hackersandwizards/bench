@@ -21,7 +21,6 @@ cairo
 certifi
 cffi
 claude-squad
-cmake
 composer
 coreutils
 cryptography
@@ -170,7 +169,6 @@ ncurses
 neo4j
 net-snmp
 nettle
-ninja
 nmap
 node
 npth

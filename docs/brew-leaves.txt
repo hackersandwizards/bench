@@ -7,7 +7,6 @@ binutils
 btop
 bun
 claude-squad
-cmake
 composer
 coreutils
 deno
@@ -57,7 +56,6 @@ mongodb/brew/mongodb-community
 mysql
 nano
 neo4j
-ninja
 nmap
 p7zip
 pandoc
