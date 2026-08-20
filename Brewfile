@@ -133,6 +133,8 @@ brew "neo4j"
 brew "nmap"
 # 7-Zip (high compression file archiver) implementation
 brew "p7zip"
+# Swiss-army knife of markup format conversion
+brew "pandoc"
 # Framework for layout and rendering of i18n text
 brew "pango"
 # Shell command parallelization utility

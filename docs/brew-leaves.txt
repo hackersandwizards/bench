@@ -57,6 +57,7 @@ nano
 neo4j
 nmap
 p7zip
+pandoc
 pango
 parallel
 pipx

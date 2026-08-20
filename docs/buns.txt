@@ -3,12 +3,12 @@ $HOME/.bun/install/global node_modules (1881)
 ├── @earendil-works/pi-coding-agent@0.84.2
 ├── @es4x/create@0.22.0
 ├── @github/copilot@1.0.80
-├── @google/gemini-cli@0.55.1
+├── @google/gemini-cli@0.56.0
 ├── @googleworkspace/cli@0.22.5
 ├── @openai/codex@0.148.0
 ├── ccusage@20.0.20
 ├── codebuff@1.0.685
-├── command-code@1.28.1
+├── command-code@1.28.4
 ├── corepack@0.35.0
 ├── freebuff@0.0.150
 ├── node-gyp@13.0.1

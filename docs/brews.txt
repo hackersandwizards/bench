@@ -158,6 +158,7 @@ openldap
 openssl@3
 opus
 p7zip
+pandoc
 pango
 parallel
 pcre2
