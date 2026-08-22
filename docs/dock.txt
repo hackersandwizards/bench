@@ -8,7 +8,6 @@ FaceTime	file:///System/Applications/FaceTime.app/	persistentApps	$HOME/Library/
 Notion Calendar	file:///Applications/Notion%20Calendar.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.cron.electron
 Contacts	file:///System/Applications/Contacts.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.AddressBook
 Reminders	file:///System/Applications/Reminders.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.reminders
-Notion	file:///Applications/Notion.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	notion.id
 Freeform	file:///System/Applications/Freeform.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.freeform
 TV	file:///System/Applications/TV.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.TV
 Music	file:///System/Applications/Music.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.Music

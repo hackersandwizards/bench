@@ -143,6 +143,8 @@ brew "parallel"
 brew "pipx"
 # Package compiler and linker metadata toolkit
 brew "pkgconf"
+# PDF rendering library (based on the xpdf-3.0 code base)
+brew "poppler"
 # Object-relational database system
 brew "postgresql@18"
 # Perl-powered file rename script with many helpful built-ins

@@ -61,6 +61,7 @@ pandoc
 pango
 parallel
 pipx
+poppler
 postgresql@18
 redpanda-data/tap/redpanda
 rename
