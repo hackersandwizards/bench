@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Reclaim disk: purge regenerable caches, dedup VS Code extensions, sweep .DS_Store.
+# Reclaim disk: purge regenerable caches, drop superseded JetBrains and VS Code
+# versions, sweep .DS_Store.
 # Removes only auto-regenerating caches and superseded files, never installed tools.
 set -u
 
@@ -51,5 +52,39 @@ dedup_vscode() {
   ok "VS Code: removed $removed orphaned extension version(s)"
 }
 step "VS Code extension dedup"; dedup_vscode
+
+# JetBrains names every config/cache dir after product-info.json's dataDirectoryName,
+# which is major.minor only (2026.2.2 lives in IntelliJIdea2026.2). Patch upgrades
+# therefore reuse their dirs and only major ones strand the predecessor — silently, and
+# for good. Read the live names off the installed apps so no version is pinned here.
+sweep_jetbrains() {
+  local roots=("$HOME/Library/Caches/JetBrains" "$HOME/Library/Logs/JetBrains" \
+               "$HOME/Library/Application Support/JetBrains")
+  local app pi name root d live="|" nlive=0 removed=0
+  have jaq || { skip "JetBrains: jaq missing, version dirs not swept"; return 0; }
+  for app in /Applications/*.app "$HOME/Applications"/*.app; do
+    pi="$app/Contents/Resources/product-info.json"   # JetBrains-only file: its presence is the test
+    [[ -f "$pi" ]] || continue                       # also absorbs an unmatched literal glob
+    name=$(jaq -r '.dataDirectoryName // empty' "$pi" 2>/dev/null)
+    [[ -n "$name" ]] && { live+="$name|"; nlive=$((nlive + 1)); }
+  done
+  # Fail closed. An empty set means Toolbox is mid-update with the bundle gone, not that
+  # every version dir is stale — sweeping on it would delete the live config.
+  (( nlive )) || { skip "JetBrains: no IDE found, nothing swept"; return 0; }
+  for root in "${roots[@]}"; do
+    for d in "$root"/*/; do
+      [[ -d "$d" ]] || continue
+      name=$(basename "$d")
+      # Only version-stamped names qualify. Toolbox, Daemon, Air and the lowercase infra
+      # dirs never match, so whatever JetBrains adds next is safe by default.
+      [[ "$name" =~ ^[A-Za-z]+[0-9]+(\.[0-9]+)+$ ]] || continue
+      [[ "$live" == *"|$name|"* ]] && continue
+      rm -rf "$d" && { ok "JetBrains: removed ${d%/}"; removed=$((removed + 1)); }
+    done
+  done
+  # Named, not counted like the VS Code dedup: these carry settings, not just cache.
+  (( removed )) || ok "JetBrains: no superseded version dirs"
+}
+step "JetBrains version dirs"; sweep_jetbrains
 
 step "Done"

@@ -93,7 +93,7 @@ bin/
   bench-export          Check Brewfile + refresh docs/ snapshots + sync home/ from $HOME
   bench-doctor          Health check
   bench-prefs-diff      Capture a settings change as defaults keys for macos.sh
-  bench-clean           Reclaim disk: caches, .DS_Store, VS Code extension dedup
+  bench-clean           Reclaim disk: caches, .DS_Store, stale JetBrains/VS Code versions
   bench-test            Unit tests for _lib.sh helpers (plain bash asserts)
   safari-favorites      Export/merge the Safari favorites bar (bench-export, bench-doctor, install.sh)
 macos/                Hotkey-driven scripts (ghostty-grid.js, idea-reset-layout.py); bound in skhd/skhdrc
@@ -133,7 +133,7 @@ bench-doctor                   # verify everything is wired up
 bench-update                   # upgrade brew, antidote, ruby, python, uv, bun, sdkman
 bench-prefs-diff snap|diff     # capture a settings change as defaults keys for macos.sh
 bench-export                   # snapshot installed packages + sync home/ from $HOME
-bench-clean                    # reclaim disk: caches, .DS_Store, VS Code dedup (alias: cleanup)
+bench-clean                    # reclaim disk: caches, .DS_Store, stale IDE versions (alias: cleanup)
 bench-test                     # run unit tests for bin/_lib.sh helpers
 ZSH_PROFILE=1 zsh -i -c exit   # profile shell startup (zprof report)
 ```
