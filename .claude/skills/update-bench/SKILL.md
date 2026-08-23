@@ -112,11 +112,18 @@ this run caused it; report it and stop if step 1 was already red.
 Its assertions run against fixtures, not against the snapshots `bench-export` just wrote, so read
 `git diff -- docs/ home/` as well. Commit a removal like any other change: `dump_to` keeps the
 previous snapshot whenever a dumper exits non-zero, so a shorter file means the dumper ran and the
-entry is gone. What that leaves is a dumper that succeeds and enumerates almost nothing. Do not
-commit a snapshot that lost more than half its lines; revert it with `git checkout -- <path>`,
-commit the rest, and report it with its count. `docs/fonts.txt` is a union and cannot shrink at
-all, so any deletion there stops the same way. `docs/moom.plist` is generated XML, so judge that
-one by size rather than by lines.
+entries are gone. What that leaves is a dumper that succeeds and enumerates almost nothing.
+
+**So the gate is emptiness, not proportion, and it has an exit.** A snapshot that falls to a handful
+of lines gets its dumper run once more by hand. Identical output twice is the machine, and it is
+committed with the count named in the report. Different output is a flaky dumper: revert that one
+with `git checkout -- <path>`, commit the rest, and report it. **Never revert a shrink you have
+confirmed, however large.** The next export reproduces it, so the revert is undone before it lands,
+and every run after re-exports, re-reverts and re-reports the same deletions without ever recording
+that they were checked.
+
+`docs/fonts.txt` is a union and cannot shrink at all, so any deletion there stops the same way.
+`docs/moom.plist` is generated XML, so judge that one by size rather than by lines.
 
 Never edit a file in the exclusion set to get past the gate, and never `--no-verify`. A gitleaks hit
 stops the commit and gets reported; an allowlist is a human's call.
