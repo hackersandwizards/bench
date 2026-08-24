@@ -1,4 +1,4 @@
-scrapling v0.4.14
+scrapling v0.4.15
 - scrapling
 - scrapling-mcp
 yt-dlp v2026.8.19

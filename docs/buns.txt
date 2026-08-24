@@ -5,7 +5,7 @@ $HOME/.bun/install/global node_modules (1619)
 ├── @github/copilot@1.0.80
 ├── @google/gemini-cli@0.56.0
 ├── @googleworkspace/cli@0.22.5
-├── @openai/codex@0.149.0
+├── @openai/codex@0.149.1
 ├── ccusage@20.0.20
 ├── codebuff@1.0.685
 ├── command-code@1.32.1
