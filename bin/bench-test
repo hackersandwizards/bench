@@ -241,6 +241,14 @@ printf 'Installed Font.ttf\n' > "$fdir/checklist.txt"
 assert_eq "empty when everything is present" "" "$(missing_fonts "$fdir/checklist.txt" "$fdir")"
 rm -rf "$fdir"
 
+step "pre-commit secret gate"
+# The gate must fail closed: a missing scanner used to print to stderr and let
+# the commit through, which is how the repo ran unscanned after gitleaks left.
+# PATH without /opt/homebrew hides betterleaks; _lib.sh only prepends, so it
+# cannot smuggle the binary back in.
+assert_fail "refuses to commit when betterleaks is missing" \
+  env PATH=/usr/bin:/bin "$REPO_ROOT/.githooks/pre-commit"
+
 step "install.sh istep self-count"
 # STEP_TOTAL greps for '^istep ': an indented call would increment STEP_N
 # without being counted, printing "Step 14/13". Fails here first instead.
