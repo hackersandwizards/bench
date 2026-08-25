@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Pre-commit checks: gitleaks (secrets), shellcheck (*.sh), zsh -n (*.zsh).
+# Pre-commit checks: betterleaks (secrets), shellcheck (*.sh), zsh -n (*.zsh).
 # NUL-delimited read so filenames with spaces or shell metacharacters can't
 # trip the linter calls. while-read, not mapfile: the hook must survive
 # /bin/bash 3.2 when it fires before the Brewfile installed bash 5.
@@ -31,11 +31,11 @@ for f in "${staged[@]}"; do
   esac
 done
 
-if have gitleaks; then
-  gitleaks git --staged --redact --no-banner
+if have betterleaks; then
+  betterleaks git --staged --redact --no-banner
 else
-  echo "pre-commit: gitleaks not installed — skipping secret scan" >&2
-  echo "  install: brew install gitleaks" >&2
+  echo "pre-commit: betterleaks not installed — skipping secret scan" >&2
+  echo "  install: brew install betterleaks" >&2
 fi
 
 if have shellcheck; then

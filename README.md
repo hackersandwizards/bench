@@ -108,7 +108,7 @@ ghostty/              Ghostty terminal config (single source of truth for theme)
 docs/                 Package + machine-state snapshots (committed; replayed by install.sh)
 .claude/              Claude Code statusline + rules + settings
 .codex/               Codex CLI config
-.githooks/pre-commit  gitleaks + shellcheck + zsh -n (repo-local)
+.githooks/pre-commit  betterleaks + shellcheck + zsh -n (repo-local)
 ```
 
 ## Theming: Ghostty as single source of truth
@@ -145,4 +145,4 @@ changes most days.
 
 ## Pre-commit hook
 
-`.githooks/pre-commit` runs gitleaks (secrets), shellcheck (`*.sh`), and `zsh -n` (`*.zsh`) on staged files. Repo-local: it does not affect other projects. The install wizard activates it.
+`.githooks/pre-commit` runs betterleaks (secrets), shellcheck (`*.sh`), and `zsh -n` (`*.zsh`) on staged files. Repo-local: it does not affect other projects. The install wizard activates it.

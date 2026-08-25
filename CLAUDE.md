@@ -26,7 +26,7 @@ bin/                  # Maintenance commands (bench-doctor/update/export, _lib.s
 macos/                # Hotkey-driven scripts (ghostty-grid.js, idea-reset-layout.py); bound in skhd/skhdrc
 skhd/                 # skhd hotkey config, symlinked to ~/.config/skhd/skhdrc by install.sh
 fonts/                # Only fonts with verified redistribution rights (repo is public); free families come as Brewfile font casks
-.githooks/pre-commit  # gitleaks + shellcheck + zsh -n on staged files
+.githooks/pre-commit  # betterleaks + shellcheck + zsh -n on staged files
 .claude/              # Statusline command + Claude Code rules/settings
 .codex/               # Codex CLI config
 ghostty/              # Ghostty terminal config

@@ -219,7 +219,7 @@ else
 fi
 
 # ---------- Repo-local git hooks ----------
-istep "Activate repo-local git hooks (gitleaks + shellcheck)"
+istep "Activate repo-local git hooks (betterleaks + shellcheck)"
 if [[ "$(hooks_path)" == ".githooks" ]]; then
   ok "core.hooksPath already set to .githooks"
 elif ask "Set core.hooksPath = .githooks for this repo?"; then

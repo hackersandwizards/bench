@@ -34,7 +34,7 @@ done
 
 echo
 echo "=== Optional tools ==="
-for cmd in atuin direnv stow gitleaks shellcheck claude; do
+for cmd in atuin direnv stow betterleaks shellcheck claude; do
   check "$cmd" command -v "$cmd"
 done
 

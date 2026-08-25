@@ -73,8 +73,6 @@ brew "git-delta"
 brew "git-filter-repo"
 # Git extension for versioning large files
 brew "git-lfs"
-# Audit git repos for secrets
-brew "gitleaks"
 # Open-source GitLab command-line tool
 brew "glab"
 # C code prettifier

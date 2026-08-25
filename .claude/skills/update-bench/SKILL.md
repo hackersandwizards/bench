@@ -125,7 +125,7 @@ that they were checked.
 `docs/fonts.txt` is a union and cannot shrink at all, so any deletion there stops the same way.
 `docs/moom.plist` is generated XML, so judge that one by size rather than by lines.
 
-Never edit a file in the exclusion set to get past the gate, and never `--no-verify`. A gitleaks hit
+Never edit a file in the exclusion set to get past the gate, and never `--no-verify`. A betterleaks hit
 stops the commit and gets reported; an allowlist is a human's call.
 
 ### 6. Commit, push, report
