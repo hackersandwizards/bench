@@ -1,6 +1,6 @@
-$HOME/.bun/install/global node_modules (1619)
+$HOME/.bun/install/global node_modules (1618)
 ├── @augmentcode/auggie@0.36.0
-├── @earendil-works/pi-coding-agent@0.84.2
+├── @earendil-works/pi-coding-agent@0.84.3
 ├── @es4x/create@0.22.0
 ├── @github/copilot@1.0.80
 ├── @google/gemini-cli@0.56.0
@@ -8,11 +8,11 @@ $HOME/.bun/install/global node_modules (1619)
 ├── @openai/codex@0.149.1
 ├── ccusage@20.0.20
 ├── codebuff@1.0.685
-├── command-code@1.32.1
+├── command-code@1.32.2
 ├── corepack@0.35.0
-├── freebuff@0.0.154
+├── freebuff@0.0.155
 ├── node-gyp@13.0.1
 ├── npm-check@6.0.1
-├── opencode-ai@1.18.21
+├── opencode-ai@1.18.23
 ├── task-master-ai@0.43.1
 └── yarn@1.22.22

@@ -9,6 +9,7 @@ atuin
 autoconf
 bash
 bat
+betterleaks
 bfs
 binutils
 brotli
@@ -54,7 +55,6 @@ git
 git-delta
 git-filter-repo
 git-lfs
-gitleaks
 glab
 glib
 gmp

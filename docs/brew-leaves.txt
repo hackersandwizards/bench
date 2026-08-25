@@ -2,6 +2,7 @@ antidote
 asmvik/formulae/skhd
 atuin
 bat
+betterleaks
 bfs
 binutils
 btop
@@ -26,7 +27,6 @@ gh
 git
 git-delta
 git-filter-repo
-gitleaks
 glab
 gnu-indent
 gnu-sed

@@ -13,6 +13,8 @@ brew "atuin"
 brew "bash"
 # Clone of cat(1) with syntax highlighting and Git integration
 brew "bat"
+# Secrets scanner built for configurability and speed
+brew "betterleaks"
 # Breadth-first version of find
 brew "bfs"
 # GNU binary tools for native development
