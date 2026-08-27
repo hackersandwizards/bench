@@ -43,6 +43,19 @@
               "chat_completions": true,
               "interleaved_reasoning": true
             }
+          },
+          {
+            "name": "qwen3.8-27b-abliterated",
+            "display_name": "Qwen 3.8 (27B) abliterated — local MTPLX",
+            "max_tokens": 262144,
+            "capabilities": {
+              "tools": true,
+              "images": true,
+              "parallel_tool_calls": true,
+              "prompt_cache_key": false,
+              "chat_completions": true,
+              "interleaved_reasoning": true
+            }
           }
         ]
       }
