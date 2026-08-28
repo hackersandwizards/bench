@@ -66,10 +66,6 @@ alias ua=bench-update
 alias npm-check-update='npm-check --skip-unused --update --save-exact'
 alias ncu=npm-check-update
 
-# --- Task Master ---
-alias tm='task-master'
-alias taskmaster='task-master'
-
 # --- Claude ---
 alias cld='claude --dangerously-skip-permissions'
 alias cldr='cld --resume'

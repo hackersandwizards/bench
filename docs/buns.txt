@@ -1,4 +1,4 @@
-$HOME/.bun/install/global node_modules (1618)
+$HOME/.bun/install/global node_modules (840)
 ├── @augmentcode/auggie@0.36.0
 ├── @earendil-works/pi-coding-agent@0.84.3
 ├── @es4x/create@0.22.0
@@ -14,5 +14,4 @@ $HOME/.bun/install/global node_modules (1618)
 ├── node-gyp@13.0.2
 ├── npm-check@6.0.1
 ├── opencode-ai@1.18.25
-├── task-master-ai@0.43.1
 └── yarn@1.22.22
