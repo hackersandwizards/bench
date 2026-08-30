@@ -2,7 +2,7 @@ $HOME/.bun/install/global node_modules (840)
 ├── @augmentcode/auggie@0.36.0
 ├── @earendil-works/pi-coding-agent@0.84.4
 ├── @es4x/create@0.22.0
-├── @github/copilot@1.0.81
+├── @github/copilot@1.0.82
 ├── @google/gemini-cli@0.57.0
 ├── @googleworkspace/cli@0.22.5
 ├── @openai/codex@0.151.0
