@@ -242,4 +242,5 @@ zoxide
 zsh
 zstd
 domzilla-caffeine
+luanti
 vlc
