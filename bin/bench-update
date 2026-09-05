@@ -119,6 +119,11 @@ if have bun; then
   run "Bun globals"       bun -g update --latest
 fi
 
+# `bun -g update` only bumps the pi CLI itself (@earendil-works/pi-coding-agent).
+# pi's own extensions (npm:pi-antigravity etc., see `pi list`) live under a
+# separate package manager and need their own update call.
+have pi && run "pi extensions" pi update --extensions
+
 have npm-check && \
   run "npm globals" env NPM_CHECK_INSTALLER=npm npm-check --global --update-all --save-exact
 
