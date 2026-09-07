@@ -1,6 +1,6 @@
-$HOME/.bun/install/global node_modules (882 installed)
+$HOME/.bun/install/global node_modules (881 installed)
 ├── @augmentcode/auggie@0.36.0
-├── @earendil-works/pi-coding-agent@0.85.0
+├── @earendil-works/pi-coding-agent@0.85.1
 ├── @earendil-works/pi-server@0.85.1
 ├── @es4x/create@0.22.0
 ├── @github/copilot@1.0.83
@@ -9,9 +9,9 @@ $HOME/.bun/install/global node_modules (882 installed)
 ├── @openai/codex@0.153.4
 ├── ccusage@20.0.20
 ├── codebuff@1.0.687
-├── command-code@1.49.1
+├── command-code@1.50.0
 ├── corepack@0.36.0
-├── freebuff@0.0.170
+├── freebuff@0.0.171
 ├── node-gyp@13.0.2
 ├── npm-check@6.0.1
 ├── opencode-ai@1.18.29
