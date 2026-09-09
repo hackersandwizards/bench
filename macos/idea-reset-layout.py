@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Normalize IntelliJ IDEA tool-window weights by anchor (see fix()) and delete
-window.state.xml / window.layouts.xml. Quit IDEA first."""
-import re, subprocess, sys
+window.state.xml / window.layouts.xml plus .layout-backups, which holds copies of
+both and survives a config import into the next major version. Quit IDEA first."""
+import re, shutil, subprocess, sys
 from pathlib import Path
 
 JB = Path.home() / "Library/Application Support/JetBrains"
@@ -32,3 +33,7 @@ for cfg in JB.glob("IntelliJIdea*"):
         if f.exists():
             f.unlink()
             print(f"deleted: {f}")
+    backups = cfg / ".layout-backups"
+    if backups.is_dir():
+        shutil.rmtree(backups)
+        print(f"deleted: {backups}")
