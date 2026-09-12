@@ -27,6 +27,7 @@ gh
 git
 git-delta
 git-filter-repo
+gitleaks
 glab
 gnu-indent
 gnu-sed
