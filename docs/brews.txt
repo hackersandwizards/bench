@@ -55,6 +55,7 @@ git
 git-delta
 git-filter-repo
 git-lfs
+gitleaks
 glab
 glib
 gmp
@@ -241,6 +242,7 @@ zlib-ng-compat
 zoxide
 zsh
 zstd
+codexbar
 domzilla-caffeine
 luanti
 vlc
