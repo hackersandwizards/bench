@@ -64,18 +64,16 @@ different problem and the two do not combine usefully.
 
 ## Seeing the limits
 
-`cswap menubar` is the tool's own macOS menu bar, and `cswap menubar --install-service` keeps it
-running through a LaunchAgent.
+`cswap menubar` puts every account's windows in the macOS menu bar, and
+`cswap menubar --install-service` keeps it running through a LaunchAgent. The menu bar needs the
+`menubar` extra, so install the tool as `uv tool install --with rumps claude-swap`: without `rumps`
+the LaunchAgent registers and then has nothing to run.
 
-CodexBar (`brew install --cask codexbar`) covers every provider in one bar, Claude alongside Codex,
-Gemini, Copilot and z.ai. It reads Claude accounts through an adapter that has to be switched on:
-enable "Read accounts from claude-swap" in its settings and point it at the `cswap` executable,
-otherwise it shows a single Claude account. Set Settings > Menu > Multi-account layout to Segmented
-for a side by side switcher. CodexBar never touches credentials; it runs `cswap --list --json` and
-reads the numbers.
+Auto-switching is off by default even with the menu bar running. Turn it on in the menu bar itself,
+or run `cswap auto`; both drive the same engine and share the `autoswitch.*` settings.
 
 The statusline renders the active account and the running cost of the current session, because the
-active account can change underneath a session once auto-switching is on.
+active account changes underneath a session once auto-switching is on.
 
 ## Cost
 
@@ -85,10 +83,13 @@ A subscription has no per-token bill, so no tool reports a real one.
 |---|---|
 | what this session is costing now | the statusline, from `total_cost_usd` in its own payload |
 | what recent days cost | `npx ccusage@latest`, local logs priced at API rates |
-| how much of each limit is left | `cswap list`, or a menu bar app |
+| how much of each limit is left | `cswap list`, or the menu bar |
 
-CodexBar's Usage and Spend pane has a known gap with several accounts: it prices one home directory
-only and undercounts the rest without reporting an error. Read cost elsewhere until that is fixed.
+ccusage reports one total across every account. `cswap switch` swaps the credential inside the same
+config home, so all accounts write to one `~/.claude/projects` and no account dimension exists in
+the logs. `cswap run` is the exception: it points `CLAUDE_CONFIG_DIR` at a per-slot profile whose
+`projects/` is separate unless `--share-history` is passed, so those runs are invisible to a
+default ccusage read.
 
 ## When it breaks
 

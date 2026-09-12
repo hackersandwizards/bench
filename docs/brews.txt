@@ -242,7 +242,6 @@ zlib-ng-compat
 zoxide
 zsh
 zstd
-codexbar
 domzilla-caffeine
 luanti
 vlc
