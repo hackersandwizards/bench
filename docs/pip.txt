@@ -7,6 +7,6 @@ packaging==26.3
 pillow==12.3.0
 pluggy==1.6.0
 Pygments==2.21.0
-pypdf==6.18.0
+pypdf==6.18.1
 pytest==9.1.1
 PyYAML==6.0.3

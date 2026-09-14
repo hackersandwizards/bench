@@ -84,7 +84,7 @@ vim
 watch
 wdiff
 wget
-whisper-cpp
+whisper.cpp
 xh
 ykman
 youssofal/mtplx/mtplx

@@ -73,6 +73,8 @@ brew "git-delta"
 brew "git-filter-repo"
 # Git extension for versioning large files
 brew "git-lfs"
+# Audit git repos for secrets
+brew "gitleaks"
 # Open-source GitLab command-line tool
 brew "glab"
 # C code prettifier
@@ -187,7 +189,7 @@ brew "wdiff"
 # Internet file retriever
 brew "wget"
 # Port of OpenAI's Whisper model in C/C++
-brew "whisper-cpp"
+brew "whisper.cpp"
 # Friendly and fast tool for sending HTTP requests
 brew "xh"
 # Tool for managing your YubiKey configuration

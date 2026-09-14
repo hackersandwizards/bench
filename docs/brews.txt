@@ -136,6 +136,7 @@ libxrender
 libyaml
 libzip
 little-cms2
+llama.cpp
 llhttp
 llvm@22
 lua
@@ -228,6 +229,7 @@ wdiff
 webp
 wget
 whisper-cpp
+whisper.cpp
 wxwidgets@3.2
 x264
 x265
