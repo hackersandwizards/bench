@@ -61,7 +61,7 @@ _init_cache zoxide init zsh
 _init_cache atuin init zsh
 
 # --- Completions fpath (must be before compinit) ---
-fpath=(/opt/homebrew/share/zsh/site-functions $HOME/.docker/completions $fpath)
+fpath=(/opt/homebrew/share/zsh/site-functions ${fpath:#/usr/local/share/zsh/site-functions})
 
 # --- Source modules ---
 source "$ZSH_SETTINGS_DIR/fzf.zsh"
