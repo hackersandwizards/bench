@@ -13,7 +13,7 @@ TV	file:///System/Applications/TV.app/	persistentApps	$HOME/Library/Preferences/
 Music	file:///System/Applications/Music.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.Music
 Keynote Creator Studio	file:///Applications/Keynote%20Creator%20Studio.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.Keynote
 Numbers Creator Studio	file:///Applications/Numbers%20Creator%20Studio.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.Numbers
-Pages Creator Studio	file:///Applications/Pages%20Creator%20Studio.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.Pages
+Pages	file:///Applications/Pages%20Creator%20Studio.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.Pages
 App Store	file:///System/Applications/App%20Store.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.AppStore
 Siri	file:///System/Applications/Siri%20AI.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.campo
 System Settings	file:///System/Applications/System%20Settings.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.systempreferences
