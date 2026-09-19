@@ -90,6 +90,10 @@ undo that fix.
 **Fixed by the run.** What passes the test this skill opens with. Of the warns doctor names, two
 qualify today: `core.hooksPath` not `.githooks` and `secrets.zsh` not mode 600. Each doctor warn
 names its own remedy and stays the owner of it; apply the test, do not keep a catalogue here.
+The test also admits a repair scoped to the one package a warn names (`gem pristine`,
+`brew reinstall`, uninstalling a stale duplicate) and a fix to the `bin/bench-*` script that prints
+a warn it can never clear, gated by step 5. A warn that passes the test and sits under "needs a
+human" is a mistake.
 
 **Needs a human.** Anything wanting a password, a browser login, a UI action, a font backup or a
 logout; anything whose remedy is `install.sh`, `macos.sh` or `brew bundle`, which replay a whole
