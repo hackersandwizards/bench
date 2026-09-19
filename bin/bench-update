@@ -21,27 +21,20 @@ if [[ -f "$ANTIDOTE_SH" ]]; then
   ok "Antidote static bundles invalidated (regenerate on next shell)"
 fi
 
-# `gem update` installs rdoc beside the copy Ruby ships in its own prefix, and
-# `gem cleanup` only reaches the primary gem dir. Both copies carry a
-# rubygems_plugin.rb, so RubyGems loads both and every later `gem` call prints
-# ~16 constant-redefinition warnings. The bundled copy belongs to the ruby
-# formula, so the update's copy is the one that goes.
-rdoc_drop_shadowing() {
-  local extra v
-  extra=$(ruby -e 'require "rbconfig"
-    puts Gem::Specification.find_all_by_name("rdoc")
-      .reject { |s| s.spec_file.start_with?(RbConfig::CONFIG["prefix"]) }
-      .map(&:version)' 2>/dev/null) || return 0
-  for v in $extra; do
-    run "RubyGems rdoc $v (shadows bundled)" gem uninstall rdoc -v "$v" -x
-  done
+# Two outdated gems are left alone. rdoc belongs to the ruby formula: a `gem
+# update` copy lands beside the bundled one, both load a rubygems_plugin.rb
+# (~16 constant-redefinition warnings on every `gem` call), and the write into
+# Homebrew's read-only plugin symlink fails. io-wait is deprecated, its
+# functionality ships with Ruby, and each update re-prints the deprecation
+# notice.
+_gem_update_all() {
+  gem outdated 2>/dev/null | awk '{print $1}' | grep -vxE 'rdoc|io-wait' | xargs -r gem update
 }
 
 if have gem; then
   run "RubyGems system"   gem update --system
-  run "RubyGems all"      gem update
+  run "RubyGems all"      _gem_update_all
   run "RubyGems cleanup"  gem cleanup
-  rdoc_drop_shadowing
 fi
 
 have pipx && run "pipx apps" pipx upgrade-all
