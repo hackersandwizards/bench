@@ -1,5 +1,6 @@
-$HOME/.bun/install/global node_modules (1016 installed)
+$HOME/.bun/install/global node_modules (1045 installed)
 ├── @augmentcode/auggie@0.36.0
+├── @doist/todoist-ai@9.0.0
 ├── @earendil-works/pi-coding-agent@0.86.1
 ├── @earendil-works/pi-server@0.86.1
 ├── @es4x/create@0.22.0
@@ -9,6 +10,7 @@ $HOME/.bun/install/global node_modules (1016 installed)
 ├── @openai/codex@0.155.1
 ├── @piotr-agier/google-drive-mcp@2.11.0
 ├── ccusage@20.0.24
+├── chrome-devtools-mcp@1.9.0
 ├── codebuff@1.0.688
 ├── command-code@1.58.1
 ├── corepack@0.36.0

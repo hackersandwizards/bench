@@ -5,8 +5,8 @@ project_doc_fallback_filenames = ["CLAUDE.md"]
 tui.status_line = ["current-dir", "git-branch", "model-with-reasoning", "context-remaining", "five-hour-limit"]
 
 [mcp_servers.chrome-devtools]
-command = "bunx"
-args = ["chrome-devtools-mcp@latest", "--headless", "--isolated", "--viewport=1920x1080", "--no-performance-crux", "--no-usage-statistics"]
+command = "sh"
+args = ["-c", 'exec "$HOME/.bun/bin/chrome-devtools-mcp" --headless --isolated --viewport=1920x1080 --no-performance-crux --no-usage-statistics']
 
 [features]
 js_repl = false

@@ -107,12 +107,20 @@ if have sdk; then
   run "SDKMAN prune"      sdk_prune
 fi
 
-if have bun; then
-  run "Bun runtime"       bun upgrade
-  run "Bun globals"       bun -g update --latest
-fi
+# `bun -g update --latest` writes `^` ranges. Re-add every global at @latest with
+# --exact instead: it upgrades and pins in one step, so the manifest always names
+# the version the MCP configs run through ~/.bun/bin.
+_bun_globals_exact() {
+  local specs
+  specs=$(jaq -r '.dependencies | keys[] | . + "@latest"' "${BUN_INSTALL:-$HOME/.bun}/install/global/package.json") \
+    && [[ -n "$specs" ]] || return 1
+  xargs bun add -g --exact <<<"$specs"
+}
 
-# `bun -g update` only bumps the pi CLI itself (@earendil-works/pi-coding-agent).
+have bun && run "Bun runtime" bun upgrade
+have bun && have jaq && run "Bun globals" _bun_globals_exact
+
+# `bun add -g` only bumps the pi CLI itself (@earendil-works/pi-coding-agent).
 # pi's own extensions (npm:pi-antigravity etc., see `pi list`) live under a
 # separate package manager and need their own update call.
 have pi && run "pi extensions" pi update --extensions

@@ -1,14 +1,10 @@
 {
   "mcpServers": {
     "chrome-devtools": {
-      "command": "bunx",
+      "command": "sh",
       "args": [
-        "chrome-devtools-mcp@latest",
-        "--headless",
-        "--isolated",
-        "--viewport=1920x1080",
-        "--no-performance-crux",
-        "--no-usage-statistics"
+        "-c",
+        "exec \"$HOME/.bun/bin/chrome-devtools-mcp\" --headless --isolated --viewport=1920x1080 --no-performance-crux --no-usage-statistics"
       ]
     }
   }
