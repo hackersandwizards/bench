@@ -7,7 +7,7 @@ $HOME/.bun/install/global node_modules (1016 installed)
 ├── @google/gemini-cli@0.60.0
 ├── @googleworkspace/cli@0.22.5
 ├── @openai/codex@0.155.1
-├── @piotr-agier/google-drive-mcp@2.9.0
+├── @piotr-agier/google-drive-mcp@2.11.0
 ├── ccusage@20.0.24
 ├── codebuff@1.0.688
 ├── command-code@1.58.1
