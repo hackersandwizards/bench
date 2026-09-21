@@ -1,16 +1,16 @@
 $HOME/.bun/install/global node_modules (1016 installed)
 ├── @augmentcode/auggie@0.36.0
-├── @earendil-works/pi-coding-agent@0.86.0
-├── @earendil-works/pi-server@0.86.0
+├── @earendil-works/pi-coding-agent@0.86.1
+├── @earendil-works/pi-server@0.86.1
 ├── @es4x/create@0.22.0
 ├── @github/copilot@1.0.86
 ├── @google/gemini-cli@0.60.0
 ├── @googleworkspace/cli@0.22.5
 ├── @openai/codex@0.155.1
-├── @piotr-agier/google-drive-mcp@2.11.0
-├── ccusage@20.0.23
+├── @piotr-agier/google-drive-mcp@2.9.0
+├── ccusage@20.0.24
 ├── codebuff@1.0.688
-├── command-code@1.58.0
+├── command-code@1.58.1
 ├── corepack@0.36.0
 ├── freebuff@0.0.180
 ├── node-gyp@13.0.2
