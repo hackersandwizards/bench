@@ -173,6 +173,7 @@ openjpeg
 openjph
 openldap
 openssl@3
+openssl@4
 opus
 p11-kit
 p7zip
