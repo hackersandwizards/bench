@@ -1,10 +1,8 @@
 ---
 name: update-bench
 description: >-
-  Daily maintenance of this machine and this repo. Runs bench-update and
-  bench-clean, refreshes the docs/ snapshots and the home/ sync, then triages
-  every warning into what the run fixed, what needs a human, and what the export
-  decided. Use for "ua", "cleanup", "update the machine", "update the bench",
+  Daily maintenance of this machine and repo, updating, cleaning, re-exporting docs/ and home/
+  and triaging every warning, for "ua", "cleanup", "update the machine", "update the bench",
   "daily sweep", "what needs updating here".
 allowed-tools: Bash, Read, Edit, Grep, Glob
 ---
@@ -16,9 +14,7 @@ baseline should be. Everything else it reports, with the command that fixes it.*
 password prompt, never reach for `sudo`, never bypass the pre-commit hook, never write a secret
 value.
 
-Never retry a `bench-*` script and never re-run one with a password: a failed step downgrades to a
-warn on its own and the run continues. Each script is a function of the machine's current state, so
-a catch-up run is a normal run.
+Never retry a `bench-*` script and never re-run one with a password: a failed step downgrades to a warn on its own and the run continues. A catch-up run is a normal run.
 
 ## The scripts
 
@@ -30,8 +26,7 @@ a catch-up run is a normal run.
 | `bench-export` | writes `docs/` and `home/`, reports Brewfile drift without writing it | 3 |
 | `bench-doctor` | read-only, and every warn names its own remedy | 4 |
 
-The order is load-bearing: `bench-clean` purges the hosting app's cache, so it runs before anything
-is written to the repo.
+`bench-clean` purges the hosting app's cache, so it runs before anything is written to the repo.
 
 ## Execution Flow
 
@@ -41,15 +36,14 @@ Work in `${ZSH_SETTINGS_DIR:-$PWD}`. Stop and say so if that is not this checkou
 
 Run `git status` and record every file it reports as modified, staged or untracked. That is this
 run's exclusion set: another session shares this tree, so nothing in it may be edited or committed
-here. Step 6 re-derives it, because it only grows.
+here. Step 6 re-derives it.
 
 `git fetch origin`, then:
 
 - Fast-forwards or already current: `git merge --ff-only origin/main`.
 - Refused, local commits ahead: `git rebase origin/main`.
 - Refused over local modifications: skip the pull, say so, carry on against the tree as it stands.
-- Fetch cannot reach origin: continue offline. Only the push needs a network, and step 6 keeps the
-  commit for the next run.
+- Fetch cannot reach origin: continue offline. Step 6 keeps the commit for the next run.
 
 Then `bench-test`. Red stops the run before anything touches the machine; name the failed
 assertions.
@@ -84,12 +78,13 @@ Never prune `docs/fonts.txt`, and never `brew bundle dump --force`. `bin/bench-e
 `bench-doctor`. Sort every warn from steps 2 and 3 into three buckets, all three of which appear in
 the report.
 
-Find a warn's cause before naming its fix, and check that the next run of the same step does not
-undo that fix.
+Check that the next run of the same step does not undo a fix.
+
+
 
 **Fixed by the run.** What passes the test this skill opens with. Of the warns doctor names, two
 qualify today: `core.hooksPath` not `.githooks` and `secrets.zsh` not mode 600. Each doctor warn
-names its own remedy and stays the owner of it; apply the test, do not keep a catalogue here.
+names its own remedy: apply the test rather than keeping a catalogue here.
 The test also admits a repair scoped to the one package a warn names (`gem pristine`,
 `brew reinstall`, uninstalling a stale duplicate) and a fix to the `bin/bench-*` script that prints
 a warn it can never clear, gated by step 5. A warn that passes the test and sits under "needs a
@@ -105,8 +100,7 @@ machine-is-truth, which `README.md` pre-authorizes, and repoints a `docs/repos.t
 clone it locates at another path or under a new name. Report which way each snapshot went, from
 `git diff --stat -- docs/`. Step 5 owns the case where that direction is wrong.
 
-Fix the cause, never the check. Do not start `sync-agent-config.sh`: it pushes into fifteen repos,
-and this run owns one.
+Do not start `sync-agent-config.sh`: it pushes into fifteen repos, and this run owns one.
 
 ### 5. Gate
 
@@ -121,22 +115,20 @@ entries are gone. What that leaves is a dumper that succeeds and enumerates almo
 **So the gate is emptiness, not proportion, and it has an exit.** A snapshot that falls to a handful
 of lines gets its dumper run once more by hand. Identical output twice is the machine, and it is
 committed with the count named in the report. Different output is a flaky dumper: revert that one
-with `git checkout -- <path>`, commit the rest, and report it. **Never revert a shrink you have
-confirmed, however large.** The next export reproduces it, so the revert is undone before it lands,
-and every run after re-exports, re-reverts and re-reports the same deletions without ever recording
-that they were checked.
+with `git show HEAD:<path> > <path>`, commit the rest, and report it. **Never revert a shrink you
+have confirmed, however large:** the next export reproduces it.
 
 `docs/fonts.txt` is a union and cannot shrink at all, so any deletion there stops the same way.
 `docs/moom.plist` is generated XML, so judge that one by size rather than by lines.
 
-Never edit a file in the exclusion set to get past the gate, and never `--no-verify`. A betterleaks hit
-stops the commit and gets reported; an allowlist is a human's call.
+Never edit a file in the exclusion set to get past the gate. A betterleaks hit stops the commit and
+gets reported; an allowlist is a human's call.
 
 ### 6. Commit, push, report
 
 Re-run `git status` and drop any path that became dirty since step 1 without a write of yours. Name
 the remaining paths as the `git commit` pathspec, per `git.md`. One commit: one line, then a short
-body naming what changed. Nothing to commit is the normal quiet-day outcome. Do not invent work.
+body naming what changed. Nothing to commit is the normal quiet-day outcome.
 
 Push. `origin` carries two push URLs, so a partial failure exits non-zero and the next run pushes
 what already landed as a no-op. A rejection because `origin/main` moved mid-run gets one
