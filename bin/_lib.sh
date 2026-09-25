@@ -179,7 +179,16 @@ missing_fonts() { comm -23 <(sort "$1") <(ls "$2" 2>/dev/null | sort); }
 # docs/ snapshot parsers: each reads a snapshot file ($1) and emits one package
 # per line (parse_sdk emits "name version"); the output feeds install.sh's
 # replay_globals. Sourced from here so they are unit-testable (see bench-test).
-parse_uv()    { awk 'NF && $1 !~ /^-/ { print $1 }' "$1"; }
+# A tool installed from a URL replays from that URL, never by name from PyPI, and
+# keeps its --with extras (mtplx needs llguidance for json_schema responses).
+parse_uv() {
+  awk 'NF && $1 !~ /^-/ {
+    spec = $1
+    if (match($0, /\[required: +[^]]+\]/)) { spec = substr($0, RSTART, RLENGTH); sub(/^\[required: +/, "", spec); sub(/\]$/, "", spec) }
+    if (match($0, /\[with: [^]]+\]/)) { n = split(substr($0, RSTART + 7, RLENGTH - 8), w, /, */); for (i = 1; i <= n; i++) spec = spec " --with " w[i] }
+    print spec
+  }' "$1"
+}
 parse_cargo() { awk '/^[^[:space:]]/ { print $1 }' "$1"; }
 parse_pip()   { awk -F'==' '/==/ { print $1 }' "$1"; }
 parse_sdk()   { awk 'NF == 2 { print $1, $2 }' "$1"; }

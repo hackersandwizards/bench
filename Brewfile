@@ -2,7 +2,6 @@ tap "asmvik/formulae" # maintained skhd fork; koekeishiya/skhd upstream is unmai
 tap "hashicorp/tap"
 tap "mongodb/brew"
 tap "redpanda-data/tap"
-tap "youssofal/mtplx"
 # Plugin manager for zsh, inspired by antigen and antibody
 brew "antidote"
 # Library for manipulating PNG images
@@ -210,12 +209,6 @@ brew "hashicorp/tap/terraform"
 brew "mongodb/brew/mongodb-community"
 # Redpanda CLI & toolbox
 brew "redpanda-data/tap/redpanda"
-# Native MTP speculative decoding for Qwen3-Next on Apple Silicon
-# The formula installs the `server` extra without llguidance, so
-# `response_format: json_schema` fails closed at request time. Each install or
-# upgrade builds a fresh venv, which is exactly when postinstall fires.
-brew "youssofal/mtplx/mtplx",
-     postinstall: "\"$(mtplx status | awk '/^python:/ {print $2}')\" -m pip install llguidance"
 cask "adguard"
 cask "antigravity"
 cask "antigravity-cli"

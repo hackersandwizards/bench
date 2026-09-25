@@ -62,7 +62,7 @@ bun_globals_dump() { bun pm -g list | sed "s|$HOME|\$HOME|g"; }
 have bun   && dump_to "$DOCS/buns.txt"  bun_globals_dump           &
 have gem   && dump_to "$DOCS/gems.txt"  gem list                   &
 have pip   && dump_to "$DOCS/pip.txt"   pip_managed_freeze         &
-have uv    && dump_to "$DOCS/uv.txt"    uv tool list               &
+have uv    && dump_to "$DOCS/uv.txt"    uv tool list --show-version-specifiers --show-with &
 # --no-unicode: npm picks tree glyphs by TTY, so an interactive export and this
 # unattended one would rewrite the same file back and forth forever.
 have npm   && dump_to "$DOCS/npms.txt"  npm list -g --depth=0 --no-unicode &

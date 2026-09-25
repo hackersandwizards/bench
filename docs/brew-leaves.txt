@@ -87,7 +87,6 @@ wget
 whisper.cpp
 xh
 ykman
-youssofal/mtplx/mtplx
 zeromq
 zlib
 zoxide

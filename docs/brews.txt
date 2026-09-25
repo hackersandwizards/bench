@@ -152,7 +152,6 @@ mongosh
 mpdecimal
 mpfr
 mpg123
-mtplx
 mysql
 nano
 nbytes
@@ -193,7 +192,6 @@ protobuf
 pycparser
 python-certifi
 python-cryptography
-python@3.13
 python@3.14
 readline
 redpanda

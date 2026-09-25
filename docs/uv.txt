@@ -1,6 +1,9 @@
-claude-swap v0.26.0
+claude-swap v0.26.0 [with: rumps]
 - claude-swap
 - cswap
+mtplx v2.12.0 [required:  git+https://github.com/youssofal/MTPLX] [with: llguidance]
+- mtplx
+- mtplx-tune
 scrapling v0.4.15
 - scrapling
 - scrapling-mcp

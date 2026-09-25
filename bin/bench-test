@@ -53,9 +53,10 @@ rm -f "$cfg"
 
 step "parse_* (docs/ snapshot parsers)"
 fix=$(mktemp)
-printf 'black v24.0.0\n- black\n- blackd\nruff v0.1.0\n- ruff\n' > "$fix"
-assert_eq "parse_uv: tool names, skip executables" "black
-ruff" "$(parse_uv "$fix")"
+printf 'black v24.0.0\n- black\n- blackd\nruff v0.1.0 [with: a, b]\n- ruff\nmtplx v2.12.0 [required:  git+https://x/y] [with: c]\n- mtplx\n' > "$fix"
+assert_eq "parse_uv: tool names, URL sources, --with extras" "black
+ruff --with a --with b
+git+https://x/y --with c" "$(parse_uv "$fix")"
 printf 'ripgrep v13.0.0:\n    rg\nfd-find v8.7.0:\n    fd\n' > "$fix"
 assert_eq "parse_cargo: crate names, skip binaries" "ripgrep
 fd-find" "$(parse_cargo "$fix")"
