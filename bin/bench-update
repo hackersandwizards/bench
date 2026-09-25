@@ -125,7 +125,9 @@ have bun && have jaq && run "Bun globals" _bun_globals_exact
 # separate package manager and need their own update call.
 have pi && run "pi extensions" pi update --extensions
 
+# npm itself belongs to the node formula: a self-update relinks bin/npm, and the
+# next node upgrade overwrites it with a "files were overwritten" warning.
 have npm-check && \
-  run "npm globals" env NPM_CHECK_INSTALLER=npm npm-check --global --update-all --save-exact
+  run "npm globals" env NPM_CHECK_INSTALLER=npm npm-check --global --update-all --save-exact --ignore npm
 
 step "Done"
