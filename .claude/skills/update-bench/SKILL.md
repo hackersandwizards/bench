@@ -78,6 +78,9 @@ Never prune `docs/fonts.txt`, and never `brew bundle dump --force`. `bin/bench-e
 `bench-doctor`. Sort every warn from steps 2 and 3 into three buckets, all three of which appear in
 the report.
 
+A tool's own `Warning:` line is a warn too. Trace it to the bench step that causes it before
+calling it expected: the step that prints it is often not the step that causes it.
+
 Check that the next run of the same step does not undo a fix.
 
 
