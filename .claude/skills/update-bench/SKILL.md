@@ -140,7 +140,7 @@ report, not a third attempt. Never force-push, never reset.
 
 Report, in this order and short:
 
-- what changed on the machine, and every warn steps 2 and 3 printed
+- what changed on the machine, and every warn steps 2 and 3 printed, verbatim
 - what the run fixed in the repo, each Brewfile addition named
 - what needs a human, one line each with the command
 - what the export decided for you, with the snapshot diffs
