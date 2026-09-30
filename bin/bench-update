@@ -23,12 +23,19 @@ fi
 
 # Runtimes and CLIs from home/.config/mise/config.toml. --prune removes the
 # versions an upgrade replaced. `mise install` left the global config's lockfile
-# unwritten (mise 2026.9.15), so lock explicitly to keep home/.config/mise/mise.lock current.
-_mise_upgrade() { (cd "$HOME" && mise upgrade --prune && mise lock --global); }
+# unwritten (mise 2026.9.15), so lock explicitly to keep home/.config/mise/mise.lock
+# current, for this machine's platform only. claude-swap stays out of the lock:
+# its rumps extra ships no wheel, and locking resolves without building.
+_mise_upgrade() (
+  tools=()
+  cd "$HOME" && mise upgrade --prune || exit 1
+  while IFS= read -r t; do tools+=("$t"); done \
+    < <(mise ls --global --json | jaq -r 'keys[] | select(. != "pypi:claude-swap")')
+  mise lock --global --platform macos-arm64 "${tools[@]}"
+)
 have mise && run "mise tools" _mise_upgrade
 
 have pipx && run "pipx apps" pipx upgrade-all
-have uv   && run "uv tools" uv tool upgrade --all
 # No uv cache prune: same lock, same reason as the clean dropped from bin/bench-clean.
 
 _pip_global_upgrade() {

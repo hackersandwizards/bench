@@ -4,7 +4,15 @@ java = ["temurin-26", "temurin-25", "temurin-21", "temurin-17", "temurin-11"]
 gradle = "latest"
 maven = "latest"
 quarkus = "latest"
+"pypi:claude-swap" = { version = "latest", with = ["rumps"] }
+"pypi:git+https://github.com/youssofal/MTPLX" = { version = "latest", with = ["llguidance"] }
+"pypi:scrapling" = { version = "latest", extras = "shell" }
+"pypi:yt-dlp" = "latest"
 
 [settings]
 idiomatic_version_file_enable_tools = ["ruby", "node", "java"]
 lockfile = true
+
+# Unauthenticated GitHub API calls hit the rate limit during `mise lock`.
+[settings.github]
+credential_command = 'gh auth token --hostname "$MISE_CREDENTIAL_HOST"'

@@ -30,7 +30,7 @@ backup() {
 }
 
 # Install each stdin line as a package: runs `"$@" <fields...>` per line, so a
-# line may carry extra arguments (uv's --with extras).
+# line may carry extra arguments.
 # `< /dev/null` keeps a package manager that reads stdin from draining the loop.
 # On failure the captured output is shown: a fresh-machine install needs the
 # reason (missing toolchain, native-extension build error), not a bare "failed".
@@ -399,11 +399,10 @@ fi
 # ---------- Language-ecosystem global CLIs ----------
 # Replay the package snapshots bench-export writes to docs/ (per-package
 # failure handling lives in replay_globals above).
-istep "Install language-ecosystem global CLIs (uv, npm, bun, cargo, pip)"
-if ask "Install uv / npm / bun / cargo / pip global CLIs from docs/ snapshots?"; then
-  # The five managers come from brew bundle, not installed here. The replay only
+istep "Install language-ecosystem global CLIs (npm, bun, cargo, pip)"
+if ask "Install npm / bun / cargo / pip global CLIs from docs/ snapshots?"; then
+  # The four managers come from brew bundle, not installed here. The replay only
   # needs them on PATH; _lib.sh puts the mise shims and Homebrew's Python first.
-  replay_ecosystem uv    uv.txt    parse_uv    uv tool install
   replay_ecosystem npm   npms.txt  parse_node  npm install -g
   replay_ecosystem bun   buns.txt  parse_node  bun add -g
   replay_ecosystem cargo cargo.txt parse_cargo cargo install
