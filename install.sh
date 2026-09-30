@@ -150,6 +150,17 @@ else
   skip "Skipped stow"
 fi
 
+# ---------- mise tools ----------
+# Runtimes and CLIs declared in home/.config/mise/config.toml (linked by Stow above).
+istep "Install mise tools"
+if ! have mise; then
+  warn "mise not installed — run the Brewfile step first"
+elif ask "Install the tools in ~/.config/mise/config.toml via mise?"; then
+  if mise install; then ok "mise tools installed"; else warn "mise install finished with failures — re-run this step"; fi
+else
+  skip "Skipped mise tools"
+fi
+
 # ---------- Personal git identity ----------
 # ~/.gitconfig.local is untracked (per-machine), so there is no snapshot to
 # diff against: show the live identity and let the user decide if it drifted.
@@ -388,15 +399,14 @@ fi
 # ---------- Language-ecosystem global CLIs ----------
 # Replay the package snapshots bench-export writes to docs/ (per-package
 # failure handling lives in replay_globals above).
-istep "Install language-ecosystem global CLIs (uv, npm, bun, cargo, gem, pip)"
-if ask "Install uv / npm / bun / cargo / gem / pip global CLIs from docs/ snapshots?"; then
-  # The six managers come from brew bundle, not installed here. The replay only
-  # needs them on PATH; _lib.sh selects the keg-only Ruby and Python tools.
+istep "Install language-ecosystem global CLIs (uv, npm, bun, cargo, pip)"
+if ask "Install uv / npm / bun / cargo / pip global CLIs from docs/ snapshots?"; then
+  # The five managers come from brew bundle, not installed here. The replay only
+  # needs them on PATH; _lib.sh puts the mise shims and Homebrew's Python first.
   replay_ecosystem uv    uv.txt    parse_uv    uv tool install
   replay_ecosystem npm   npms.txt  parse_node  npm install -g
   replay_ecosystem bun   buns.txt  parse_node  bun add -g
   replay_ecosystem cargo cargo.txt parse_cargo cargo install
-  replay_ecosystem gem   gems.txt  parse_gem   gem install
   replay_ecosystem pip   pip.txt   parse_pip   pip install
 else
   skip "Skipped language-ecosystem globals"

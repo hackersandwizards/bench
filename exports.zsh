@@ -1,36 +1,20 @@
-# Ruby ABI from the brew keg (the /opt/homebrew/opt/ruby symlink follows upgrades).
-_ruby_dirs=( /opt/homebrew/opt/ruby/lib/ruby/gems/*(/N:t) )
-RUBY_API="${_ruby_dirs[1]-}"
-unset _ruby_dirs
-
 # --- PATH ---
+# mise shims serve non-interactive shells and apps; interactive shells get
+# `mise activate` from init.zsh on top.
 export PATH="\
 $ZSH_SETTINGS_DIR/bin:\
 $HOME/.local/bin:\
+$HOME/.local/share/mise/shims:\
 $HOME/.cargo/bin:\
 $HOME/go/bin:\
-${RUBY_API:+$HOME/.gem/ruby/$RUBY_API/bin:}\
 $HOME/.antigravity-ide/antigravity-ide/bin:\
 $HOME/Library/Application Support/JetBrains/Toolbox/scripts:\
-/opt/homebrew/opt/ruby/bin:\
 /opt/homebrew/opt/python3/libexec/bin:\
 /opt/homebrew/opt/unzip/bin:\
 /opt/homebrew/share/google-cloud-sdk/bin:\
 /opt/homebrew/bin:\
 /opt/homebrew/sbin:\
 $PATH"
-
-# --- Ruby ---
-if [[ -n "$RUBY_API" ]]; then
-  export GEM_HOME="$HOME/.gem/ruby/$RUBY_API"
-  export GEM_PATH="$GEM_HOME:/opt/homebrew/lib/ruby/gems/$RUBY_API"
-  # Keg-only ruby: native gem builds need the header/lib paths. Inside the
-  # guard so a machine without the ruby keg does not point every build here.
-  export LDFLAGS="-L/opt/homebrew/opt/ruby/lib"
-  export CPPFLAGS="-I/opt/homebrew/opt/ruby/include"
-  export PKG_CONFIG_PATH="/opt/homebrew/opt/ruby/lib/pkgconfig"
-fi
-unset RUBY_API
 
 # --- Homebrew ---
 # Load formulae/casks/commands only from official or explicitly-trusted taps

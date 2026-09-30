@@ -118,6 +118,8 @@ brew "lefthook"
 brew "less"
 # Mac App Store command-line interface
 brew "mas"
+# Polyglot runtime manager (asdf rust clone)
+brew "mise"
 # Deep clean and optimize your Mac
 brew "mole"
 # Open-source, cross-platform JavaScript runtime environment
@@ -154,8 +156,6 @@ brew "rename"
 brew "ripgrep"
 # Utility that provides fast incremental file transfer
 brew "rsync"
-# Powerful, clean, object-oriented scripting language
-brew "ruby", link: false
 # Safe, concurrent, practical language. Not rustup: the two conflict (both
 # link cargo/rustc), and brew upgrade already covers toolchain updates.
 brew "rust"

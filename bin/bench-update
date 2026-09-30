@@ -21,21 +21,11 @@ if [[ -f "$ANTIDOTE_SH" ]]; then
   ok "Antidote static bundles invalidated (regenerate on next shell)"
 fi
 
-# Two outdated gems are left alone. rdoc belongs to the ruby formula: a `gem
-# update` copy lands beside the bundled one, both load a rubygems_plugin.rb
-# (~16 constant-redefinition warnings on every `gem` call), and the write into
-# Homebrew's read-only plugin symlink fails. io-wait is deprecated, its
-# functionality ships with Ruby, and each update re-prints the deprecation
-# notice.
-_gem_update_all() {
-  gem outdated 2>/dev/null | awk '{print $1}' | grep -vxE 'rdoc|io-wait' | xargs -r gem update
-}
-
-if have gem; then
-  run "RubyGems system"   gem update --system
-  run "RubyGems all"      _gem_update_all
-  run "RubyGems cleanup"  gem cleanup
-fi
+# Runtimes and CLIs from home/.config/mise/config.toml. --prune removes the
+# versions an upgrade replaced. `mise install` left the global config's lockfile
+# unwritten (mise 2026.9.15), so lock explicitly to keep home/.config/mise/mise.lock current.
+_mise_upgrade() { (cd "$HOME" && mise upgrade --prune && mise lock --global); }
+have mise && run "mise tools" _mise_upgrade
 
 have pipx && run "pipx apps" pipx upgrade-all
 have uv   && run "uv tools" uv tool upgrade --all

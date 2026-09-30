@@ -76,14 +76,6 @@ assert_eq "same line despite patch bump"      "$(sdk_line 17.0.19-tem)" "$(sdk_l
 assert_eq "major bump is a different line"    "25-tem" "$(sdk_line 25.0.4-tem)"
 assert_fail "25 and 26 never share a line" \
   test "$(sdk_line 25.0.4-tem)" = "$(sdk_line 26.0.2-tem)"
-# `json (2.19.8, default: 2.18.0)` is the dominant real shape: a user-updated
-# version alongside the bundled one. It must be kept: the `^` anchor in the
-# parser (`$2 !~ /^default:/`) is what distinguishes it from a `(default: X)`
-# bundled-only gem. Without this case an unanchored regex would pass the test
-# but silently drop every updated stdlib gem from replay.
-printf 'rake (13.0.6)\nbigdecimal (default: 3.1.4)\njson (2.19.8, default: 2.18.0)\n' > "$fix"
-assert_eq "parse_gem: keep user gems, skip bundled defaults" "rake
-json" "$(parse_gem "$fix")"
 printf '/opt/homebrew/lib\n├── npm@10.2.0\n├── typescript@5.3.3\n└── @angular/cli@17.0.0\n' > "$fix"
 assert_eq "parse_node: strip version, drop npm, keep scope" "typescript
 @angular/cli" "$(parse_node "$fix")"

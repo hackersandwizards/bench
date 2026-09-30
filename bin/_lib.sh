@@ -13,7 +13,7 @@ have() { command -v "$1" >/dev/null 2>&1; }
 indent() { sed 's/^/    /'; }
 
 # Scripts must not fall back to Apple's Ruby or bypass Homebrew's Python tools.
-export PATH="/opt/homebrew/opt/ruby/bin:/opt/homebrew/opt/python3/libexec/bin:$PATH"
+export PATH="$HOME/.local/share/mise/shims:/opt/homebrew/opt/python3/libexec/bin:$PATH"
 
 check() {
   local label="$1"; shift
@@ -168,6 +168,7 @@ STOW_FILES=(
   ".commitTemplate.txt"
   ".ssh/config"
   ".config/zed/settings.json"
+  ".config/mise/config.toml"
 )
 
 # Checklist lines of $1 absent from directory $2. Shared by install.sh's fonts
@@ -192,9 +193,6 @@ parse_uv() {
 parse_cargo() { awk '/^[^[:space:]]/ { print $1 }' "$1"; }
 parse_pip()   { awk -F'==' '/==/ { print $1 }' "$1"; }
 parse_sdk()   { awk 'NF == 2 { print $1, $2 }' "$1"; }
-# Replay only gems carrying a user-installed version; skip Ruby's bundled gems
-# (those show a lone `default:` version).
-parse_gem()   { awk -F' *[()] *' 'NF > 1 && $2 !~ /^default:/ { print $1 }' "$1"; }
 # Drop `npm` itself: reinstalling the package manager is a no-op.
 parse_node()  { awk 'NF && $NF ~ /@/ { n=$NF; sub(/@[^@]*$/, "", n); if (n != "npm") print n }' "$1"; }
 

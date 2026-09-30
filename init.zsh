@@ -151,6 +151,8 @@ function entire() {
 
 # direnv adds a chpwd hook: it must be registered eagerly to fire on every cd.
 _init_cache direnv hook zsh
+# mise switches tool versions per directory through a precmd hook.
+_init_cache mise activate zsh
 
 # --- Profiling report ---
 [[ -n "$ZSH_PROFILE" ]] && zprof
