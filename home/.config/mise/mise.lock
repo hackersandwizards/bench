@@ -2,6 +2,52 @@
 
 lockfile_version = 2
 
+[[tools.bun]]
+version = "1.4.2"
+backend = "core:bun"
+specifiers = ["latest"]
+
+[tools.bun."platforms.macos-arm64"]
+checksum = "sha256:90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f"
+url = "https://github.com/oven-sh/bun/releases/download/bun-v1.4.2/bun-darwin-aarch64.zip"
+
+[[tools.deno]]
+version = "2.9.7"
+backend = "core:deno"
+specifiers = ["latest"]
+
+[tools.deno."platforms.macos-arm64"]
+checksum = "sha256:5cd46d6268f6f78f5d88bdc7159d20bd44cdaa4b3303474839f87ec6fe7ae25c"
+url = "https://dl.deno.land/release/v2.9.7/deno-aarch64-apple-darwin.zip"
+
+[[tools.elixir]]
+version = "1.20.4-otp-29"
+backend = "core:elixir"
+specifiers = ["latest"]
+
+[tools.elixir."platforms.macos-arm64"]
+checksum = "sha256:7863c546cda13fecc949e562e326042451dacf8fd8698a36783cb71eeb223b46"
+url = "https://builds.hex.pm/builds/elixir/v1.20.4-otp-29.zip"
+
+[[tools.erlang]]
+version = "29.1.1"
+backend = "core:erlang"
+specifiers = ["latest"]
+
+[tools.erlang."platforms.macos-arm64"]
+checksum = "sha256:0e80f209b06d9d13cf3b5f7c07228d9561aff983e6e55ea9c8ebda085db286cc"
+url = "https://github.com/erlef/otp_builds/releases/download/OTP-29.1.1/otp-aarch64-apple-darwin.tar.gz"
+url_api = "https://api.github.com/repos/erlef/otp_builds/releases/assets/580922715"
+
+[[tools.go]]
+version = "1.27.1"
+backend = "core:go"
+specifiers = ["latest"]
+
+[tools.go."platforms.macos-arm64"]
+checksum = "sha256:ee215d57e0ec269c60cc9ceca68e6bda321ba9ee5afe24f4b0988703c2d87d12"
+url = "https://dl.google.com/go/go1.27.1.darwin-arm64.tar.gz"
+
 [[tools.gradle]]
 version = "9.8.0"
 backend = "aqua:gradle/gradle-distributions"
@@ -121,4 +167,20 @@ ruby_install = "false"
 [tools.ruby."platforms.macos-arm64"]
 checksum = "sha256:1b239cb6e4f8ba27e890e025c723c00ba781b993ac12aab2029618f347c2206d"
 url = "https://github.com/jdx/ruby/releases/download/4.0.7-1/ruby-4.0.7.macos.tar.gz"
+provenance = "github-attestations"
+
+[[tools.rust]]
+version = "1.98.1"
+backend = "core:rust"
+specifiers = ["latest"]
+
+[[tools.uv]]
+version = "0.12.20"
+backend = "aqua:astral-sh/uv"
+specifiers = ["latest"]
+
+[tools.uv."platforms.macos-arm64"]
+checksum = "sha256:848fdeb602ff1a1baacd4f6c8b7bdc6cf1ad026a6d9cf59475fda17c179743ca"
+url = "https://github.com/astral-sh/uv/releases/download/0.12.20/uv-aarch64-apple-darwin.tar.gz"
+url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/596657737"
 provenance = "github-attestations"

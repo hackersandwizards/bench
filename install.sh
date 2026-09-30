@@ -399,13 +399,13 @@ fi
 # ---------- Language-ecosystem global CLIs ----------
 # Replay the package snapshots bench-export writes to docs/ (per-package
 # failure handling lives in replay_globals above).
-istep "Install language-ecosystem global CLIs (npm, bun, cargo, pip)"
-if ask "Install npm / bun / cargo / pip global CLIs from docs/ snapshots?"; then
-  # The four managers come from brew bundle, not installed here. The replay only
-  # needs them on PATH; _lib.sh puts the mise shims and Homebrew's Python first.
+istep "Install language-ecosystem global CLIs (npm, bun, pip)"
+if ask "Install npm / bun / pip global CLIs from docs/ snapshots?"; then
+  # The three managers come from brew bundle and mise, not installed here. The
+  # replay only needs them on PATH; _lib.sh puts the mise shims and Homebrew's
+  # Python first.
   replay_ecosystem npm   npms.txt  parse_node  npm install -g
   replay_ecosystem bun   buns.txt  parse_node  bun add -g
-  replay_ecosystem cargo cargo.txt parse_cargo cargo install
   replay_ecosystem pip   pip.txt   parse_pip   pip install
 else
   skip "Skipped language-ecosystem globals"

@@ -20,8 +20,6 @@ brew "bfs"
 brew "binutils"
 # Resource monitor. C++ version and continuation of bashtop and bpytop
 brew "btop"
-# Incredibly fast JavaScript runtime, bundler, test runner, and package manager
-brew "bun"
 # Software library to render fonts
 brew "freetype"
 # Vector graphics library with cross-device output support
@@ -34,8 +32,6 @@ brew "php"
 brew "composer"
 # GNU File, Shell, and Text utilities
 brew "coreutils"
-# Secure runtime for JavaScript and TypeScript
-brew "deno"
 # File comparison utilities
 brew "diffutils"
 # Load/unload environment variables based on $PWD
@@ -46,8 +42,6 @@ brew "dockutil"
 brew "duti"
 # Classic UNIX line editor
 brew "ed"
-# Functional metaprogramming aware language built on Erlang VM
-brew "elixir"
 # Modern, maintained replacement for ls
 brew "eza"
 # Simple, fast and user-friendly alternative to find
@@ -84,8 +78,6 @@ brew "gnu-sed"
 brew "gnu-tar"
 # GNU implementation of which utility
 brew "gnu-which"
-# Open source programming language to build simple/reliable/efficient software
-brew "go"
 # Apply a diff file to an original
 brew "gpatch"
 # GNU grep, egrep and fgrep
@@ -142,8 +134,6 @@ brew "pandoc"
 brew "pango"
 # Shell command parallelization utility
 brew "parallel"
-# Execute binaries from Python packages in isolated environments
-brew "pipx"
 # Package compiler and linker metadata toolkit
 brew "pkgconf"
 # PDF rendering library (based on the xpdf-3.0 code base)
@@ -156,9 +146,6 @@ brew "rename"
 brew "ripgrep"
 # Utility that provides fast incremental file transfer
 brew "rsync"
-# Safe, concurrent, practical language. Not rustup: the two conflict (both
-# link cargo/rustc), and brew upgrade already covers toolchain updates.
-brew "rust"
 # Terminal multiplexer with VT100/ANSI terminal emulation
 brew "screen"
 # Static analysis and lint tool, for (ba)sh scripts
@@ -177,8 +164,6 @@ brew "tree"
 brew "ugrep"
 # Extraction utility for .zip compressed archives
 brew "unzip"
-# Extremely fast Python package installer and resolver, written in Rust
-brew "uv"
 # Vi 'workalike' with many additional features
 brew "vim"
 # Executes a program periodically, showing output fullscreen

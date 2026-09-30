@@ -122,7 +122,6 @@ missing_fonts() { comm -23 <(sort "$1") <(ls "$2" 2>/dev/null | sort); }
 # docs/ snapshot parsers: each reads a snapshot file ($1) and emits one package
 # per line; the output feeds install.sh's replay_globals. Sourced from here so
 # they are unit-testable (see bench-test).
-parse_cargo() { awk '/^[^[:space:]]/ { print $1 }' "$1"; }
 parse_pip()   { awk -F'==' '/==/ { print $1 }' "$1"; }
 # Drop `npm` itself: reinstalling the package manager is a no-op.
 parse_node()  { awk 'NF && $NF ~ /@/ { n=$NF; sub(/@[^@]*$/, "", n); if (n != "npm") print n }' "$1"; }

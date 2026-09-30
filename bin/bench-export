@@ -61,8 +61,6 @@ have pip   && dump_to "$DOCS/pip.txt"   pip_managed_freeze         &
 # --no-unicode: npm picks tree glyphs by TTY, so an interactive export and this
 # unattended one would rewrite the same file back and forth forever.
 have npm   && dump_to "$DOCS/npms.txt"  npm list -g --depth=0 --no-unicode &
-have cargo && dump_to "$DOCS/cargo.txt" cargo install --list       &
-have mix   && dump_to "$DOCS/mix.txt"   mix archive                &
 dump_to "$DOCS/safari-favorites.txt" "$REPO_ROOT/bin/safari-favorites" export &
 # $HOME -> literal token so the snapshots replay for any user (parse_* expands it).
 dock_dump()    { dockutil --list | sed "s|$HOME|\$HOME|g"; }

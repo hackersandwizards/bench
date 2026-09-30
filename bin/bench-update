@@ -35,7 +35,6 @@ _mise_upgrade() (
 )
 have mise && run "mise tools" _mise_upgrade
 
-have pipx && run "pipx apps" pipx upgrade-all
 # No uv cache prune: same lock, same reason as the clean dropped from bin/bench-clean.
 
 _pip_global_upgrade() {
@@ -70,7 +69,6 @@ _bun_globals_exact() {
   xargs bun add -g --exact <<<"$specs"
 }
 
-have bun && run "Bun runtime" bun upgrade
 have bun && have jaq && run "Bun globals" _bun_globals_exact
 
 # `bun add -g` only bumps the pi CLI itself (@earendil-works/pi-coding-agent).

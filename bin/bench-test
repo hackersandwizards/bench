@@ -39,9 +39,6 @@ assert_ok "no ledger configured — warn still succeeds" warn "unledgered"
 
 step "parse_* (docs/ snapshot parsers)"
 fix=$(mktemp)
-printf 'ripgrep v13.0.0:\n    rg\nfd-find v8.7.0:\n    fd\n' > "$fix"
-assert_eq "parse_cargo: crate names, skip binaries" "ripgrep
-fd-find" "$(parse_cargo "$fix")"
 printf 'requests==2.31.0\nurllib3==2.0.0\n' > "$fix"
 assert_eq "parse_pip: name before ==" "requests
 urllib3" "$(parse_pip "$fix")"

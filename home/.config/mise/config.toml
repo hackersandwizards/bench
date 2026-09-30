@@ -4,6 +4,13 @@ java = ["temurin-26", "temurin-25", "temurin-21", "temurin-17", "temurin-11"]
 gradle = "latest"
 maven = "latest"
 quarkus = "latest"
+go = "latest"
+rust = "latest"
+deno = "latest"
+bun = "latest"
+uv = "latest"
+erlang = "latest"
+elixir = "latest"
 "pypi:claude-swap" = { version = "latest", with = ["rumps"] }
 "pypi:git+https://github.com/youssofal/MTPLX" = { version = "latest", with = ["llguidance"] }
 "pypi:scrapling" = { version = "latest", extras = "shell" }

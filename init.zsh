@@ -114,7 +114,7 @@ zstyle ':fzf-tab:complete:git-checkout:*' fzf-preview 'git log --color=always --
 zstyle ':fzf-tab:complete:git-log:*' fzf-preview 'git log --color=always --oneline -20 $word'
 zstyle ':fzf-tab:complete:kill:*' fzf-preview 'ps -p $word -o pid,user,%cpu,%mem,command'
 
-# --- Bun (binary from brew; `bun add -g` still targets $BUN_INSTALL/bin) ---
+# --- Bun (binary from mise; `bun add -g` still targets $BUN_INSTALL/bin) ---
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
