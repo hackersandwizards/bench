@@ -7,6 +7,7 @@ apr-util
 argon2
 atuin
 autoconf
+azure-cli
 bash
 bat
 betterleaks
@@ -14,7 +15,6 @@ bfs
 binutils
 brotli
 btop
-bun
 c-ares
 ca-certificates
 cairo
@@ -26,14 +26,11 @@ cryptography
 curl
 cypher-shell
 dav1d
-deno
 diffutils
 direnv
 dockutil
 duti
 ed
-elixir
-erlang
 eza
 fd
 ffmpeg
@@ -65,7 +62,6 @@ gnu-tar
 gnu-which
 gnupg
 gnutls
-go
 gpatch
 gpgme
 gpgmepp
@@ -138,13 +134,13 @@ libzip
 little-cms2
 llama.cpp
 llhttp
-llvm@22
 lua
 lz4
 lzo
 m4
 mas
 merve
+mise
 mole
 mongodb-community
 mongodb-database-tools
@@ -182,7 +178,6 @@ parallel
 pcre2
 php
 pinentry
-pipx
 pixman
 pkgconf
 poppler
@@ -198,8 +193,6 @@ redpanda
 rename
 ripgrep
 rsync
-ruby
-rust
 screen
 sdl2-compat
 sdl3
@@ -220,7 +213,6 @@ ugrep
 unixodbc
 unzip
 utf8proc
-uv
 uvwasi
 vim
 watch
@@ -229,7 +221,6 @@ webp
 wget
 whisper-cpp
 whisper.cpp
-wxwidgets@3.2
 x264
 x265
 xh

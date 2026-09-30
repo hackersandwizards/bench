@@ -62,8 +62,9 @@ for the window to reset instead of switching, and the two do not combine usefull
 
 `cswap menubar` puts every account's windows in the macOS menu bar, and
 `cswap menubar --install-service` keeps it running through a LaunchAgent. The menu bar needs the
-`menubar` extra, so install the tool as `uv tool install --with rumps claude-swap`: without `rumps`
-the LaunchAgent registers and then has nothing to run.
+`menubar` extra, so install the tool with `rumps` alongside it, as the mise config does with
+`"pypi:claude-swap" = { version = "latest", with = ["rumps"] }`: without `rumps` the LaunchAgent
+registers and then has nothing to run.
 
 Auto-switching is off by default even with the menu bar running. Turn it on in the menu bar itself,
 or run `cswap auto`; both drive the same engine and share the `autoswitch.*` settings.

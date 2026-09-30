@@ -21,7 +21,7 @@ cd ~/opt/zsh-settings
 
 Every wizard step is opt-in:
 
-- **Packages**: `brew bundle`, language-ecosystem globals (uv/npm/bun/cargo/gem/pip), SDKMAN + JVM SDKs
+- **Packages**: `brew bundle`, runtimes and CLI tools via `mise install` (`home/.config/mise/config.toml`), npm/bun/pip globals
 - **Config**: Stow symlinks, `~/.gitconfig.local`, repo-local git hooks, `~/.zshrc` source line, Ghostty config, skhd
 - **Logins + keys**: `gh`/`glab` auth, missing API keys into `secrets.zsh` (key list: `docs/secret-keys.txt`)
 - **Default repos**: `~/dev` + `~/opt` created, missing clones from `docs/repos.txt` (company-os, talks, trainings, MCP servers)
@@ -104,6 +104,7 @@ home/                 Stow package, symlinked into $HOME
   .vimrc, .tmux.conf
   .ssh/config           Hardened (Keychain, ControlMaster, no ForwardAgent)
   .config/zed/settings.json   Zed editor defaults
+  .config/mise/config.toml    Runtimes (JDKs, Ruby, Go, Rust, ...) and Python CLIs; mise.lock pins versions
 ghostty/              Ghostty terminal config (single source of truth for theme)
 docs/                 Package + machine-state snapshots (committed; replayed by install.sh)
 .claude/              Claude Code statusline + rules + settings
@@ -130,7 +131,7 @@ To change the theme: edit the `palette` section in `ghostty/config.ghostty`. Eve
 
 ```bash
 bench-doctor                   # verify everything is wired up
-bench-update                   # upgrade brew, antidote, ruby, python, uv, bun, sdkman
+bench-update                   # upgrade brew, antidote, mise tools, pip, bun and npm globals
 bench-prefs-diff snap|diff     # capture a settings change as defaults keys for macos.sh
 bench-export                   # snapshot installed packages + sync home/ from $HOME
 bench-clean                    # reclaim disk: caches, .DS_Store, stale IDE versions (alias: cleanup)

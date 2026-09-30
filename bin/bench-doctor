@@ -39,6 +39,9 @@ echo "=== Stow symlinks ==="
 for rel in "${STOW_FILES[@]}"; do
   if [[ -L "$HOME/$rel" ]]; then
     ok "$rel -> $(readlink "$HOME/$rel")"
+  # Stow folds a directory holding only package files into one symlink.
+  elif [[ "$HOME/$rel" -ef "$REPO_ROOT/home/$rel" ]]; then
+    ok "$rel (via folded directory)"
   elif [[ -e "$HOME/$rel" ]]; then
     warn "$rel: real file (not Stow-managed)"
   else

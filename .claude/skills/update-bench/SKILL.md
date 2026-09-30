@@ -59,8 +59,9 @@ Keep the full output; the warn lines are this step's product. Shapes to read cor
 - Every step failing at once is one network problem, not fifteen findings. Say that instead.
 - A skipped Homebrew block is `brew_bottles_supported` false: macOS is newer than brew's bottles.
   Nothing to fix, and it clears itself.
-- `SDKMAN prune` deletes installed tools rather than caches. Repeat every removal it names in the
-  report. Adopting a newer feature line is a human's call, not a silent install.
+- `mise upgrade --prune` deletes the tool versions an upgrade replaced. Repeat every removal it
+  names in the report. Adopting a newer major line pinned in `home/.config/mise/config.toml` is a
+  human's call, not a silent config edit.
 
 ### 3. Refresh the repo's picture of the machine
 
@@ -88,15 +89,17 @@ Check that the next run of the same step does not undo a fix.
 **Fixed by the run.** What passes the test this skill opens with. Of the warns doctor names, two
 qualify today: `core.hooksPath` not `.githooks` and `secrets.zsh` not mode 600. Each doctor warn
 names its own remedy: apply the test rather than keeping a catalogue here.
-The test also admits a repair scoped to the one package a warn names (`gem pristine`,
-`brew reinstall`, uninstalling a stale duplicate) and a fix to the `bin/bench-*` script that prints
-a warn it can never clear, gated by step 5. A warn that passes the test and sits under "needs a
-human" is a mistake.
+The test also admits a repair scoped to the one formula that `bench-update` or `bench-doctor`
+reports broken or unlinked in the same run: `brew reinstall <formula>` (with
+`--build-from-source` when the bottle does not match the running macOS), `brew link <formula>`,
+and `brew link --overwrite <formula>` once the plain form failed on a file conflict. It also admits
+a fix to the `bin/bench-*` script that prints a warn it can never clear, gated by step 5. Name each
+repair in the report with the error that justified it and the command that undoes it. A warn that
+passes the test and sits under "needs a human" is a mistake.
 
 **Needs a human.** Anything wanting a password, a browser login, a UI action, a font backup or a
 logout; anything whose remedy is `install.sh`, `macos.sh` or `brew bundle`, which replay a whole
-machine; a stopped `skhd`, which may have been stopped on purpose; leftover rustup shims, since an
-uninstall is not this run's call. One line each, with the command doctor gave.
+machine; a stopped `skhd`, which may have been stopped on purpose. One line each, with the command doctor gave.
 
 **Resolved by the export.** `bench-export` settles Dock, Finder sidebar and Safari favorites drift
 machine-is-truth, which `README.md` pre-authorizes, and repoints a `docs/repos.txt` entry whose
@@ -143,5 +146,6 @@ Report, in this order and short:
 - what changed on the machine, and every warn steps 2 and 3 printed, verbatim
 - what the run fixed in the repo, each Brewfile addition named
 - what needs a human, one line each with the command
-- what the export decided for you, with the snapshot diffs
+- what the export decided for you, with the snapshot diffs and the version changes in
+  `git diff -- home/.config/mise/mise.lock`
 - the gate result, the commit and the push

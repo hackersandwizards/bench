@@ -30,7 +30,7 @@ fonts/                # Only fonts with verified redistribution rights (repo is 
 .claude/              # Statusline command + Claude Code rules/settings
 .codex/               # Codex CLI config
 ghostty/              # Ghostty terminal config
-home/                 # Dotfile templates symlinked via Stow
+home/                 # Dotfile templates symlinked via Stow; .config/mise/ holds the mise config and its mise.lock
 docs/                 # Package + machine-state snapshots, replayed by install.sh (offline-readable); fonts.txt (restore checklist) and secret-keys.txt (expected key names) are hand-maintained, never dumped by bench-export; repos.txt (default clones) is hand-maintained in its selection, with bench-export repointing an entry whose clone moved or was renamed
 ```
 
@@ -39,6 +39,7 @@ docs/                 # Package + machine-state snapshots, replayed by install.s
 - Modern CLI tools: `eza` (ls), `bat` (cat), `fd` (find), `rg` (grep), `xh` (curl)
 - Internal paths use `$ZSH_SETTINGS_DIR` (set by `init.zsh` self-discovery, no hardcoded install location)
 - Global npm/bun packages preferred over system installs
+- Runtimes and CLI tools via mise (`home/.config/mise/config.toml`), except where a kept brew formula depends on the brew runtime (node, python@3.14, php, openjdk)
 - `/opt/homebrew` hardcoded, Apple Silicon only (Intel Macs not supported)
 
 ## Behavioral rules
