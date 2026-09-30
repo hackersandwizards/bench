@@ -101,64 +101,6 @@ hooks_path() {
 # shellcheck disable=SC2034  # consumed by bench-update / bench-doctor
 ANTIDOTE_SH="/opt/homebrew/opt/antidote/share/antidote/antidote.zsh"
 
-SDKMAN_INIT="$HOME/.sdkman/bin/sdkman-init.sh"
-SDKMAN_CONFIG="$HOME/.sdkman/etc/config"
-
-# Source SDKMAN's init so the `sdk` shell function exists. It is not a binary,
-# so `have sdk` is false until this runs. The init reads unset vars, so `set +u`
-# wraps it.
-source_sdkman() {
-  [[ -s "$SDKMAN_INIT" ]] || return 1
-  if (( BASH_VERSINFO[0] < 4 )); then
-    [[ -x /opt/homebrew/bin/bash ]] || return 1
-    # shellcheck disable=SC2329
-    sdk() {
-      /opt/homebrew/bin/bash -c '
-        set +u
-        source "$1"
-        shift
-        sdk "$@"
-      ' bash "$SDKMAN_INIT" "$@"
-    }
-    return 0
-  fi
-  set +u
-  # shellcheck disable=SC1090
-  source "$SDKMAN_INIT"
-  set -u
-}
-
-# SDKMAN reads $2 and other unset vars unconditionally. `sdk selfupdate` aborts
-# with "$2: unbound variable" under `set -u` (which all bench-* scripts enable),
-# so relax nounset around it. Requires source_sdkman first.
-sdk_run() {
-  set +u
-  sdk "$@"
-  local rc=$?
-  set -u
-  return "$rc"
-}
-
-# An SDK version's "line": major version plus vendor suffix, so 21-tem and 26-tem
-# are distinct and bench-update's prune never removes the last JDK of a line.
-# Decides what gets deleted, so it lives here and bench-test covers it.
-sdk_line() { local v="$1" s=""; case "$v" in *-*) s="-${v##*-}";; esac; printf '%s%s' "${v%%.*}" "$s"; }
-
-# No `sed -i`: the temp-file edit works under both BSD and GNU sed. `cat >`
-# preserves perms and inode.
-sdkman_set_config() {
-  local key="$1" value="$2" tmp
-  [[ -f "$SDKMAN_CONFIG" ]] || return 1
-  if grep -q "^${key}=" "$SDKMAN_CONFIG"; then
-    tmp="$(mktemp)"
-    sed "s/^${key}=.*/${key}=${value}/" "$SDKMAN_CONFIG" > "$tmp" \
-      && cat "$tmp" > "$SDKMAN_CONFIG"
-    rm -f "$tmp"
-  else
-    printf '%s=%s\n' "$key" "$value" >> "$SDKMAN_CONFIG"
-  fi
-}
-
 # shellcheck disable=SC2034  # consumed by bench-* and install.sh
 STOW_FILES=(
   ".gitconfig"
@@ -178,8 +120,7 @@ STOW_FILES=(
 missing_fonts() { comm -23 <(sort "$1") <(ls "$2" 2>/dev/null | sort); }
 
 # docs/ snapshot parsers: each reads a snapshot file ($1) and emits one package
-# per line (parse_sdk emits "name version"); the output feeds install.sh's
-# replay_globals. Sourced from here so they are unit-testable (see bench-test).
+# per line; the output feeds install.sh's replay_globals. Sourced from here so they are unit-testable (see bench-test).
 # A tool installed from a URL replays from that URL, never by name from PyPI, and
 # keeps its --with extras (mtplx needs llguidance for json_schema responses).
 parse_uv() {
@@ -192,7 +133,6 @@ parse_uv() {
 }
 parse_cargo() { awk '/^[^[:space:]]/ { print $1 }' "$1"; }
 parse_pip()   { awk -F'==' '/==/ { print $1 }' "$1"; }
-parse_sdk()   { awk 'NF == 2 { print $1, $2 }' "$1"; }
 # Drop `npm` itself: reinstalling the package manager is a no-op.
 parse_node()  { awk 'NF && $NF ~ /@/ { n=$NF; sub(/@[^@]*$/, "", n); if (n != "npm") print n }' "$1"; }
 

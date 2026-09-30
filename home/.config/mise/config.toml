@@ -1,5 +1,9 @@
 [tools]
 ruby = "4"
+java = ["temurin-26", "temurin-25", "temurin-21", "temurin-17", "temurin-11"]
+gradle = "latest"
+maven = "latest"
+quarkus = "latest"
 
 [settings]
 idiomatic_version_file_enable_tools = ["ruby", "node", "java"]

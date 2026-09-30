@@ -47,9 +47,6 @@ elif have brew; then
   fi
 fi
 
-# Source SDKMAN so the `sdk current` snapshot below can see the function (see _lib.sh).
-source_sdkman || true
-
 # --- docs/ snapshots (replayed by install.sh, offline-readable) ---
 # Each tool is its own subprocess and stat-bound: fan out, then `wait`.
 step "docs/ snapshots"
@@ -66,7 +63,6 @@ have uv    && dump_to "$DOCS/uv.txt"    uv tool list --show-version-specifiers -
 # unattended one would rewrite the same file back and forth forever.
 have npm   && dump_to "$DOCS/npms.txt"  npm list -g --depth=0 --no-unicode &
 have cargo && dump_to "$DOCS/cargo.txt" cargo install --list       &
-have sdk   && dump_to "$DOCS/sdks.txt"  sdk_run current            &
 have mix   && dump_to "$DOCS/mix.txt"   mix archive                &
 dump_to "$DOCS/safari-favorites.txt" "$REPO_ROOT/bin/safari-favorites" export &
 # $HOME -> literal token so the snapshots replay for any user (parse_* expands it).

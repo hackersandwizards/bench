@@ -29,8 +29,8 @@ backup() {
   warn "backed up $target → $bak"
 }
 
-# Install each stdin line as a package: runs `"$@" <fields...>` per line, so
-# single-token lines and multi-token `sdk` lines (name version) both work.
+# Install each stdin line as a package: runs `"$@" <fields...>` per line, so a
+# line may carry extra arguments (uv's --with extras).
 # `< /dev/null` keeps a package manager that reads stdin from draining the loop.
 # On failure the captured output is shown: a fresh-machine install needs the
 # reason (missing toolchain, native-extension build error), not a bare "failed".
@@ -429,32 +429,6 @@ elif ask "Install Claude Code (official installer)?"; then
   fi
 else
   skip "Skipped Claude Code install"
-fi
-
-# ---------- SDKMAN + JVM-ecosystem SDKs ----------
-# SDKMAN_INIT and source_sdkman live in _lib.sh: `sdk` is a shell function, not
-# a binary, so its init must be sourced before `sdk install` works.
-istep "Install SDKMAN and JVM-ecosystem SDKs"
-if [[ ! -s "$SDKMAN_INIT" ]] && ask "SDKMAN not installed. Install it now?"; then
-  curl -fsSL "https://get.sdkman.io" | bash
-fi
-sdks_doc="$REPO_ROOT/docs/sdks.txt"
-if [[ ! -s "$SDKMAN_INIT" ]]; then
-  skip "Skipped SDKMAN"
-else
-  # Auto-answer every prompt: install/upgrade always set the newest as default
-  # and never ask. Keeps interactive `sdk` and unattended `bench-update` silent.
-  sdkman_set_config sdkman_auto_answer true && ok "SDKMAN auto-answer enabled"
-  if [[ -s "$sdks_doc" ]] && ask "Install JVM SDKs from docs/sdks.txt?"; then
-    source_sdkman
-    # sdk_run, not raw sdk: the `sdk` function reads $2 and other vars unset under
-    # install.sh's `set -u` (see _lib.sh). `sdk install <name> <ver>` clears the
-    # $2 read, but the install path goes deeper; sdk_run relaxes nounset for the
-    # whole call, matching how bench-update and bench-export invoke sdk.
-    parse_sdk "$sdks_doc" | replay_globals sdk sdk_run install
-  else
-    skip "Skipped JVM SDK install"
-  fi
 fi
 
 # ---------- Safari favorites bar ----------

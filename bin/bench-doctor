@@ -194,8 +194,9 @@ fi
 
 echo
 echo "=== IntelliJ JDK pins ==="
-# bench-update prunes superseded SDKs; IntelliJ pins JDKs by absolute path, so a
-# prune silently leaves dangling project SDKs. IntelliJ rewrites this file on
+# IntelliJ pins JDKs by absolute path. A pin on a mise line symlink
+# (installs/java/temurin-21) survives bench-update's prune, a pin on an exact
+# version or on the retired ~/.sdkman does not. IntelliJ rewrites this file on
 # exit, so this only reports: repoint it in the IDE, never from a script.
 shopt -s nullglob
 jdk_tables=("$HOME/Library/Application Support/JetBrains"/*/options/jdk.table.xml)
@@ -205,8 +206,8 @@ if (( ${#jdk_tables[@]} == 0 )); then
 else
   for t in "${jdk_tables[@]}"; do
     ide=$(basename "$(dirname "$(dirname "$t")")")
-    dangling=$(grep -o 'candidates/[^"!/]*/[^"!/]*' "$t" | sort -u \
-      | while read -r rel; do [[ -d "$HOME/.sdkman/$rel" ]] || printf '%s ' "${rel#candidates/}"; done)
+    dangling=$(grep -oE '(\.sdkman/candidates/java|\.local/share/mise/installs/java)/[^"!/]*' "$t" | sort -u \
+      | while read -r rel; do [[ -d "$HOME/$rel" ]] || printf '%s ' "${rel##*/}"; done)
     if [[ -z "$dangling" ]]; then
       ok "$ide JDK pins all resolve"
     else

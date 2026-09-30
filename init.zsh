@@ -114,17 +114,6 @@ zstyle ':fzf-tab:complete:git-checkout:*' fzf-preview 'git log --color=always --
 zstyle ':fzf-tab:complete:git-log:*' fzf-preview 'git log --color=always --oneline -20 $word'
 zstyle ':fzf-tab:complete:kill:*' fzf-preview 'ps -p $word -o pid,user,%cpu,%mem,command'
 
-# --- SDKMAN (candidates on PATH, sdk command lazy-loaded) ---
-export SDKMAN_DIR="$HOME/.sdkman"
-_sdk_bins=( "$SDKMAN_DIR/candidates/"*/current/bin(N) )
-(( $#_sdk_bins )) && export PATH="${(j.:.)_sdk_bins}:$PATH"
-unset _sdk_bins
-function sdk() {
-  unfunction sdk
-  source "$SDKMAN_DIR/bin/sdkman-init.sh"
-  sdk "$@"
-}
-
 # --- Bun (binary from brew; `bun add -g` still targets $BUN_INSTALL/bin) ---
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
