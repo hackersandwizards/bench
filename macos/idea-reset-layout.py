@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 """Normalize IntelliJ IDEA tool-window weights by anchor (see fix()), drop each
-project's dialog bounds (WindowStateProjectService) and each window's frame bounds
-in recentProjects.xml, the home window's included, and delete window.state.xml /
-window.layouts.xml plus .layout-backups, which holds copies of both and survives a
-config import into the next major version. Quit IDEA first."""
+project's dialog bounds (WindowStateProjectService), and delete window.layouts.xml
+plus .layout-backups, which holds copies of it and survives a config import into
+the next major version. Quit IDEA first.
+
+--frames also clears every window's frame bounds (recentProjects.xml and
+window.state.xml, the home window's included). IDEA keeps a tool window's pixel
+width when its window is resized, so a window that opens at the default size and
+is then resized loses the weights. Size the windows, quit, and run again without
+--frames."""
 import re, shutil, subprocess, sys
 from pathlib import Path
 
@@ -33,7 +38,7 @@ for cfg in JB.glob("IntelliJIdea*"):
             tmp.replace(ws)  # atomic: never leave the workspace half-written
             print(f"weights and dialog bounds reset: {ws}")
     recent = cfg / "options" / "recentProjects.xml"
-    if recent.exists():
+    if "--frames" in sys.argv and recent.exists():
         text = recent.read_text()
         new = re.sub(r'\s*<frame\b[^>]*/>', "", text)
         if new != text:
@@ -41,7 +46,7 @@ for cfg in JB.glob("IntelliJIdea*"):
             tmp.write_text(new)
             tmp.replace(recent)
             print(f"frame bounds cleared: {recent}")
-    for name in ("window.state.xml", "window.layouts.xml"):
+    for name in ("window.layouts.xml",) + (("window.state.xml",) if "--frames" in sys.argv else ()):
         f = cfg / "options" / name
         if f.exists():
             f.unlink()
