@@ -195,8 +195,8 @@ echo
 echo "=== IntelliJ JDK pins ==="
 # IntelliJ pins JDKs by absolute path. A pin on a mise line symlink
 # (installs/java/temurin-21) survives bench-update's prune, a pin on an exact
-# version or on the retired ~/.sdkman does not. IntelliJ rewrites this file on
-# exit, so this only reports: repoint it in the IDE, never from a script.
+# version or on the retired ~/.sdkman does not. IntelliJ rewrites these files on
+# exit, so this only reports: repoint in the IDE, never from a script.
 shopt -s nullglob
 jdk_tables=("$HOME/Library/Application Support/JetBrains"/*/options/jdk.table.xml)
 shopt -u nullglob
@@ -211,6 +211,18 @@ else
       ok "$ide JDK pins all resolve"
     else
       warn "$ide pins missing SDKs: ${dangling% } — repoint the project SDK in IntelliJ"
+    fi
+    # Projects pick their SDK by name, so a name the table lacks breaks a project
+    # even when every path above resolves.
+    names=$(grep -oE '<name value="[^"]*"' "$t" | sed 's/.*="//;s/"$//')
+    unknown=$(grep -ohE '<entry key="[^"]*"' "$(dirname "$t")/recentProjects.xml" 2>/dev/null \
+      | sed "s/.*key=\"//;s/\"$//;s#\\\$USER_HOME\\\$#$HOME#" \
+      | while read -r p; do
+          n=$(grep -oE 'project-jdk-name="[^"]*"' "$p/.idea/misc.xml" 2>/dev/null | sed 's/.*="//;s/"$//')
+          [[ -n "$n" ]] && ! grep -qxF "$n" <<<"$names" && printf '%s (%s) ' "${p#"$HOME"/}" "$n"
+        done)
+    if [[ -n "$unknown" ]]; then
+      warn "$ide projects name SDKs it lacks: ${unknown% } — pick a project SDK in IntelliJ"
     fi
   done
 fi
