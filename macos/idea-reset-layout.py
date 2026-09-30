@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-"""Normalize IntelliJ IDEA tool-window weights by anchor (see fix()) and delete
-window.state.xml / window.layouts.xml plus .layout-backups, which holds copies of
-both and survives a config import into the next major version. Quit IDEA first."""
+"""Normalize IntelliJ IDEA tool-window weights by anchor (see fix()), drop each
+project's dialog bounds (WindowStateProjectService) and each window's frame bounds
+in recentProjects.xml, the home window's included, and delete window.state.xml /
+window.layouts.xml plus .layout-backups, which holds copies of both and survives a
+config import into the next major version. Quit IDEA first."""
 import re, shutil, subprocess, sys
 from pathlib import Path
 
@@ -23,11 +25,22 @@ for cfg in JB.glob("IntelliJIdea*"):
             continue
         text = ws.read_text()
         new = re.sub(r'<window_info\b[^>]*/>', lambda m: fix(m.group(0)), text)
+        new = re.sub(r'\s*<component name="WindowStateProjectService"(?:\s*/>|>.*?</component>)',
+                     "", new, flags=re.S)
         if new != text:
             tmp = ws.with_name(ws.name + ".tmp")
             tmp.write_text(new)
             tmp.replace(ws)  # atomic: never leave the workspace half-written
-            print(f"weights set: {ws}")
+            print(f"weights and dialog bounds reset: {ws}")
+    recent = cfg / "options" / "recentProjects.xml"
+    if recent.exists():
+        text = recent.read_text()
+        new = re.sub(r'\s*<frame\b[^>]*/>', "", text)
+        if new != text:
+            tmp = recent.with_name(recent.name + ".tmp")
+            tmp.write_text(new)
+            tmp.replace(recent)
+            print(f"frame bounds cleared: {recent}")
     for name in ("window.state.xml", "window.layouts.xml"):
         f = cfg / "options" / name
         if f.exists():
