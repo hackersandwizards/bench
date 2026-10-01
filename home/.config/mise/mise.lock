@@ -144,14 +144,14 @@ specifiers = ["latest"]
 uv = { path = "locks/pypi-yt-dlp/2026.8.19", digest = "sha256:46d0eb611f91fada4d32fad4e588da3f1727532eec1c489406d564bcf4120ce5" }
 
 [[tools.quarkus]]
-version = "3.39.5"
+version = "3.40.1"
 backend = "github:quarkusio/quarkus"
 specifiers = ["latest"]
 
 [tools.quarkus."platforms.macos-arm64"]
-checksum = "sha256:8d5a2481eddca256a2f120b91eb07d105b2ae86bfb20f427e35f777e975b2e79"
-url = "https://github.com/quarkusio/quarkus/releases/download/3.39.5/quarkus-cli-3.39.5.tar.gz"
-url_api = "https://api.github.com/repos/quarkusio/quarkus/releases/assets/584213201"
+checksum = "sha256:c4b62e7c8709d96e59aa9dc4a176a91813d2a55a43950d16d2fc8a31c355cc9a"
+url = "https://github.com/quarkusio/quarkus/releases/download/3.40.1/quarkus-cli-3.40.1.tar.gz"
+url_api = "https://api.github.com/repos/quarkusio/quarkus/releases/assets/600748906"
 
 [[tools.ruby]]
 version = "4.0.7"
