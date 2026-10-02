@@ -193,6 +193,7 @@ redpanda
 rename
 ripgrep
 rsync
+rustup
 screen
 sdl2-compat
 sdl3

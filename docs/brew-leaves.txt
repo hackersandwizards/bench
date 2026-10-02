@@ -66,6 +66,7 @@ redpanda-data/tap/redpanda
 rename
 ripgrep
 rsync
+rustup
 screen
 shellcheck
 sslscan
