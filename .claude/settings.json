@@ -9,6 +9,7 @@
     "CLAUDE_CODE_ENABLE_AWAY_SUMMARY": "0",
     "CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD": "1",
     "CLAUDE_CODE_FORK_SUBAGENT": "1",
+    "CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH": "2",
     "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1"
   },
   "permissions": {
@@ -22,5 +23,5 @@
   "voiceEnabled": true,
   "enabledMcpjsonServers": [],
   "model": "opus",
-  "effortLevel": "high"
+  "effortLevel": "medium"
 }
