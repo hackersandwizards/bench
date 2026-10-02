@@ -148,6 +148,8 @@ brew "rename"
 brew "ripgrep"
 # Utility that provides fast incremental file transfer
 brew "rsync"
+# Rust toolchain installer
+brew "rustup"
 # Terminal multiplexer with VT100/ANSI terminal emulation
 brew "screen"
 # Static analysis and lint tool, for (ba)sh scripts

@@ -169,11 +169,6 @@ checksum = "sha256:1b239cb6e4f8ba27e890e025c723c00ba781b993ac12aab2029618f347c22
 url = "https://github.com/jdx/ruby/releases/download/4.0.7-1/ruby-4.0.7.macos.tar.gz"
 provenance = "github-attestations"
 
-[[tools.rust]]
-version = "1.99.0"
-backend = "core:rust"
-specifiers = ["latest"]
-
 [[tools.uv]]
 version = "0.12.22"
 backend = "aqua:astral-sh/uv"

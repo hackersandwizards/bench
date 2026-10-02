@@ -39,7 +39,7 @@ docs/                 # Package + machine-state snapshots, replayed by install.s
 - Modern CLI tools: `eza` (ls), `bat` (cat), `fd` (find), `rg` (grep), `xh` (curl)
 - Internal paths use `$ZSH_SETTINGS_DIR` (set by `init.zsh` self-discovery, no hardcoded install location)
 - Global npm/bun packages preferred over system installs
-- Runtimes and CLI tools via mise (`home/.config/mise/config.toml`), except where a kept brew formula depends on the brew runtime (node, python@3.14, php, openjdk)
+- Runtimes and CLI tools via mise (`home/.config/mise/config.toml`), except where a kept brew formula depends on the brew runtime (node, python@3.14, php, openjdk), and Rust, which rustup from the Brewfile owns
 - `/opt/homebrew` hardcoded, Apple Silicon only (Intel Macs not supported)
 
 ## Behavioral rules

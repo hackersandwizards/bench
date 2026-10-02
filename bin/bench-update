@@ -35,6 +35,10 @@ _mise_upgrade() (
 )
 have mise && run "mise tools" _mise_upgrade
 
+# Rust belongs to rustup (Brewfile), not mise: mise wraps rustup but never moves its
+# default toolchain. `rustup update` updates the stable channel in place.
+have rustup && run "Rust toolchains" rustup update
+
 # No uv cache prune: same lock, same reason as the clean dropped from bin/bench-clean.
 
 _pip_global_upgrade() {
