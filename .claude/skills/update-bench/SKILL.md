@@ -94,7 +94,9 @@ The test also admits a repair scoped to the one formula that `bench-update` or `
 reports broken or unlinked in the same run: `brew reinstall <formula>` (with
 `--build-from-source` when the bottle does not match the running macOS), `brew link <formula>`,
 and `brew link --overwrite <formula>` once the plain form failed on a file conflict. It also admits
-a fix to the `bin/bench-*` script that prints a warn it can never clear, gated by step 5. Name each
+a fix to the `bin/bench-*` script that prints a warn it can never clear, gated by step 5. Benedikt
+allows npm install scripts: for `install-scripts ... blocked`, set `dangerously-allow-all-scripts=true`
+in the `.npmrc` of the install that blocked them, then `npm rebuild` the named packages. Name each
 repair in the report with the error that justified it and the command that undoes it. A warn that
 passes the test and sits under "needs a human" is a mistake.
 
