@@ -48,10 +48,10 @@ New team member, fresh machine. Provision these before running `install.sh`. The
 | Slack            | hackersandwizards.slack.com                                                                      |
 | Anthropic        | claude.ai, Claude desktop app, Claude Code CLI and VS Code extension                             |
 | LinkedIn         | Personal profile, linked to the hackers&wizards company page                                     |
-| Qonto            | `QONTO_API_KEY`, `QONTO_ORGANIZATION_ID`, `QONTO_THIRDPARTY_HOST` in `secrets.zsh`               |
+| Qonto            | Business account                                                                                 |
 | Circle           | Community platform                                                                               |
 
-Optional, per person: Fathom (`FATHOM_API_KEY` in `secrets.zsh`), Todoist (`TODOIST_API_KEY`), OpenAI (Codex CLI, ChatGPT), Cloudflare, Namecheap, AWS, Google Cloud (Workspace sign-in). JetBrains Toolbox, Cursor, Warp, CleanMyMac, DaisyDisk, CrossOver, and superwhisper bring their own licenses.
+Optional, per person: Fathom, Todoist (`TODOIST_API_KEY`), OpenAI (Codex CLI, ChatGPT), Cloudflare, Namecheap, AWS, Google Cloud (Workspace sign-in). JetBrains Toolbox, Cursor, Warp, CleanMyMac, DaisyDisk, CrossOver, and superwhisper bring their own licenses.
 
 ## New-machine checklist (manual)
 
