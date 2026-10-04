@@ -16,14 +16,13 @@ Run every `mo` command with `</dev/null` and strip its ANSI codes
 ## 1. Guard
 
 `~/.config/mole/whitelist` replaces mole's built-in defaults once it exists, and both `mo clean`
-and `mo purge` honour it. Skip steps 2 and 3 and report the gap unless it holds all four:
+and `mo purge` honour it. Skip steps 2 and 3 and report the gap unless it holds all three:
 
 | Line | Protects |
 |---|---|
 | `$HOME/.Trash` | the Trash from `mo clean` |
 | `$HOME/Library/Caches/antidote/*` | the zsh plugins antidote clones there |
 | `$HOME/dev/hackersandwizards/internal/company/os/*` | Company OS, in use all day |
-| `$HOME/opt/*mcp*` | the MCP servers, which break without their `node_modules` or `.venv` |
 
 Record the free space from `df -h /`.
 
