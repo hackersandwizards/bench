@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cleanup Bench"
+  short_description: "Weekly deep clean: delete what rebuilds itself, report what deletes data"
+  default_prompt: "Use $cleanup-bench to run the weekly deep clean."
