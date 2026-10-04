@@ -1,0 +1,17 @@
+# mole defaults (1.57.0) plus: Trash, antidote plugins, company os (purge)
+$HOME/.Trash
+$HOME/Library/Caches/antidote/*
+$HOME/Library/Caches/ms-playwright*
+$HOME/.gradle/caches/*
+$HOME/.gradle/daemon/*
+$HOME/.ollama/models/*
+$HOME/Library/Caches/com.nssurge.surge-mac/*
+$HOME/Library/Application Support/com.nssurge.surge-mac/*
+$HOME/Library/Caches/org.R-project.R/R/renv/*
+$HOME/Library/Caches/JetBrains*
+$HOME/Library/Caches/com.jetbrains.toolbox*
+$HOME/Library/Caches/tealdeer/tldr-pages
+$HOME/Library/Application Support/JetBrains*
+$HOME/Library/Caches/com.apple.finder
+$HOME/Library/Mobile Documents*
+$HOME/dev/hackersandwizards/internal/company/os/*

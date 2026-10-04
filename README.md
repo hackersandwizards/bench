@@ -105,6 +105,7 @@ home/                 Stow package, symlinked into $HOME
   .ssh/config           Hardened (Keychain, ControlMaster, no ForwardAgent)
   .config/zed/settings.json   Zed editor defaults
   .config/mise/config.toml    Runtimes (JDKs, Ruby, Go, ...) and Python CLIs
+  .config/mole/whitelist      Paths mo clean and mo purge never touch (cleanup-bench guard)
 ghostty/              Ghostty terminal config (single source of truth for theme)
 docs/                 Package + machine-state snapshots (committed; replayed by install.sh)
 .claude/              Claude Code statusline + rules + settings

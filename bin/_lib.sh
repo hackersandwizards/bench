@@ -111,6 +111,7 @@ STOW_FILES=(
   ".ssh/config"
   ".config/zed/settings.json"
   ".config/mise/config.toml"
+  ".config/mole/whitelist"
 )
 
 # Checklist lines of $1 absent from directory $2. Shared by install.sh's fonts
