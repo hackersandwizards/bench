@@ -51,7 +51,7 @@ New team member, fresh machine. Provision these before running `install.sh`. The
 | Qonto            | Business account                                                                                 |
 | Circle           | Community platform                                                                               |
 
-Optional, per person: Fathom, Todoist (`TODOIST_API_KEY`), OpenAI (Codex CLI, ChatGPT), Cloudflare, Namecheap, AWS, Google Cloud (Workspace sign-in). JetBrains Toolbox, Cursor, Warp, CleanMyMac, DaisyDisk, CrossOver, and superwhisper bring their own licenses.
+Optional, per person: Fathom (`FATHOM_API_KEY` in `secrets.zsh`), Todoist (`TODOIST_API_KEY`), OpenAI (Codex CLI, ChatGPT), Cloudflare, Namecheap, AWS, Google Cloud (Workspace sign-in). JetBrains Toolbox, Cursor, Warp, CleanMyMac, DaisyDisk, CrossOver, and superwhisper bring their own licenses.
 
 ## New-machine checklist (manual)
 
