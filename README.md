@@ -104,7 +104,7 @@ home/                 Stow package, symlinked into $HOME
   .vimrc, .tmux.conf
   .ssh/config           Hardened (Keychain, ControlMaster, no ForwardAgent)
   .config/zed/settings.json   Zed editor defaults
-  .config/mise/config.toml    Runtimes (JDKs, Ruby, Go, ...) and Python CLIs; mise.lock pins versions
+  .config/mise/config.toml    Runtimes (JDKs, Ruby, Go, ...) and Python CLIs
 ghostty/              Ghostty terminal config (single source of truth for theme)
 docs/                 Package + machine-state snapshots (committed; replayed by install.sh)
 .claude/              Claude Code statusline + rules + settings

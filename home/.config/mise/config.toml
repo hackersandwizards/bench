@@ -17,10 +17,9 @@ elixir = "latest"
 
 [settings]
 idiomatic_version_file_enable_tools = ["ruby", "node", "java"]
-lockfile = true
 # mise defaults to holding back releases younger than 24h. Always take the latest.
 minimum_release_age = "0"
 
-# Unauthenticated GitHub API calls hit the rate limit during `mise lock`.
+# Unauthenticated GitHub API calls hit the rate limit.
 [settings.github]
 credential_command = 'gh auth token --hostname "$MISE_CREDENTIAL_HOST"'

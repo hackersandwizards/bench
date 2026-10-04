@@ -149,6 +149,5 @@ Report, in this order and short:
 - what changed on the machine, and every warn steps 2 and 3 printed, verbatim
 - what the run fixed in the repo, each Brewfile addition named
 - what needs a human, one line each with the command
-- what the export decided for you, with the snapshot diffs and the version changes in
-  `git diff -- home/.config/mise/mise.lock`
+- what the export decided for you, with the snapshot diffs
 - the gate result, the commit and the push
