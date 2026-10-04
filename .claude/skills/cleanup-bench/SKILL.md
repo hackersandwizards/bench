@@ -32,11 +32,10 @@ Record the free space from `df -h /`.
 
 ## 3. Docker
 
-If `docker info` fails, OrbStack is not running: skip this step and say so. Otherwise:
+If `docker info` fails, OrbStack is not running: skip this step and say so.
 
-- `docker builder prune -af` and `docker image prune -af`
-- each volume in `docker volume ls -qf dangling=true` whose name contains `cache`, with
-  `docker volume rm`. Any other unused volume can hold a database: list it in step 5.
+`docker builder prune -af`, `docker image prune -af` and `docker volume prune -af`. Before the
+last one, record the names of `docker volume ls -qf dangling=true`.
 
 ## 4. Shell check
 
@@ -51,9 +50,8 @@ cd "${ZSH_SETTINGS_DIR:-$HOME/opt/zsh-settings}" && zsh -c 'source /opt/homebrew
 
 - free space before and after, and that Time Machine local snapshots hold deleted space until
   macOS expires them after 24 hours
-- the mole lines and Docker's reclaimed space, verbatim, and the volumes removed by name
+- the mole lines and Docker's reclaimed space, verbatim, and the removed volumes by name
 - the shell check result
-- for Benedikt, each with its size and command: the Trash (empty in Finder) and every unused
-  volume step 3 kept (`docker volume rm <name>`)
+- the Trash with its size, for Benedikt to empty in Finder
 - as a question, anything `mo clean` lists under `Large files` beyond Mail data, Time Machine
   local snapshots, Docker storage, OrbStack data and mise Java installs, which Benedikt keeps
