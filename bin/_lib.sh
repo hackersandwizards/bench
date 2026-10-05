@@ -54,6 +54,7 @@ secret_line() {
 # bash, and on a fresh machine ~/.zshrc has not yet sourced exports.zsh, so set
 # it here, the one file every script sources. Mirrors exports.zsh (interactive).
 export PIP_BREAK_SYSTEM_PACKAGES=1
+export NPM_CONFIG_PREFIX=/opt/homebrew
 
 # --- Homebrew bottle-support guard ------------------------------------------
 # Homebrew maps the running macOS major to a codename (its macos_version.rb
