@@ -1,7 +1,6 @@
 antidote
 asmvik/formulae/skhd
 atuin
-azure-cli
 bat
 betterleaks
 bfs

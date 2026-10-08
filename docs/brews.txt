@@ -7,7 +7,6 @@ apr-util
 argon2
 atuin
 autoconf
-azure-cli
 bash
 bat
 betterleaks
@@ -235,6 +234,7 @@ zlib-ng-compat
 zoxide
 zsh
 zstd
+azure-cli
 domzilla-caffeine
 luanti
 vlc

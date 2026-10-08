@@ -8,8 +8,6 @@ brew "antidote"
 brew "libpng"
 # Improved shell history for zsh, bash, fish and nushell
 brew "atuin"
-# Microsoft Azure CLI 2.0
-brew "azure-cli"
 # Bourne-Again SHell, a UNIX command interpreter
 brew "bash"
 # Clone of cat(1) with syntax highlighting and Git integration
@@ -202,6 +200,7 @@ cask "adguard"
 cask "antigravity"
 cask "antigravity-cli"
 cask "antigravity-ide"
+cask "azure-cli"
 cask "claude"
 cask "cleanmymac"
 cask "conductor"
