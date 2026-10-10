@@ -3,11 +3,11 @@ $HOME/.bun/install/global node_modules (1040 installed)
 ├── @doist/todoist-ai@9.0.0
 ├── @earendil-works/pi-coding-agent@1.1.0
 ├── @es4x/create@0.22.0
-├── @github/copilot@1.0.94
+├── @github/copilot@1.0.95
 ├── @google/gemini-cli@0.63.0
 ├── @googleworkspace/cli@0.22.5
-├── @openai/codex@0.162.0
-├── ccusage@20.0.26
+├── @openai/codex@0.162.1
+├── ccusage@20.0.28
 ├── chrome-devtools-mcp@1.10.1
 ├── codebuff@1.0.688
 ├── command-code@1.79.2
