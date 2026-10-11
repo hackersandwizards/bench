@@ -214,5 +214,27 @@ step "install.sh istep self-count"
 assert_fail "no indented istep calls (self-count stays exact)" \
   grep -qE '^[[:space:]]+istep ' "$REPO_ROOT/install.sh"
 
+step "transcribe"
+# whisper-cli at its default context invents repeated sentences and can lose
+# punctuation for a whole file (README "Transcription"), so the wrapper's fixed
+# flags are the product. A shim records what the wrapper passes: no model, no
+# audio, no GPU. HOME moves so the fixed model path resolves inside the fixture.
+tdir=$(mktemp -d)
+mkdir -p "$tdir/bin" "$tdir/home/.cache/whisper" "$tdir/out"
+printf '#!/bin/sh\nprintf "%%s\\n" "$*" > "%s/args"\n' "$tdir" > "$tdir/bin/whisper-cli"
+chmod +x "$tdir/bin/whisper-cli"
+: > "$tdir/talk.wav"
+assert_fail "refuses to run without the model file" \
+  env HOME="$tdir/home" PATH="$tdir/bin:$PATH" "$REPO_ROOT/bin/transcribe" "$tdir/talk.wav"
+assert_eq "and names the download instead of fetching" "1" \
+  "$(env HOME="$tdir/home" PATH="$tdir/bin:$PATH" "$REPO_ROOT/bin/transcribe" "$tdir/talk.wav" 2>&1 | grep -c 'curl -fL')"
+: > "$tdir/home/.cache/whisper/ggml-large-v3-turbo.bin"
+assert_ok "runs once the model file exists" \
+  env HOME="$tdir/home" PATH="$tdir/bin:$PATH" "$REPO_ROOT/bin/transcribe" -o "$tdir/out" "$tdir/talk.wav"
+assert_eq "passes -mc 0, the fixed model, text and SRT output" \
+  "-m $tdir/home/.cache/whisper/ggml-large-v3-turbo.bin -l en -mc 0 -f $tdir/talk.wav -otxt -osrt -of $tdir/out/talk -np" \
+  "$(cat "$tdir/args" 2>/dev/null)"
+rm -rf "$tdir"
+
 step "$passed passed, $failed failed"
 (( failed == 0 ))

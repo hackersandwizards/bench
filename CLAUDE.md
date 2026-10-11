@@ -22,7 +22,7 @@ secrets.zsh           # Untracked, gitignored - API keys go here
 install.sh            # Fresh-machine bootstrap (sources bin/_lib.sh)
 macos.sh              # Opt-in macOS system defaults
 Brewfile              # Executable source of truth for brew packages
-bin/                  # Maintenance commands (bench-doctor/update/export, _lib.sh)
+bin/                  # Maintenance commands (bench-doctor/update/export, _lib.sh) and transcribe, the one speech-to-text path
 macos/                # Hotkey-driven scripts (ghostty-grid.js, idea-reset-layout.py); bound in skhd/skhdrc
 skhd/                 # skhd hotkey config, symlinked to ~/.config/skhd/skhdrc by install.sh
 fonts/                # Only fonts with verified redistribution rights (repo is public); free families come as Brewfile font casks

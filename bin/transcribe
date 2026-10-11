@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# Speech to text with whisper.cpp: writes <name>.txt and <name>.srt (segment
+# timestamps) per input. The one supported transcription path on this bench.
+# README "Transcription" has the measurements behind the fixed flags.
+set -euo pipefail
+
+MODEL="$HOME/.cache/whisper/ggml-large-v3-turbo.bin"
+MODEL_URL="https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin"
+
+usage() {
+  echo "usage: transcribe [-l lang] [-o outdir] file..."
+  echo "  -l lang    spoken language, default en. Only en is tested."
+  echo "  -o outdir  write there instead of next to each input"
+  echo "  flac, mp3, ogg and wav go to whisper-cli as they are; anything else"
+  echo "  (mp4, m4a, mov, ...) is converted with ffmpeg first."
+}
+
+lang=en out=""
+while getopts l:o:h opt; do
+  case $opt in
+    l) lang=$OPTARG ;;
+    o) out=$OPTARG ;;
+    h) usage; exit 0 ;;
+    *) usage >&2; exit 2 ;;
+  esac
+done
+shift $((OPTIND - 1))
+(($#)) || { usage >&2; exit 2; }
+
+if [[ ! -f $MODEL ]]; then
+  echo "transcribe: model missing: $MODEL (1.6 GB). Fetch it with:" >&2
+  echo "  curl -fL --create-dirs -o \"$MODEL\" \"$MODEL_URL\"" >&2
+  exit 1
+fi
+
+for f; do
+  [[ -f $f ]] || { echo "transcribe: no such file: $f" >&2; exit 1; }
+  base=$(basename "${f%.*}")
+  dir=${out:-$(dirname "$f")}
+  mkdir -p "$dir"
+  src=$f tmp=""
+  case $(printf '%s' "${f##*.}" | tr '[:upper:]' '[:lower:]') in
+    flac | mp3 | ogg | wav) ;;
+    *)
+      tmp=$(mktemp -d)
+      src="$tmp/$base.wav"
+      ffmpeg -nostdin -loglevel error -y -i "$f" -vn -ac 1 -ar 16000 -c:a pcm_s16le "$src"
+      ;;
+  esac
+  # -mc 0 is the reason this wrapper exists: at its default, whisper-cli feeds
+  # each window the previous window's text, which invented repeated sentences
+  # and carried one unpunctuated window through a whole file. bench-test fails
+  # if the flag goes missing.
+  whisper-cli -m "$MODEL" -l "$lang" -mc 0 -f "$src" -otxt -osrt -of "$dir/$base" -np >/dev/null
+  [[ -z $tmp ]] || rm -rf "$tmp"
+  printf '%s\n' "$dir/$base.txt" "$dir/$base.srt"
+done
