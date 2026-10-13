@@ -45,8 +45,8 @@
             }
           },
           {
-            "name": "qwen3.8-27b-abliterated",
-            "display_name": "Qwen 3.8 (27B) abliterated — local MTPLX",
+            "name": "qwen3.6-35b",
+            "display_name": "Qwen 3.6 (35B-A3B) fast — local MTPLX",
             "max_tokens": 262144,
             "capabilities": {
               "tools": true,
