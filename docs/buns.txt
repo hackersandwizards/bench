@@ -1,18 +1,18 @@
-$HOME/.bun/install/global node_modules (1040 installed)
+$HOME/.bun/install/global node_modules (1015 installed)
 ├── @augmentcode/auggie@0.36.0
 ├── @doist/todoist-ai@9.0.0
-├── @earendil-works/pi-coding-agent@1.1.0
+├── @earendil-works/pi-coding-agent@1.2.0
 ├── @es4x/create@0.22.0
-├── @github/copilot@1.0.95
+├── @github/copilot@1.0.96
 ├── @google/gemini-cli@0.63.0
 ├── @googleworkspace/cli@0.22.5
 ├── @openai/codex@0.162.1
-├── ccusage@20.0.29
+├── ccusage@20.0.30
 ├── chrome-devtools-mcp@1.10.1
 ├── codebuff@1.0.688
-├── command-code@1.79.2
+├── command-code@1.81.0
 ├── corepack@0.36.0
-├── freebuff@0.2.26
+├── freebuff@0.2.27
 ├── mcp-remote@0.14.3
 ├── node-gyp@13.1.0
 ├── npm-check@6.0.1
