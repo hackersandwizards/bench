@@ -13,7 +13,7 @@ have() { command -v "$1" >/dev/null 2>&1; }
 indent() { sed 's/^/    /'; }
 
 # Scripts must not fall back to Apple's Ruby or bypass Homebrew's Python tools.
-export PATH="$HOME/.local/share/mise/shims:/opt/homebrew/opt/python3/libexec/bin:$PATH"
+export PATH="$HOME/.local/share/mise/shims:/opt/homebrew/opt/python@3.14/libexec/bin:$PATH"
 
 check() {
   local label="$1"; shift
@@ -129,7 +129,7 @@ parse_pip()   { awk -F'==' '/==/ { print $1 }' "$1"; }
 parse_node()  { awk 'NF && $NF ~ /@/ { n=$NF; sub(/@[^@]*$/, "", n); if (n != "npm") print n }' "$1"; }
 
 pip_managed_freeze() {
-  /opt/homebrew/bin/python3 -c 'import importlib.metadata as m
+  python3 -c 'import importlib.metadata as m
 rows = {(d.metadata["Name"], d.version) for d in m.distributions()
         if d.metadata["Name"] and d.read_text("RECORD") is not None}
 for name, version in sorted(rows, key=lambda row: row[0].lower()):
