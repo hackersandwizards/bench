@@ -10,11 +10,11 @@ $HOME/.bun/install/global node_modules (1015 installed)
 ├── ccusage@20.0.34
 ├── chrome-devtools-mcp@1.11.0
 ├── codebuff@1.0.688
-├── command-code@1.82.5
+├── command-code@1.84.0
 ├── corepack@0.36.0
 ├── freebuff@0.2.29
 ├── mcp-remote@0.15.1
 ├── node-gyp@13.1.0
 ├── npm-check@6.0.1
-├── opencode-ai@1.19.2
+├── opencode-ai@1.19.3
 └── yarn@1.22.22
