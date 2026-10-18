@@ -222,6 +222,8 @@ webp
 wget
 whisper-cpp
 whisper.cpp
+wireguard-go
+wireguard-tools
 x264
 x265
 xh

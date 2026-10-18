@@ -176,6 +176,8 @@ brew "wdiff"
 brew "wget"
 # Port of OpenAI's Whisper model in C/C++
 brew "whisper.cpp"
+# Tools for the WireGuard secure network tunnel
+brew "wireguard-tools"
 # Friendly and fast tool for sending HTTP requests
 brew "xh"
 # Tool for managing your YubiKey configuration

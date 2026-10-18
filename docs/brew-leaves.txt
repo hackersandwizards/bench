@@ -80,6 +80,7 @@ watch
 wdiff
 wget
 whisper.cpp
+wireguard-tools
 xh
 ykman
 zeromq
