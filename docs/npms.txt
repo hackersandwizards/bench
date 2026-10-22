@@ -1,4 +1,4 @@
 /opt/homebrew/lib
-+-- @straion/cli@0.1.15
++-- @straion/cli@0.1.17
 `-- npm@11.20.0
 

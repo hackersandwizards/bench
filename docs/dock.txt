@@ -1,11 +1,13 @@
 Apps	file:///System/Applications/Apps.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.apps.launcher
 Safari	file:///System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.Safari
 Messages	file:///System/Applications/Messages.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.MobileSMS
+Chat	file://$HOME/Applications/Chat.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.Safari.WebApp.FE088D26-464B-4299-9622-403BDFE627A5
 Mail	file:///System/Applications/Mail.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.mail
 Maps	file:///System/Applications/Maps.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.Maps
 Photos	file:///System/Applications/Photos.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.Photos
 FaceTime	file:///System/Applications/FaceTime.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.FaceTime
-Notion Calendar	file:///Applications/Notion%20Calendar.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.cron.electron
+Calendar	file://$HOME/Applications/Calendar.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.Safari.WebApp.558D1449-D577-4924-BCC6-721CBDC63765
+Toggl Track	file://$HOME/Applications/Toggl%20Track.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.Safari.WebApp.2727EA42-C5C1-429F-A3A8-127F5D6B8A3D
 Contacts	file:///System/Applications/Contacts.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.AddressBook
 Reminders	file:///System/Applications/Reminders.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.reminders
 Freeform	file:///System/Applications/Freeform.app/	persistentApps	$HOME/Library/Preferences/com.apple.dock.plist	com.apple.freeform
