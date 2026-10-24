@@ -103,9 +103,10 @@ passes the test and sits under "needs a human" is a mistake.
 **Needs a human.** Anything wanting a password, a browser login, a UI action, a font backup or a
 logout; anything whose remedy is `install.sh`, `macos.sh` or `brew bundle`, which replay a whole
 machine; a stopped `skhd`, which may have been stopped on purpose. One line each, with the command doctor gave.
-Benedikt keeps the latest `pi-web-access` and accepts its `pi extensions audit` warn for
-GHSA-6qxp-vccf-f47h: report that warn as accepted, never offer `audit fix --force`, and raise it
-again only when the audit names another advisory.
+Benedikt keeps the latest `pi-web-access` and `pi-coding-agent` and accepts their `pi extensions
+audit` warn for GHSA-6qxp-vccf-f47h, and for GHSA-4qv8-2p9j-2685, GHSA-f72v-6w45-q472 and
+GHSA-xjj6-f33q-929c in `undici` until npm offers a fix: report that warn as accepted, never offer
+`audit fix --force`, and raise it again when the audit names another advisory or a fix appears.
 
 **Resolved by the export.** `bench-export` settles Dock, Finder sidebar and Safari favorites drift
 machine-is-truth, which `README.md` pre-authorizes, and repoints a `docs/repos.txt` entry whose
