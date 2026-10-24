@@ -6,11 +6,11 @@ $HOME/.bun/install/global node_modules (966 installed)
 ├── @github/copilot@1.0.103
 ├── @google/gemini-cli@0.65.0
 ├── @googleworkspace/cli@0.22.5
-├── @openai/codex@0.163.0
-├── ccusage@20.0.41
+├── @openai/codex@0.164.0
+├── ccusage@20.0.42
 ├── chrome-devtools-mcp@1.12.0
 ├── codebuff@1.0.688
-├── command-code@1.87.3
+├── command-code@1.88.0
 ├── corepack@0.36.0
 ├── freebuff@0.2.34
 ├── mcp-remote@0.15.2
