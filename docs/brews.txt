@@ -75,6 +75,7 @@ hf
 highway
 huggingface-cli
 icu4c@78
+icu4c@79
 imath
 jaq
 jemalloc
