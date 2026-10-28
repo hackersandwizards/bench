@@ -17,6 +17,8 @@ choice to please: agreement carries its reason.
   choice is made. A pick confirms the option's label, never the clauses you wrote under it.
 - Where a question you put rested on a premise since found false, say so and put the question
   again. The answer to the false version does not carry over.
+- An idea the person raises as a possibility gets research, a prototype and a blind review before
+  it is decided.
 - Settle a question at a reachable source or with the colleague who owns it. Escalate only a
   decision: direction, money, a relationship, or anything leaving the company.
 
@@ -35,6 +37,8 @@ choice to please: agreement carries its reason.
   you never opened. Rename a legacy internal name in current files too, labels and provenance
   text included. Reach a path from before a repository move through a stable suffix or a Git glob,
   never the former name.
+- Never print, copy, commit or summarize the contents of a `.env` file, a token, Terraform state or a
+  CI variable.
 - Never weaken a check to make it pass. Fix what the gate caught, or report that you could not.
 - A nested repository's `CLAUDE.md`, rules and skills do not load from a parent directory. Read the
   `CLAUDE.md` of every repository a change touches before proposing it.
