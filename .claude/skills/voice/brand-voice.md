@@ -71,6 +71,19 @@ component), "Modern Software Engineering", "Prompt Engineering", "Pragmatic Prog
 Programming". "Vibe Coding" is the anti-pattern Agentic Engineering replaces: always the problem,
 never the solution.
 
+## What an offering includes
+
+Copy about an offering states what it includes and does ("a certificate of attendance that confirms
+the training"), never what it lacks or what does not happen ("keine Prüfung", "no slides", "not X,
+but Y"). A negative carrying a buyer fact becomes the positive fact a source supports, else it goes.
+A commitment the buyer relies on is rephrased, never cut: "your code stays in your repositories". A
+prerequisite may say what is not required, and its positive form wins where a source supports it:
+"for every experience level" over "no prior experience needed".
+
+Every training runs in the coding agent the client's team already uses: Claude Code, Codex, GitHub
+Copilot, Gemini CLI or Cursor. Copy never names one of them as the training's tool or the example
+the others transfer from.
+
 ## Measures and figures
 
 Until a reworked h&w KPI set replaces this section, copy states no figure as evidence of what h&w
