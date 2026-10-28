@@ -4,8 +4,9 @@
   your context and will otherwise stop to ask.
 - The colleague holding a case drafts its outbound message itself through the channel's skill,
   rather than handing the draft to the colleague who owns the channel.
-- A brief naming a channel lets the delegate draft there and never forbids it: a draft is not a
-  send.
+- A brief yields to a rule and to the channel's skill: where they conflict, follow the rule or skill
+  and name the skipped instruction in the report. A brief naming a channel lets the delegate draft
+  there and never forbids it: a draft is not a send.
 - Delegating never widens scope. Name the work in the prompt, and have anything the delegate judges
   to need more come back as a decision for the principal. The prompt cannot enforce this: a
   delegate's tools come from its own definition, never from the caller's.

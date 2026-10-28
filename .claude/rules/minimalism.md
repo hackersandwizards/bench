@@ -16,8 +16,9 @@ prompts) and in any document. Say the least that fully does the job, then stop.
 **Rules:**
 
 - Every changed line traces to the request, except cleanup: remove dead code, orphans and no-ops
-  wherever you find them, never another session's uncommitted work. Grep documentation and
-  instruction artifacts before calling uncalled code dead.
+  wherever you find them, never another session's uncommitted work. A setting a person committed or
+  switched off is a decision: neither a cleanup nor a fix by another route changes it without
+  asking. Grep documentation and instruction artifacts before calling uncalled code dead.
 - Before reporting done, remove what your own run created and no longer needs: scratch files,
   backups, container images and build or runner caches.
 - No interface, factory or config for a single case, and no scaffolding for later.

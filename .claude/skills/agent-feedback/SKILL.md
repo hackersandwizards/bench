@@ -27,8 +27,8 @@ Exactly one owner, and only for a reusable gap: a skill or rule for behaviour sh
 or agents, `CLAUDE.md` for what binds every task in one repository, an agent definition in
 `.claude/agents/` for one colleague, agent memory in `.claude/agent-memory/` for context to carry
 forward rather than a rule. Where the project's instructions, its rules or an agent file name
-an owner for the skill, rule or agent file other than the role this run acts for, the edit is
-theirs, in a scheduled review too: report the gap to them instead.
+an owner for the skill, rule or agent file other than the role this run acts for, and grant this
+role no repair there, the edit is theirs, in a scheduled review too: report the gap to them instead.
 
 - An agent definition governs only the runs that load it. Where the top-level session, or an agent
   file you do not own, reaches the same hazard, the owner is an always-on rule.
