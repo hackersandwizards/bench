@@ -30,8 +30,7 @@ The five recurring themes, one of which anchors every post, talk and proposal ar
 2. Context Engineering Foundations: multi-layer context architectures; context engineering as the
    bottleneck.
 3. Quality at Scale with Agents: AI-friendly architecture, testing strategies, quality gates.
-4. Team Practices and Change Management: AI adoption is like Agile twenty years ago, culture, not
-   tools.
+4. Team Practices and Change Management: AI adoption is culture, not tools.
 5. Programming Joy Preservation: purpose, fulfillment, and craft in agentic software development.
 
 Audience: CTOs, VPs of Engineering, Tech Leads, senior developers. Peer language, not vendor
@@ -80,7 +79,8 @@ merges, commits, diffs, lines of code, tokens, AI-tool usage, share of AI-assist
 progress, ours or a third party's. The reason: these counts measure output, and which figures
 support a sound claim about our effect is not established. A third-party research finding that is
 not an activity count may be quoted with its source, fetched in the session, and never as h&w's
-result.
+result. Until then the example figures in `intro-framework.md` (Fame), `brand-vocabulary.md`
+(approved patterns) and `prose-style.md` (concrete over abstract) are suspended.
 
 Where the reader needs a measure (a proposal, an assessment, a CTO asking how to tell whether it
 works), name what the client should measure, at team or service level, against a baseline taken at
