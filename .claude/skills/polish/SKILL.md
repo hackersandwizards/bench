@@ -19,8 +19,7 @@ running it:
 
 The argument also scopes where you hunt for defects, never which proven defects you may correct.
 Once a fact is verified false, fix every live copy of it, the generator that produced them
-included, in files the argument never named. The phase 1 exclusion set still binds: a file another
-session is editing is reported as deferred whatever it contains.
+included, in files the argument never named. The phase 1 exclusion set still binds.
 
 ## 1. Preflight
 
@@ -67,8 +66,6 @@ A failing check blocks the commit. Fix it if the sweep caused it; report it and 
 ## 6. Commit and push
 
 Re-run `git status` and drop any file that became dirty since phase 1 without an edit of yours, and commit each batch that passes the gate.
-
-Push to the branch you started on. If the push fails, report the error and stop.
 
 Report each fix with the check that goes red without it, each finding left unfixed and why, the
 decisions left for the user, and the gate result with the pushed commits.
