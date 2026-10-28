@@ -19,7 +19,8 @@
       "ArtifactComments",
       "ArtifactData",
       "mcp__claude_ai_Claude_Docs__*",
-      "mcp__1a59c906-04da-521d-bda7-7f71b9f9e01c__*"
+      "mcp__1a59c906-04da-521d-bda7-7f71b9f9e01c__*",
+      "mcp__dc748e22-4910-4762-ae74-bb45fc292540__*"
     ]
   },
   "tui": "fullscreen",
@@ -30,5 +31,10 @@
   "voiceEnabled": true,
   "enabledMcpjsonServers": [],
   "model": "opus",
-  "effortLevel": "medium"
+  "effortLevel": "medium",
+  "deniedMcpServers": [
+    {
+      "serverName": "claude.ai Todoist"
+    }
+  ]
 }
