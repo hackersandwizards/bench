@@ -13,7 +13,14 @@
     "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1"
   },
   "permissions": {
-    "defaultMode": "bypassPermissions"
+    "defaultMode": "bypassPermissions",
+    "deny": [
+      "Artifact",
+      "ArtifactComments",
+      "ArtifactData",
+      "mcp__claude_ai_Claude_Docs__*",
+      "mcp__1a59c906-04da-521d-bda7-7f71b9f9e01c__*"
+    ]
   },
   "tui": "fullscreen",
   "autoMemoryEnabled": false,
