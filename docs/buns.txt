@@ -1,6 +1,5 @@
-$HOME/.bun/install/global node_modules (966 installed)
+$HOME/.bun/install/global node_modules (869 installed)
 ├── @augmentcode/auggie@0.36.0
-├── @doist/todoist-ai@9.0.0
 ├── @earendil-works/pi-coding-agent@1.4.0
 ├── @es4x/create@0.22.0
 ├── @github/copilot@1.0.105
