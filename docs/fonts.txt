@@ -242,6 +242,13 @@ Macan-Bold-Italic.otf
 Macan-Bold.otf
 Macan-Book-Italic.otf
 Macan-Book.otf
+MartianMono-CnBd.otf
+MartianMono-CnLt.otf
+MartianMono-CnMd.otf
+MartianMono-CnRg.otf
+MartianMono-CnTh.otf
+MartianMono-CnxBd.otf
+MartianMono-CnxLt.otf
 Meslo LG M DZ Regular for Powerline.otf
 Mika Melvas - Authenia Solid.otf
 Mika Melvas - Authenia Textured.otf
