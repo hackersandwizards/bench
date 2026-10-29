@@ -144,8 +144,11 @@ elif ask "Symlink dotfiles in home/ to \$HOME via stow?"; then
   done
   mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
   mkdir -p "$HOME/.ssh/control" && chmod 700 "$HOME/.ssh/control"
-  stow --dir="$REPO_ROOT" --target="$HOME" --restow home
-  ok "Stow symlinks applied"
+  if stow --dir="$REPO_ROOT" --target="$HOME" --restow home; then
+    ok "Stow symlinks applied"
+  else
+    warn "stow failed — resolve the conflict it names, then re-run this step"
+  fi
 else
   skip "Skipped stow"
 fi
@@ -335,8 +338,11 @@ if ! have atuin; then
 elif [[ -f "$HOME/.local/share/atuin/history.db" ]]; then
   ok "atuin database already exists — skipping import"
 elif ask "Import existing ~/.zsh_history into atuin?"; then
-  atuin import auto
-  ok "atuin history imported"
+  if atuin import auto; then
+    ok "atuin history imported"
+  else
+    warn "atuin import failed — run 'atuin import auto' manually later"
+  fi
 else
   skip "Skipped — run 'atuin import auto' manually later"
 fi
@@ -354,10 +360,15 @@ elif [[ -s "$REPO_ROOT/plugins.zsh" && -s "$REPO_ROOT/plugins-post.zsh" \
         && "$REPO_ROOT/plugins-post.zsh" -nt "$REPO_ROOT/plugins-post.txt" ]]; then
   ok "Antidote bundles already cached and up to date"
 elif ask "Pre-warm antidote bundles now? (avoids slow first shell start)"; then
-  zsh -c "source '$ANTIDOTE_SH'
-          antidote bundle < '$REPO_ROOT/plugins.txt' > '$REPO_ROOT/plugins.zsh'
-          antidote bundle < '$REPO_ROOT/plugins-post.txt' > '$REPO_ROOT/plugins-post.zsh'"
-  ok "Antidote bundles pre-warmed"
+  if zsh -c "source '$ANTIDOTE_SH' &&
+          antidote bundle < '$REPO_ROOT/plugins.txt' > '$REPO_ROOT/plugins.zsh' &&
+          antidote bundle < '$REPO_ROOT/plugins-post.txt' > '$REPO_ROOT/plugins-post.zsh'"; then
+    ok "Antidote bundles pre-warmed"
+  else
+    # A partial bundle would look current to init.zsh; without it the first shell retries.
+    rm -f "$REPO_ROOT/plugins.zsh" "$REPO_ROOT/plugins-post.zsh"
+    warn "Antidote pre-warm failed — the first shell retries it"
+  fi
 else
   skip "Skipped antidote pre-warm"
 fi
@@ -376,8 +387,11 @@ elif ask "Switch login shell from $SHELL to $BREW_ZSH?"; then
   if ! grep -qxF "$BREW_ZSH" /etc/shells; then
     echo "$BREW_ZSH" | sudo tee -a /etc/shells > /dev/null
   fi
-  chsh -s "$BREW_ZSH"
-  ok "Login shell changed — open a new terminal to verify"
+  if chsh -s "$BREW_ZSH"; then
+    ok "Login shell changed — open a new terminal to verify"
+  else
+    warn "chsh failed — run 'chsh -s $BREW_ZSH' by hand"
+  fi
 else
   skip "Skipped chsh"
 fi

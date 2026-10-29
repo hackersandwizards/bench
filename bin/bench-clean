@@ -60,13 +60,13 @@ step "VS Code extension dedup"; dedup_vscode
 sweep_jetbrains() {
   local roots=("$HOME/Library/Caches/JetBrains" "$HOME/Library/Logs/JetBrains" \
                "$HOME/Library/Application Support/JetBrains")
-  local app pi name root d live="|" nlive=0 removed=0
+  local app pi name root d live="|" products="|" nlive=0 removed=0
   have jaq || { skip "JetBrains: jaq missing, version dirs not swept"; return 0; }
   for app in /Applications/*.app "$HOME/Applications"/*.app; do
     pi="$app/Contents/Resources/product-info.json"   # JetBrains-only file: its presence is the test
     [[ -f "$pi" ]] || continue                       # also absorbs an unmatched literal glob
     name=$(jaq -r '.dataDirectoryName // empty' "$pi" 2>/dev/null)
-    [[ -n "$name" ]] && { live+="$name|"; nlive=$((nlive + 1)); }
+    [[ -n "$name" ]] && { live+="$name|"; products+="${name%%[0-9]*}|"; nlive=$((nlive + 1)); }
   done
   # Fail closed. An empty set means Toolbox is mid-update with the bundle gone, not that
   # every version dir is stale — sweeping on it would delete the live config.
@@ -79,6 +79,9 @@ sweep_jetbrains() {
       # dirs never match, so whatever JetBrains adds next is safe by default.
       [[ "$name" =~ ^[A-Za-z]+[0-9]+(\.[0-9]+)+$ ]] || continue
       [[ "$live" == *"|$name|"* ]] && continue
+      # Superseded means an older version of an installed product. A product with
+      # no app found (uninstalled, or Toolbox in a custom folder) keeps its settings.
+      [[ "$products" == *"|${name%%[0-9]*}|"* ]] || continue
       rm -rf "$d" && { ok "JetBrains: removed ${d%/}"; removed=$((removed + 1)); }
     done
   done

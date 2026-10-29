@@ -33,12 +33,16 @@ if [[ ! -f $MODEL ]]; then
   exit 1
 fi
 
+# set -e leaves the loop on a failed ffmpeg or whisper-cli; the trap still drops
+# the converted WAV, which runs to about 115 MB per hour of audio.
+tmp=""
+trap '[[ -z $tmp ]] || rm -rf "$tmp"' EXIT
 for f; do
   [[ -f $f ]] || { echo "transcribe: no such file: $f" >&2; exit 1; }
   base=$(basename "${f%.*}")
   dir=${out:-$(dirname "$f")}
   mkdir -p "$dir"
-  src=$f tmp=""
+  src=$f
   case $(printf '%s' "${f##*.}" | tr '[:upper:]' '[:lower:]') in
     flac | mp3 | ogg | wav) ;;
     *)
@@ -53,5 +57,6 @@ for f; do
   # if the flag goes missing.
   whisper-cli -m "$MODEL" -l "$lang" -mc 0 -f "$src" -otxt -osrt -of "$dir/$base" -np >/dev/null
   [[ -z $tmp ]] || rm -rf "$tmp"
+  tmp=""
   printf '%s\n' "$dir/$base.txt" "$dir/$base.srt"
 done

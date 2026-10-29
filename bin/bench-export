@@ -55,7 +55,9 @@ if have brew && brew_bottles_supported; then   # unsupported notice already show
   dump_to "$DOCS/brew-leaves.txt" brew leaves &
   dump_to "$DOCS/brews.txt"       brew list   &
 fi
-bun_globals_dump() { bun pm -g list | sed "s|$HOME|\$HOME|g"; }
+# pipefail inside each *_dump: a failing producer must fail dump_to, not hand sed
+# an empty stream that overwrites the snapshot. Each runs in its own & subshell.
+bun_globals_dump() { set -o pipefail; bun pm -g list | sed "s|$HOME|\$HOME|g"; }
 have bun   && dump_to "$DOCS/buns.txt"  bun_globals_dump           &
 have pip   && dump_to "$DOCS/pip.txt"   pip_managed_freeze         &
 # --no-unicode: npm picks tree glyphs by TTY, so an interactive export and this
@@ -63,8 +65,8 @@ have pip   && dump_to "$DOCS/pip.txt"   pip_managed_freeze         &
 have npm   && dump_to "$DOCS/npms.txt"  npm list -g --depth=0 --no-unicode &
 dump_to "$DOCS/safari-favorites.txt" "$REPO_ROOT/bin/safari-favorites" export &
 # $HOME -> literal token so the snapshots replay for any user (parse_* expands it).
-dock_dump()    { dockutil --list | sed "s|$HOME|\$HOME|g"; }
-sidebar_dump() { mysides list    | sed "s|$HOME|\$HOME|g"; }
+dock_dump()    { set -o pipefail; dockutil --list | sed "s|$HOME|\$HOME|g"; }
+sidebar_dump() { set -o pipefail; mysides list    | sed "s|$HOME|\$HOME|g"; }
 have dockutil && dump_to "$DOCS/dock.txt"           dock_dump    &
 have mysides  && dump_to "$DOCS/finder-sidebar.txt" sidebar_dump &
 have defaults && dump_to "$DOCS/moom.plist" defaults export com.manytricks.Moom - &

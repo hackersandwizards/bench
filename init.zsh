@@ -20,10 +20,16 @@ source "$ZSH_SETTINGS_DIR/exports.zsh"
 
 # --- Init-output cache: source cached `init zsh` output, regenerating when the
 #     binary is newer. Cache hit forks nothing ($commands is a zsh builtin). ---
+# -nt follows the Homebrew symlink to a binary that keeps the bottle's build
+# time, which can be older than a cache written before the upgrade. zstat -L
+# adds the link's own mtime, the pour time.
+zmodload -F zsh/stat b:zstat
 _init_cache() {
   local bin="$1"; shift
-  local out="$HOME/.cache/zsh/$bin.zsh"
-  if [[ ! -f "$out" || "$commands[$bin]" -nt "$out" ]]; then
+  local out="$HOME/.cache/zsh/$bin.zsh" t=0 c=0
+  [[ -n $commands[$bin] ]] && zstat -L -A t +mtime -- "$commands[$bin]" 2>/dev/null
+  [[ -f $out ]] && zstat -A c +mtime -- "$out" 2>/dev/null
+  if [[ ! -f "$out" || "$commands[$bin]" -nt "$out" ]] || (( t > c )); then
     mkdir -p "$HOME/.cache/zsh"
     # Per-process tmp ($$) + mv: concurrent startups regenerating the same
     # cache must not interleave writes; each mv lands complete, last wins.
@@ -49,10 +55,12 @@ _init_cache starship init zsh
 _antidote_bundle() {
   local txt="$ZSH_SETTINGS_DIR/$1.txt" out="$ZSH_SETTINGS_DIR/$1.zsh"
   if [[ ! -f "$out" || "$txt" -nt "$out" ]]; then
+    # tmp + mv as in _init_cache: a failed bundle must not leave an empty file
+    # newer than the .txt, which every later shell would source as valid.
     source /opt/homebrew/opt/antidote/share/antidote/antidote.zsh
-    antidote bundle < "$txt" > "$out"
+    if antidote bundle < "$txt" > "$out.$$"; then mv "$out.$$" "$out"; else rm -f "$out.$$"; fi
   fi
-  source "$out"
+  [[ -f "$out" ]] && source "$out"
 }
 _antidote_bundle plugins
 

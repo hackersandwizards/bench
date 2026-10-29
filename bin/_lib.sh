@@ -232,7 +232,8 @@ find_clone() {  # find_clone <url> [retried] -> paths, or non-zero when none
     d=${d%/}; d=${d%/.git}
     [[ "$(repo_slug "$(git -C "$d" remote get-url origin 2>/dev/null)")" == "$want" ]] || continue
     printf '%s\n' "${d#"$HOME"/}"
-  done < <(fd -H -t d -d 6 '^\.git$' "$HOME/dev" "$HOME/opt" 2>/dev/null))
+  # -I: a clone inside a directory its parent repo ignores is still a clone.
+  done < <(fd -H -I -t d -d 6 '^\.git$' "$HOME/dev" "$HOME/opt" 2>/dev/null))
   [[ -n "$hits" ]] && { printf '%s' "$hits"; return 0; }
   # No clone carries this URL. A rename on the host leaves docs/repos.txt on the
   # old name while the clone already carries the new one, so ask the host once

@@ -236,5 +236,75 @@ assert_eq "passes -mc 0, the fixed model, text and SRT output" \
   "$(cat "$tdir/args" 2>/dev/null)"
 rm -rf "$tdir"
 
+step "bench-export dumpers fail with their producer"
+# A dumper is a pipeline into sed. Without pipefail sed's exit 0 hides a failed
+# dockutil or mysides, and dump_to overwrites the snapshot with nothing.
+tdir=$(mktemp -d)
+printf '#!/bin/sh\nexit 1\n' > "$tdir/dockutil"; chmod +x "$tdir/dockutil"
+assert_fail "dock_dump exits non-zero when dockutil fails" \
+  env PATH="$tdir:$PATH" bash -c "$(grep -E '^dock_dump\(\)' "$REPO_ROOT/bin/bench-export"); dock_dump"
+rm -rf "$tdir"
+
+step "find_clone sees clones inside ignored directories"
+tdir=$(mktemp -d)
+git init -q "$tdir/dev/parent" && printf 'child/\n' > "$tdir/dev/parent/.gitignore"
+git init -q "$tdir/dev/parent/child"
+git -C "$tdir/dev/parent/child" remote add origin https://github.com/example/child.git
+assert_eq "finds a clone its parent repo ignores" "dev/parent/child" \
+  "$(HOME="$tdir" find_clone https://github.com/example/child.git retried)"
+rm -rf "$tdir"
+
+step "JetBrains sweep removes only superseded versions"
+tdir=$(mktemp -d)
+mkdir -p "$tdir/Applications/Zzzide.app/Contents/Resources" \
+  "$tdir/Library/Caches/JetBrains/Zzzide2026.1" "$tdir/Library/Caches/JetBrains/Zzzide2026.2" \
+  "$tdir/Library/Caches/JetBrains/Yyyide2026.1"
+printf '{"dataDirectoryName":"Zzzide2026.2"}' > "$tdir/Applications/Zzzide.app/Contents/Resources/product-info.json"
+HOME="$tdir" bash -c ". '$REPO_ROOT/bin/_lib.sh'; $(sed -n '/^sweep_jetbrains()/,/^}/p' "$REPO_ROOT/bin/bench-clean"); sweep_jetbrains" >/dev/null 2>&1
+assert_eq "older version of an installed product removed, live one kept" "Zzzide2026.2" \
+  "$(command ls "$tdir/Library/Caches/JetBrains" | grep Zzz)"
+assert_ok "product with no installed app keeps its dir" test -d "$tdir/Library/Caches/JetBrains/Yyyide2026.1"
+rm -rf "$tdir"
+
+step "pre-commit lints the staged blob"
+# A broken hunk staged with its fix left unstaged must still fail the hook.
+tdir=$(mktemp -d)
+git init -q "$tdir" && mkdir -p "$tdir/.githooks" "$tdir/bin"
+cp "$REPO_ROOT/.githooks/pre-commit" "$tdir/.githooks/" && cp "$REPO_ROOT/bin/_lib.sh" "$tdir/bin/"
+printf 'if true; then\n' > "$tdir/a.zsh" && git -C "$tdir" add a.zsh
+printf 'true\n' > "$tdir/a.zsh"
+assert_fail "fails on a staged syntax error the working copy fixed" \
+  bash -c "cd '$tdir' && .githooks/pre-commit >/dev/null 2>&1"
+rm -rf "$tdir"
+
+step "transcribe cleans up after a failure"
+tdir=$(mktemp -d)
+mkdir -p "$tdir/bin" "$tdir/home/.cache/whisper" "$tdir/tmp"
+printf '#!/bin/sh\nexit 1\n' > "$tdir/bin/ffmpeg"; chmod +x "$tdir/bin/ffmpeg"
+# macOS mktemp -d ignores TMPDIR without a template, so a shim pins the location.
+printf '#!/bin/sh\nexec /usr/bin/mktemp -d "%s/tmp/t.XXXXXX"\n' "$tdir" > "$tdir/bin/mktemp"; chmod +x "$tdir/bin/mktemp"
+: > "$tdir/home/.cache/whisper/ggml-large-v3-turbo.bin"; : > "$tdir/talk.mp4"
+env HOME="$tdir/home" PATH="$tdir/bin:$PATH" "$REPO_ROOT/bin/transcribe" "$tdir/talk.mp4" >/dev/null 2>&1
+assert_eq "no temp directory left when ffmpeg fails" "" "$(command ls "$tdir/tmp")"
+rm -rf "$tdir"
+
+step "init.zsh caches"
+tdir=$(mktemp -d)
+mkdir -p "$tdir/bin" "$tdir/home/.cache/zsh"
+# A failed antidote bundle must leave no plugins.zsh that looks current.
+printf 'antidote() { return 1; }\n' > "$tdir/antidote.zsh"; : > "$tdir/plugins.txt"
+ZSH_SETTINGS_DIR="$tdir" zsh -fc "$(sed -n '/^_antidote_bundle()/,/^}/p' "$REPO_ROOT/init.zsh" \
+  | sed "s|source /opt/homebrew/opt/antidote/share/antidote/antidote.zsh|source $tdir/antidote.zsh|"); _antidote_bundle plugins" 2>/dev/null
+assert_fail "failed bundle writes no plugins.zsh" test -e "$tdir/plugins.zsh"
+# Homebrew keeps the bottle's build mtime on the binary; the link carries the
+# pour time. A cache between the two must regenerate.
+printf '#!/bin/sh\necho "echo new"\n' > "$tdir/foo-real"; chmod +x "$tdir/foo-real"
+touch -t 202001010000 "$tdir/foo-real"
+echo 'echo old' > "$tdir/home/.cache/zsh/foo.zsh"; touch -t 202101010000 "$tdir/home/.cache/zsh/foo.zsh"
+ln -s "$tdir/foo-real" "$tdir/bin/foo"
+assert_eq "an upgrade poured after the cache regenerates it" "new" \
+  "$(HOME="$tdir/home" PATH="$tdir/bin:$PATH" zsh -fc "$(sed -n '/^zmodload -F zsh\/stat/,/^}/p' "$REPO_ROOT/init.zsh"); _init_cache foo")"
+rm -rf "$tdir"
+
 step "$passed passed, $failed failed"
 (( failed == 0 ))

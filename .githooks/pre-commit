@@ -9,6 +9,12 @@ set -e
 # shellcheck source=../bin/_lib.sh
 . "$(dirname "${BASH_SOURCE[0]}")/../bin/_lib.sh"
 
+# Lint the staged blobs, not the working tree: after a partial `git add -p` the
+# commit carries what the index holds. The whole index, so source= paths resolve.
+idx=$(mktemp -d)
+trap 'rm -rf "$idx"' EXIT
+git checkout-index -a --prefix="$idx/"
+
 staged=()
 while IFS= read -r -d '' f; do staged+=("$f"); done \
   < <(git diff --cached --name-only --diff-filter=ACMR -z)
@@ -21,8 +27,8 @@ for f in "${staged[@]}"; do
       # Extensionless scripts (e.g. bin/bench-*) would otherwise skip the linters.
       # Classify by shebang. `|| continue` keeps `set -e` from aborting on an empty
       # file (read hits EOF) and the `-f` guard avoids a redirect error on deletes.
-      [[ -f $f ]] || continue
-      IFS= read -r shebang < "$f" || continue
+      [[ -f $idx/$f ]] || continue
+      IFS= read -r shebang < "$idx/$f" || continue
       case $shebang in
         '#!'*zsh*)  zsh_files+=("$f") ;;
         '#!'*bash*) sh_files+=("$f") ;;
@@ -41,11 +47,11 @@ fi
 
 if have shellcheck; then
   # -x lets shellcheck follow `# shellcheck source=...` annotations.
-  ((${#sh_files[@]})) && shellcheck -x "${sh_files[@]}"
+  ((${#sh_files[@]})) && (cd "$idx" && shellcheck -x "${sh_files[@]}")
 else
   echo "pre-commit: shellcheck not installed — skipping shell lint" >&2
 fi
 
 if have zsh; then
-  for f in "${zsh_files[@]}"; do zsh -n "$f"; done
+  for f in "${zsh_files[@]}"; do zsh -n "$idx/$f"; done
 fi
