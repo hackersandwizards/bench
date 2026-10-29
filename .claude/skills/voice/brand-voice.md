@@ -53,7 +53,8 @@ below the reader sits, the less setup comes first: a reader who asked for the of
 running thread and a logistics mail open on the answer.
 
 The vision and the whole offer speak of product development and enablement. A concrete text says
-engineering teams, training and mentoring, never "product teams".
+engineering teams or engineering and product teams, training and mentoring, never "product teams"
+alone.
 
 A text arguing why us names two kinds of experience together: more than 20 years building large
 software systems, and work with agents since the first tools at the end of 2022, alpha access to
