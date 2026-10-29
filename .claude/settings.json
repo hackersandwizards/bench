@@ -36,5 +36,9 @@
     {
       "serverName": "claude.ai Todoist"
     }
+  ],
+  "claudeMdExcludes": [
+    "/Users/*/.claude/rules/**",
+    "/home/*/.claude/rules/**"
   ]
 }
