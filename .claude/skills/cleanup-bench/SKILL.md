@@ -43,7 +43,7 @@ last one, record the names of `docker volume ls -qf dangling=true`.
 `~/Library/Caches/antidote` means the guard failed: rebuild the plugins and report it.
 
 ```bash
-cd "${ZSH_SETTINGS_DIR:-$HOME/opt/zsh-settings}" && zsh -c 'source /opt/homebrew/opt/antidote/share/antidote/antidote.zsh; antidote bundle < plugins.txt > plugins.zsh && antidote bundle < plugins-post.txt > plugins-post.zsh'
+cd "${ZSH_SETTINGS_DIR:-$PWD}" && zsh -c 'source /opt/homebrew/opt/antidote/share/antidote/antidote.zsh; antidote bundle < plugins.txt > plugins.zsh && antidote bundle < plugins-post.txt > plugins-post.zsh'
 ```
 
 ## 5. Report

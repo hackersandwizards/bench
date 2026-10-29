@@ -41,7 +41,7 @@ here. Step 6 re-derives it.
 `git fetch origin`, then:
 
 - Fast-forwards or already current: `git merge --ff-only origin/main`.
-- Refused, local commits ahead: `git rebase origin/main`.
+- Refused, local commits ahead: `git merge origin/main`.
 - Refused over local modifications: skip the pull, say so, carry on against the tree as it stands.
 - Fetch cannot reach origin: continue offline. Step 6 keeps the commit for the next run.
 
@@ -145,7 +145,7 @@ body naming what changed. Nothing to commit is the normal quiet-day outcome.
 
 Push. `origin` carries two push URLs, so a partial failure exits non-zero and the next run pushes
 what already landed as a no-op. A rejection because `origin/main` moved mid-run gets one
-`git fetch origin && git rebase origin/main` and one more push. Once. A second rejection is a
+`git fetch origin && git merge origin/main` and one more push. Once. A second rejection is a
 report, not a third attempt. Never force-push, never reset.
 
 Report, in this order and short:

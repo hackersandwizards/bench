@@ -162,7 +162,7 @@ bench-update                   # upgrade brew, antidote, mise tools, Rust toolch
 bench-prefs-diff snap|diff     # capture a settings change as defaults keys for macos.sh
 bench-export                   # snapshot installed packages + sync home/ from $HOME
 bench-clean                    # reclaim disk: caches, .DS_Store, stale IDE versions (alias: cleanup)
-bench-test                     # run unit tests for bin/_lib.sh helpers
+bench-test                     # tests for bin/_lib.sh helpers, bin/ scripts and repo invariants
 ZSH_PROFILE=1 zsh -i -c exit   # profile shell startup (zprof report)
 ```
 
