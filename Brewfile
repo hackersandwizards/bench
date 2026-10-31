@@ -1,3 +1,4 @@
+tap "anomalyco/tap"
 tap "asmvik/formulae" # maintained skhd fork; koekeishiya/skhd upstream is unmaintained
 tap "hashicorp/tap"
 tap "mongodb/brew"
@@ -199,6 +200,7 @@ brew "mongodb/brew/mongodb-community"
 # Redpanda CLI & toolbox
 brew "redpanda-data/tap/redpanda"
 cask "adguard"
+cask "anomalyco/tap/hex", trusted: true
 cask "antigravity"
 cask "antigravity-cli"
 cask "antigravity-ide"
@@ -232,7 +234,6 @@ cask "notion"
 cask "notion-calendar"
 cask "orbstack"
 cask "slack"
-cask "superwhisper"
 cask "visual-studio-code"
 cask "warp"
 cask "whatsapp"
