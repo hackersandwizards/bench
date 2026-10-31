@@ -153,6 +153,8 @@ Granite and Canary-Qwen lead the pooled score by 1.2 and 0.6 points, and the boo
 
 Limits of the measurement: set A is four calls from four companies, and set B is mostly native speakers. The interval covers variation inside those recordings, not between speakers. On two of our own talks a list of 30 and 28 names and technical terms did not separate the candidates, each recalled 19 to 25. Time is the median wall time for one 33-minute recording, model load included, over three runs per row and two for Canary-Qwen.
 
+Rechecked on 2026-10-31 with the same sets and scoring, `-mc 0` reproduced to the digit. Parakeet's dropped passages come from encoding the whole file in one pass, in `parakeet-cli` and in transcribe.cpp alike. transcribe.cpp is the runner inside Hex, which gives identical transcripts but writes no timestamps. Cut into 20 to 30 s chunks at the quietest 100 ms, Parakeet TDT v3 Q8_0 in transcribe.cpp scored 13.27 / 2.61 / 9.14 [8.22, 10.09] with 2 dropped passages of 63 words: 0.60 [0.11, 1.07] points ahead of Whisper and about four times faster. Parakeet Unified English tied Whisper when chunked and returned an empty transcript for a 46-minute call fed whole. On German, VoxPopuli parliament speech and Multilingual LibriSpeech at 60 minutes each, scored after Whisper's basic normalizer, `whisper-cli -l de -mc 0` reached 6.25 [5.57, 6.97] and chunked TDT v3 7.11 [6.23, 8.04] with one dropped passage. Whisper stays for every language: the English gain does not pay for a source build, a chunker and an `.srt` writer.
+
 ## Maintenance
 
 ```bash
