@@ -16,13 +16,14 @@ Run every `mo` command with `</dev/null` and strip its ANSI codes
 ## 1. Guard
 
 `~/.config/mole/whitelist` replaces mole's built-in defaults once it exists, and both `mo clean`
-and `mo purge` honour it. Skip steps 2 and 3 and report the gap unless it holds all three:
+and `mo purge` honour it. Skip steps 2 and 3 and report the gap unless it holds all four:
 
 | Line | Protects |
 |---|---|
 | `$HOME/.Trash` | the Trash from `mo clean` |
 | `$HOME/Library/Caches/antidote/*` | the zsh plugins antidote clones there |
 | `$HOME/dev/hackersandwizards/internal/company/os/*` | Company OS, in use all day |
+| `$HOME/.cache/puppeteer/*` | the Chrome for Testing builds repos pin, which `mo clean` deletes whole |
 
 Record the free space from `df -h /`.
 
@@ -46,11 +47,25 @@ last one, record the names of `docker volume ls -qf dangling=true`.
 cd "${ZSH_SETTINGS_DIR:-$PWD}" && zsh -c 'source /opt/homebrew/opt/antidote/share/antidote/antidote.zsh; antidote bundle < plugins.txt > plugins.zsh && antidote bundle < plugins-post.txt > plugins-post.zsh'
 ```
 
-## 5. Report
+## 5. Versions and browsers
+
+In `~/.cache/puppeteer/*`, `~/Library/Caches/ms-playwright`, `~/.local/share/mise/installs/*`,
+`~/.local/share/claude/versions`, `~/Library/Application Support/Claude/claude-code` and
+`~/.codex/packages/app-server-daemon/releases`, keep the newest version, the one a symlink or
+`current` names, and every version a repo under `~/dev` or `~/opt` pins: the browser builds in its
+`node_modules/puppeteer-core/lib/cjs/puppeteer/revisions.js` or `playwright-core/browsers.json`, the
+runtimes in `.tool-versions`, `mise.toml`, `.nvmrc`, `.node-version`, `.ruby-version` or
+`packageManager`. `mise prune` misses repos mise never loaded, so it decides nothing. Skip any
+version `lsof` shows open. Remove the rest with `mise uninstall`, else move it to `~/.Trash`. Then
+run `brew autoremove`, `brew cleanup -s`, `bun pm cache rm` and `uv cache prune`, and move
+`~/.npm/_npx/*` to `~/.Trash`.
+
+## 6. Report
 
 - free space before and after, and that Time Machine local snapshots hold deleted space until
   macOS expires them after 24 hours
 - the mole lines and Docker's reclaimed space, verbatim, and the removed volumes by name
+- each version removed in step 5, and each kept with the repo that pins it
 - the shell check result
 - the Trash with its size, for Benedikt to empty in Finder
 - as a question, anything `mo clean` lists under `Large files` beyond Mail data, Time Machine
