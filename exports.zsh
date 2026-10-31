@@ -8,7 +8,6 @@ $HOME/.local/share/mise/shims:\
 /opt/homebrew/opt/rustup/bin:\
 $HOME/.cargo/bin:\
 $HOME/go/bin:\
-$HOME/.antigravity-ide/antigravity-ide/bin:\
 $HOME/Library/Application Support/JetBrains/Toolbox/scripts:\
 /opt/homebrew/opt/python@3.14/libexec/bin:\
 /opt/homebrew/opt/unzip/bin:\

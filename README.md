@@ -4,7 +4,7 @@ Terminal setup for hackers&wizards: zsh, Ghostty, Starship, fzf, modern CLI repl
 > **Highly opinionated. Don't install blindly.**
 >
 > Every choice reflects specific tooling preferences. Walk through the files with an AI agent (Claude Code, Cursor, etc.) before running `install.sh` so you understand:
-> - what gets installed: Brewfile with brew CLI packages, GUI app casks (Ghostty, browsers, editors, Office, Slack), Mac App Store apps, and VS Code extensions
+> - what gets installed: Brewfile with brew CLI packages, GUI app casks (Ghostty, browsers, editors, Office, Slack), and Mac App Store apps
 > - what gets configured globally (Stow symlinks home/ -> $HOME, line appended to `~/.zshrc`, Ghostty config symlink)
 > - which choices wouldn't fit your setup
 
@@ -51,14 +51,13 @@ New team member, fresh machine. Provision these before running `install.sh`. The
 | Qonto            | Business account                                                                                 |
 | Circle           | Community platform                                                                               |
 
-Optional, per person: Fathom (`FATHOM_API_KEY` in `secrets.zsh`), OpenAI (Codex CLI, ChatGPT), Cloudflare, Namecheap, AWS, Google Cloud (Workspace sign-in). JetBrains Toolbox, Cursor, Warp, CleanMyMac, DaisyDisk, and CrossOver bring their own licenses.
+Optional, per person: Fathom (`FATHOM_API_KEY` in `secrets.zsh`), OpenAI (Codex CLI, ChatGPT), Cloudflare, Namecheap, AWS, Google Cloud (Workspace sign-in). JetBrains Toolbox and CrossOver bring their own licenses.
 
 ## New-machine checklist (manual)
 
 `install.sh` replays everything scriptable. These need a human: interactive logins and UI state macOS exposes no API for. Work through them once after the wizard:
 
 - [ ] **Apple Mail + Calendar**: System Settings -> Internet Accounts -> Add Account -> Google -> sign in with the Workspace account -> enable Mail, Calendar, Contacts.
-- [ ] **Notion Calendar**: launch, sign in with the same Google account, connect the Workspace calendar.
 - [ ] **Slack**: launch, sign in to `hackersandwizards.slack.com`.
 - [ ] **Google Workspace in the browser**: sign in once so Claude's Workspace MCP connectors can request permissions against the right account.
 - [ ] **GitHub / GitLab**: `gh auth login` and `glab auth login` if the wizard step was skipped.
@@ -67,7 +66,7 @@ Optional, per person: Fathom (`FATHOM_API_KEY` in `secrets.zsh`), OpenAI (Codex 
 - [ ] **Mail signature**: fill the `{{...}}` placeholders in `docs/mail-signature.html` (name, role, phone, photo, links), open it in a browser, select all, copy, paste into Mail -> Settings -> Signatures.
 - [ ] **Widgets**: rebuild desktop + Notification Center widgets by hand (right-click desktop -> Edit Widgets). macOS has no supported export.
 - [ ] **Default-app cleanup**: Apple system apps live in `/System/Applications` and are SIP-protected, so they cannot be deleted. The Dock replay already hides the unwanted ones. Delete unwanted App Store installs from `/Applications`.
-- [ ] **App settings outside this repo**: GUI app preferences (Moom, DeepL, ...) are not synced. Licensed apps restore their own settings after sign-in.
+- [ ] **App settings outside this repo**: GUI app preferences (Moom, ...) are not synced. Licensed apps restore their own settings after sign-in.
 - [ ] **Dock / sidebar drift**: after curating Dock or Finder sidebar, run `bench-export` and commit. `bench-doctor` flags when a machine drifts from the snapshots.
 - [ ] **Log out / restart**: the `macos.sh` trackpad and keyboard defaults only fully apply after a logout.
 
@@ -93,7 +92,7 @@ bin/
   bench-export          Check Brewfile + refresh docs/ snapshots + sync home/ from $HOME
   bench-doctor          Health check
   bench-prefs-diff      Capture a settings change as defaults keys for macos.sh
-  bench-clean           Reclaim disk: caches, .DS_Store, stale JetBrains/VS Code versions
+  bench-clean           Reclaim disk: caches, .DS_Store, stale JetBrains versions
   bench-test            Tests for _lib.sh helpers, bin/ scripts and repo invariants (plain bash asserts)
   safari-favorites      Export/merge the Safari favorites bar (bench-export, bench-doctor, install.sh)
   transcribe            Speech to text: whisper-cli with the fixed model and -mc 0, writes .txt and .srt
