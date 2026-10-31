@@ -230,12 +230,9 @@ InputSerifNarrow-Regular.ttf
 InputSerifNarrow-Thin.ttf
 InputSerifNarrow-ThinItalic.ttf
 Jeff_Script_Regular.otf
-JetBrainsMono-Bold-Italic.ttf
 JetBrainsMono-Bold.ttf
-JetBrainsMono-ExtraBold-Italic.ttf
 JetBrainsMono-ExtraBold.ttf
 JetBrainsMono-Italic.ttf
-JetBrainsMono-Medium-Italic.ttf
 JetBrainsMono-Medium.ttf
 JetBrainsMono-Regular.ttf
 Macan-Bold-Italic.otf
@@ -256,11 +253,8 @@ Monoid-Bold.ttf
 Monoid-Italic.ttf
 Monoid-Regular.ttf
 Monoid-Retina.ttf
-Montserrat-Bold.ttf
 Moon Flower Bold.ttf
 Moon Flower.ttf
-NotoSans_Bold.ttf
-NotoSans_gdi.ttf
 OTTO Script.otf
 PayPalSansBig-Light-Klim.ttf
 PayPalSansBig-Regular-Klim.ttf
@@ -268,29 +262,6 @@ PayPalSansSmall-Medium-Klim.ttf
 PayPalSansSmall-Regular-Klim.ttf
 Perfect DOS VGA 437.ttf
 RW_BLUME2000.ttf
-Roboto-Black.ttf
-Roboto-BlackItalic.ttf
-Roboto-Bold.ttf
-Roboto-BoldItalic.ttf
-Roboto-Italic.ttf
-Roboto-Light.ttf
-Roboto-LightItalic.ttf
-Roboto-Medium.ttf
-Roboto-MediumItalic.ttf
-Roboto-Regular.ttf
-Roboto-Thin.ttf
-Roboto-ThinItalic.ttf
-Rubik-Black.ttf
-Rubik-BlackItalic.ttf
-Rubik-Bold.ttf
-Rubik-BoldItalic.ttf
-Rubik-ExtraBold.ttf
-Rubik-ExtraBoldItalic.ttf
-Rubik-Italic.ttf
-Rubik-Light.ttf
-Rubik-LightItalic.ttf
-Rubik-SemiBold.ttf
-Rubik-SemiBoldItalic.ttf
 SFDisplay-Black.otf
 SFDisplay-Bold.otf
 SFDisplay-Heavy.otf
