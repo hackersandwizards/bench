@@ -16,7 +16,7 @@ Run every `mo` command with `</dev/null` and strip its ANSI codes
 ## 1. Guard
 
 `~/.config/mole/whitelist` replaces mole's built-in defaults once it exists, and both `mo clean`
-and `mo purge` honour it. Skip steps 2 and 3 and report the gap unless it holds all four:
+and `mo purge` honour it. Skip steps 2 and 3 and report the gap unless it holds all five:
 
 | Line | Protects |
 |---|---|
