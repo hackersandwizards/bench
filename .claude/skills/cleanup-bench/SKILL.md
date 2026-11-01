@@ -54,7 +54,7 @@ In `~/.cache/puppeteer/*`, `~/Library/Caches/ms-playwright`, `~/.local/share/mis
 `~/.local/share/claude/versions`, `~/Library/Application Support/Claude/claude-code` and
 `~/.codex/packages/app-server-daemon/releases`, keep the newest version, the one a symlink or
 `current` names, and every version a repo under `~/dev` or `~/opt` pins: the browser builds in its
-`node_modules/puppeteer-core/lib/cjs/puppeteer/revisions.js` or `playwright-core/browsers.json`, the
+`node_modules/puppeteer-core/lib/**/revisions.js` or `playwright-core/browsers.json`, the
 runtimes in `.tool-versions`, `mise.toml`, `.nvmrc`, `.node-version`, `.ruby-version` or
 `packageManager`. `mise prune` misses repos mise never loaded, so it decides nothing. Skip any
 version `lsof` shows open. Remove the rest with `mise uninstall`, else move it to `~/.Trash`. Then
