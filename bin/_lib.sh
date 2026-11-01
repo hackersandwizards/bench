@@ -91,9 +91,12 @@ brew_unsupported_notice() {
 # shellcheck disable=SC2034  # consumed by bench-* and install.sh
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-# macos.sh sets this wallpaper; bench-doctor verifies it. One owner, no drift.
+# macos.sh sets these wallpapers: the Studio Display file on every Studio
+# Display desktop, the MacBook file on all others.
 # shellcheck disable=SC2034
-WALLPAPER="$REPO_ROOT/assets/wallpaper.png"
+WALLPAPER_MACBOOK="$REPO_ROOT/assets/wallpaper-macbook.png"
+# shellcheck disable=SC2034
+WALLPAPER_STUDIO="$REPO_ROOT/assets/wallpaper-studio-display.png"
 
 hooks_path() {
   git -C "$REPO_ROOT" config core.hooksPath 2>/dev/null || echo "<unset>"

@@ -147,17 +147,31 @@ fi
 # ============================================================================
 # Desktop wallpaper
 # Placement (Fill Screen) and "Show on all Spaces" are preserved from user
-# prefs (no public Tahoe API forces them). Image matches display res
-# (5120x2880), so all placement modes render identically on this hardware.
+# prefs (no public Tahoe API forces them). Each file matches its display's
+# native resolution (MacBook Pro 16" 3456x2234, Studio Display 5120x2880), so
+# all placement modes render identically on this hardware.
 # ============================================================================
-if [[ -f "$WALLPAPER" ]]; then
-  if osascript -e "tell application \"System Events\" to set picture of every desktop to \"$WALLPAPER\"" 2>/dev/null; then
+if [[ -f "$WALLPAPER_MACBOOK" && -f "$WALLPAPER_STUDIO" ]]; then
+  if osascript - "$WALLPAPER_MACBOOK" "$WALLPAPER_STUDIO" 2>/dev/null <<'APPLESCRIPT'
+on run {macbook, studio}
+  tell application "System Events"
+    repeat with d in desktops
+      if display name of d is "Studio Display" then
+        set picture of d to studio
+      else
+        set picture of d to macbook
+      end if
+    end repeat
+  end tell
+end run
+APPLESCRIPT
+  then
     ok "Wallpaper set"
   else
     warn "Wallpaper set failed (may need login or System Events permission)"
   fi
 else
-  warn "Wallpaper missing at $WALLPAPER — skipping"
+  warn "Wallpaper missing at $WALLPAPER_MACBOOK or $WALLPAPER_STUDIO — skipping"
 fi
 
 # ============================================================================
