@@ -11,3 +11,4 @@ replace them from the brand repository when it ships new ones.
 Copyright hackers&wizards GmbH. The name hackers&wizards and its logos are
 trademarks of hackers&wizards GmbH; these images are not covered by this
 repository's licence.
+See "Publication by hackers&wizards GmbH" in the brand repository's LICENSE.
