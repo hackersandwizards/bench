@@ -73,6 +73,7 @@ each by hand, in the section its neighbours sit in, with the `brew desc <name>` 
 above it. Name every addition in the commit body and the report.
 
 Never prune `docs/fonts.txt`, and never `brew bundle dump --force`. `bin/bench-export` says why.
+Commit every line the union adds, entries an earlier commit pruned by hand included.
 
 ### 4. Triage
 
