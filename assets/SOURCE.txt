@@ -3,8 +3,8 @@ wallpaper-studio-display.png   5120 x 2880  Apple Studio Display
 
 Copies of applications/backgrounds/macbook-background.png and
 studio-display-background.png from the hackers&wizards brand repository
-(github.com/hackersandwizards/brand), version 0.21.2-2-g4342adf, files last
-changed in commit 823c24b (2026-11-01). The brand package does not export the
+(github.com/hackersandwizards/brand), version 0.21.4, files last changed in
+commit 836e6f4 (2026-11-01). The brand package does not export the
 backgrounds and this repository installs no packages, so they are copied;
 replace them from the brand repository when it ships new ones.
 
