@@ -13,18 +13,18 @@ Terminal setup for hackers&wizards: zsh, Ghostty, Starship, fzf, modern CLI repl
 Grant the terminal Full Disk Access (System Settings -> Privacy & Security) before the wizard's Safari-favorites step: it reads `~/Library/Safari/Bookmarks.plist` and can only warn without it.
 
 ```bash
-git clone <repo> ~/opt/zsh-settings
-cd ~/opt/zsh-settings
+git clone https://github.com/hackersandwizards/bench.git ~/opt/bench
+cd ~/opt/bench
 ./install.sh        # interactive wizard, idempotent, re-runnable
-./macos.sh          # ~45 macOS system defaults (also offered as an install.sh step)
+./macos.sh          # about 60 macOS system defaults (also offered as an install.sh step)
 ```
 
-Every wizard step is opt-in:
+Any folder works: `init.zsh` finds its own location. The wizard asks before every step; only trusting the Brewfile taps and creating an empty `secrets.zsh` (mode 600) happen without a prompt:
 
 - **Packages**: `brew bundle`, runtimes and CLI tools via `mise install` (`home/.config/mise/config.toml`), npm/bun/pip globals
-- **Config**: Stow symlinks, `~/.gitconfig.local`, repo-local git hooks, `~/.zshrc` source line, Ghostty config, skhd
+- **Config**: Stow symlinks, `~/.gitconfig.local`, repo-local git hooks, `~/.zshrc` source line, Ghostty config, skhd, fonts, atuin history import, brew zsh as login shell, Touch ID for sudo, Claude Code CLI
 - **Logins + keys**: `gh`/`glab` auth, missing API keys into `secrets.zsh` (key list: `docs/secret-keys.txt`)
-- **Default repos**: `~/dev` + `~/opt` created, missing clones from `docs/repos.txt` (company-os, talks, trainings, MCP servers)
+- **Default repos**: `~/dev` + `~/opt` created, missing clones from `docs/repos.txt` (Company OS, talks, website, trainer-hub, the Next.js training, local-mlx-stack, the Fathom and Qonto MCP servers)
 - **Machine state from `docs/` snapshots**: Safari favorites (merge), Dock layout (replace), Finder sidebar (mirror; installs mysides via sudo from a GitHub pkg), Moom settings (import)
 
 `macos.sh` also sets default apps: Zed opens txt/md/json/yaml/toml, Ghostty runs .sh/.command/.tool.
@@ -33,7 +33,7 @@ static.adguard.com drops TLS handshakes on some routes, so the adguard cask down
 
 ## Defaults ownership
 
-Benedikt maintains the defaults. `bench-export` runs on his machine and commits the `docs/` snapshots. He curates the `macos.sh` keys and the Stow configs by hand. Everyone else consumes them: `install.sh` replays Dock, sidebar, Moom, and `macos.sh` on a fresh machine. Local deviations are unsupported: they are never exported, and an `install.sh` replay resets them. To capture a new System Settings deviation as `defaults` keys for `macos.sh`: `bench-prefs-diff snap`, flip the setting in the UI, `bench-prefs-diff diff`.
+Benedikt maintains the defaults: he runs `bench-export` on his machine and commits the refreshed `docs/` snapshots. He curates the `macos.sh` keys and the Stow configs by hand. Everyone else consumes them: `install.sh` replays Dock, sidebar, Moom, and `macos.sh` on a fresh machine. Local deviations on other machines are unsupported: they never reach the snapshots, and accepting the Dock, sidebar or Moom step of `install.sh` resets them. To capture a new System Settings deviation as `defaults` keys for `macos.sh`: `bench-prefs-diff snap`, flip the setting in the UI, `bench-prefs-diff diff`.
 
 ## Onboarding accounts
 
@@ -66,7 +66,7 @@ Optional, per person: Fathom (`FATHOM_API_KEY` in `secrets.zsh`), OpenAI (Codex 
 - [ ] **Mail signature**: fill the `{{...}}` placeholders in `docs/mail-signature.html` (name, role, phone, photo, links), open it in a browser, select all, copy, paste into Mail -> Settings -> Signatures.
 - [ ] **Widgets**: rebuild desktop + Notification Center widgets by hand (right-click desktop -> Edit Widgets). macOS has no supported export.
 - [ ] **Default-app cleanup**: Apple system apps live in `/System/Applications` and are SIP-protected, so they cannot be deleted. The Dock replay already hides the unwanted ones. Delete unwanted App Store installs from `/Applications`.
-- [ ] **App settings outside this repo**: GUI app preferences (Moom, ...) are not synced. Licensed apps restore their own settings after sign-in.
+- [ ] **App settings outside this repo**: GUI app preferences other than Moom's are not synced. Licensed apps restore their own settings after sign-in.
 - [ ] **Dock / sidebar drift**: after curating Dock or Finder sidebar, run `bench-export` and commit. `bench-doctor` flags when a machine drifts from the snapshots.
 - [ ] **Log out / restart**: the `macos.sh` trackpad and keyboard defaults only fully apply after a logout.
 
@@ -97,6 +97,9 @@ bin/
   safari-favorites      Export/merge the Safari favorites bar (bench-export, bench-doctor, install.sh)
   transcribe            Speech to text: whisper-cli with the fixed model and -mc 0, writes .txt and .srt
 macos/                Hotkey-driven scripts (ghostty-grid.js, idea-reset-layout.py); bound in skhd/skhdrc
+skhd/                 skhd hotkey config, symlinked to ~/.config/skhd/skhdrc by install.sh
+fonts/                Fonts with verified redistribution rights; the rest comes from Brewfile casks or a backup
+assets/               Desktop wallpapers copied from the brand repository (origin in assets/SOURCE.txt)
 home/                 Stow package, symlinked into $HOME
   .gitconfig            Aliases, delta, includes ~/.gitconfig.local
   .gitignore_global     .DS_Store, IDE noise, etc.
@@ -115,7 +118,7 @@ docs/                 Package + machine-state snapshots (committed; replayed by 
 
 ## Theming: Ghostty as single source of truth
 
-The 16 ANSI palette colors plus `background`/`foreground`/`cursor`/`selection` in `ghostty/config.ghostty` are the **only** literal color definitions in this repo. Most tools inherit them via ANSI indices. delta is the exception, pinning a GitHub light theme to match the white background:
+The 16 ANSI palette colors plus `background`/`foreground`/`cursor`/`selection` in `ghostty/config.ghostty` are the **only** literal color definitions for the terminal tools. Most inherit them via ANSI indices. delta is the exception, pinning a GitHub light theme to match the white background. Beyond the tools in the table, the Claude Code statusline (`.claude/statusline-command.sh`) pins three RGB colors and Zed picks its own One Light and One Dark themes:
 
 | Tool       | How it inherits                                          |
 |------------|----------------------------------------------------------|
@@ -126,11 +129,11 @@ The 16 ANSI palette colors plus `background`/`foreground`/`cursor`/`selection` i
 | vim        | no `termguicolors` -> terminal palette                   |
 | tmux       | named colors in status-style                             |
 
-To change the theme: edit the `palette` section in `ghostty/config.ghostty`. Every tool except delta follows automatically.
+To change the theme: edit the `palette` section in `ghostty/config.ghostty`. Every tool in the table except delta follows automatically.
 
 ## Transcription
 
-`transcribe talk.mp4` writes `talk.txt` and `talk.srt` (segment timestamps) next to the input, or into `-o <dir>`. It runs `whisper-cli` from the Homebrew `whisper.cpp` package with Whisper large-v3-turbo and `-mc 0`. `-l de` sets another language, and only English is tested. flac, mp3, ogg and wav go in as they are, anything else passes through ffmpeg first.
+`transcribe talk.mp4` writes `talk.txt` and `talk.srt` (segment timestamps) next to the input, or into `-o <dir>`. It runs `whisper-cli` from the Homebrew `whisper.cpp` package with Whisper large-v3-turbo and `-mc 0`. `-l de` sets another language; English and German are measured below. flac, mp3, ogg and wav go in as they are, anything else passes through ffmpeg first.
 
 The wizard does not install the model. `transcribe` expects it at `~/.cache/whisper/ggml-large-v3-turbo.bin` (1.6 GB) and prints the download command when the file is missing.
 
@@ -149,7 +152,7 @@ Measured on 2026-10-11 on an M3 Max with 64 GB and whisper.cpp 1.9.5. WER is the
 | Cohere Transcribe 03-2026, transformers | 14.30 | 3.11 | 9.97 [9.05, 10.90] | 1 invented passage, 27 words | none, 33 s chunks | 33 s | 10.0 GB |
 | Canary-Qwen 2.5B, NeMo | 13.34 | 2.55 | 9.17 [8.29, 10.05] | none | none, 25 s chunks | 206 s | 15.2 GB |
 
-Granite and Canary-Qwen lead the pooled score by 1.2 and 0.6 points, and the bootstrap separates both from Whisper. Granite's lead comes from set A alone: on set B it trails Whisper at defaults. Neither model writes timestamps, and both need a Python environment and a chunking script. Whisper with `-mc 0` is the only row with segment timestamps, and it runs from one Homebrew package.
+Granite and Canary-Qwen lead the pooled score by 1.2 and 0.6 points, and the bootstrap separates both from Whisper. Granite's lead comes from set A alone: on set B it trails Whisper at defaults. Neither model writes timestamps, and both need a Python environment and a chunking script. Whisper is the only model with segment timestamps, and it runs from one Homebrew package.
 
 Limits of the measurement: set A is four calls from four companies, and set B is mostly native speakers. The interval covers variation inside those recordings, not between speakers. On two of our own talks a list of 30 and 28 names and technical terms did not separate the candidates, each recalled 19 to 25. Time is the median wall time for one 33-minute recording, model load included, over three runs per row and two for Canary-Qwen.
 
@@ -167,9 +170,9 @@ bench-test                     # tests for bin/_lib.sh helpers, bin/ scripts and
 ZSH_PROFILE=1 zsh -i -c exit   # profile shell startup (zprof report)
 ```
 
-The daily loop is the `update-bench` skill (`.claude/skills/update-bench/`): it runs those commands in
-order, triages what `bench-doctor` reports into fixed, needs-a-human, and export-resolved, then commits
-the refreshed snapshots. The `update-bench-daily` scheduled task fires it at 06:00, which is why `docs/`
+The daily loop is the `update-bench` skill (`.claude/skills/update-bench/`): it runs `bench-test`,
+`bench-update`, `bench-clean`, `bench-export` and `bench-doctor`, triages what they report into fixed,
+needs-a-human, and export-resolved, runs `bench-test` again, then commits the refreshed snapshots. The `update-bench-daily` scheduled task fires it at 06:00, which is why `docs/`
 changes most days.
 
 ## Pre-commit hook
