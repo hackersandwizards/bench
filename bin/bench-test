@@ -266,6 +266,9 @@ assert_eq "older version of an installed product removed, live one kept" "Zzzide
 assert_ok "product with no installed app keeps its dir" test -d "$tdir/Library/Caches/JetBrains/Yyyide2026.1"
 rm -rf "$tdir"
 
+step "bench-clean keeps the Chrome for Testing builds repos pin"
+assert_fail "never names ~/.cache/puppeteer" grep -q '\.cache/puppeteer' "$REPO_ROOT/bin/bench-clean"
+
 step "pre-commit lints the staged blob"
 # A broken hunk staged with its fix left unstaged must still fail the hook.
 tdir=$(mktemp -d)

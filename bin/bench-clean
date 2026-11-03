@@ -36,7 +36,6 @@ cat "$WORK"/* 2>/dev/null
 rm -rf "$WORK"
 
 # Instant steps: sequential, parallelizing buys nothing.
-run "Puppeteer Chromium" rm -rf "$HOME/.cache/puppeteer"
 run "Claude HTTP cache"  rm -rf "$HOME/Library/Application Support/Claude/Cache"
 run "Claude code cache"  rm -rf "$HOME/Library/Application Support/Claude/Code Cache"
 
