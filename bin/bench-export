@@ -79,7 +79,7 @@ wait
 # prune entries by hand.
 # shellcheck disable=SC2012
 if { [[ -s "$DOCS/fonts.txt" ]] && cat "$DOCS/fonts.txt"; ls "$HOME/Library/Fonts"; } 2>/dev/null \
-     | sort -u > "$DOCS/fonts.txt.tmp" && [[ -s "$DOCS/fonts.txt.tmp" ]]; then
+     | LC_ALL=C sort -u > "$DOCS/fonts.txt.tmp" && [[ -s "$DOCS/fonts.txt.tmp" ]]; then
   mv "$DOCS/fonts.txt.tmp" "$DOCS/fonts.txt"
   ok "fonts.txt (union)"
 else
