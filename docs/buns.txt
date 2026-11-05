@@ -1,15 +1,15 @@
-$HOME/.bun/install/global node_modules (872 installed)
-├── @augmentcode/auggie@0.36.0
+$HOME/.bun/install/global node_modules (871 installed)
+├── @augmentcode/auggie@0.37.0
 ├── @earendil-works/pi-coding-agent@1.5.0
 ├── @es4x/create@0.22.0
 ├── @github/copilot@1.0.105
-├── @google/gemini-cli@0.66.0
+├── @google/gemini-cli@0.67.0
 ├── @googleworkspace/cli@0.22.5
 ├── @openai/codex@0.166.0
 ├── ccusage@20.0.48
 ├── chrome-devtools-mcp@1.12.0
 ├── codebuff@1.0.688
-├── command-code@1.88.2
+├── command-code@1.88.3
 ├── corepack@0.36.0
 ├── freebuff@0.2.36
 ├── mcp-remote@0.16.0
