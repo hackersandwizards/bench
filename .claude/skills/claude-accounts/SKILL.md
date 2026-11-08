@@ -3,7 +3,7 @@ name: claude-accounts
 description: >-
   Run Claude Code across several subscription accounts with one kept protected, for "switch claude
   account", "which account am I on", "I hit my usage limit", "rate limit", "account rotation",
-  "claude usage", "how much did this session cost".
+  "claude usage", "how much did this session cost", and for Claude threads in T3 Code.
 ---
 
 # Claude accounts
@@ -23,6 +23,23 @@ logged in at that moment, so log into an account you are happy to spend before r
 `cswap disable <num|email>` is the weaker second option. It holds a registered account out of
 auto-switch and out of the `best` and `next-available` strategies, but an explicit
 `cswap switch <num|email>` still activates it.
+
+## T3 Code
+
+T3 Code runs Claude through the SDK, so `cswap` reaches it under one condition: the Claude
+provider's config-dir field stays empty. An explicit `~/.claude` there makes Claude read a
+suffixed keychain item that `cswap` never writes. A `cswap switch` then reaches a running T3
+thread on its next turn; the rate-limit `resetsAt` in `~/.t3/userdata/logs/provider/events.*.log`
+shows which account served each turn.
+
+- Remote Control very likely does not see T3 sessions; the phone goes through T3's own app.
+- The desktop app runs its own server and tunnel. The launchd service that `t3 up` installs
+  holds `~/.t3`, and the app's backend then exits `ServerAlreadyRunning`. App and service never
+  share `~/.t3`: an app paired to the service as its client runs on its own `T3CODE_HOME`. `t3 connect` is `t3 up --connect` and
+  installs that service again, through `bunx` or `npx` alike; the app's tunnel needs no command.
+- A session import needs a project first, and the Claude provider skips sessions older than 30
+  days or whose folder is gone.
+- `T3CODE_TELEMETRY_ENABLED=false` turns telemetry off.
 
 ## Daily use
 
