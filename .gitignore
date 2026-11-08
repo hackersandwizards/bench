@@ -24,3 +24,6 @@ home/.ssh/control/
 # Held live Maven/Sonatype credentials once (2026-07); belt against any re-add.
 gradle.properties
 __pycache__/
+
+# bench-paths keeps the pre-rewrite copy of a Stow-linked config next to its target.
+*.bench-paths-bak

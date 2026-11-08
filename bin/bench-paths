@@ -15,7 +15,8 @@ set -uo pipefail
 apply=0
 [[ ${1:-} == --apply ]] && { apply=1; shift; }
 (( $# == 1 || $# == 2 )) || { echo "usage: bench-paths [--apply] <old> [<new>]" >&2; exit 2; }
-abspath() { local p="${1%/}"; [[ $p == "~"/* ]] && p="$HOME/${p#\~/}"; [[ $p == /* ]] || p="$PWD/$p"; printf '%s' "$p"; }
+# The logical $PWD, so /var stays /var where macOS links it to /private/var.
+abspath() { python3 -I -c 'import os,sys; print(os.path.normpath(os.path.join(os.environ["PWD"], os.path.expanduser(sys.argv[1]))))' "$1"; }
 old=$(abspath "$1"); new=${2:+$(abspath "$2")}
 [[ $old == "$new" ]] && { echo "old and new are the same path" >&2; exit 2; }
 (( apply )) && [[ -z $new ]] && { echo "--apply needs <new>" >&2; exit 2; }
@@ -41,14 +42,18 @@ fi
 # A match ends where the path does: /opt/x must not hit /opt/x-old or
 # /opt/x.bak, while a sentence's closing dot still ends it.
 # shellcheck disable=SC2016  # perl code
-PL='BEGIN { @f = map { my $o = $ENV{"O$_"}; [qr/\Q$o\E(?![\w-]|\.\w)/, $ENV{"N$_"}] } grep { defined $ENV{"O$_"} } 0..5 }'
+PL='BEGIN { @f = map { my $o = $ENV{"O$_"}; [$o =~ m{/$} ? qr/\Q$o\E/ : qr/\Q$o\E(?![\w-]|\.\w)/, $ENV{"N$_"}] } grep { defined $ENV{"O$_"} } 0..5 }'
 count_refs() { perl -ne "$PL"' my $l = $_; $c += () = $l =~ /$_->[0]/g for @f; END { print $c + 0 }' "$1"; }
 rewrite_file() { perl -i.bench-paths-bak -pe "$PL"' for my $x (@f) { my $n = $x->[1]; s/$x->[0]/$n/g }' "$1"; }
 pats() { local i v; for i in 0 1 2 3 4 5; do v="O$i"; [[ -n ${!v:-} ]] && printf '%s\n' "${!v}"; done; }
 
 running() {  # running "a,b": the first of these process names that runs
   local n; IFS=, read -ra names <<< "$1"
-  for n in "${names[@]}"; do pgrep -x "$n" >/dev/null 2>&1 && { printf '%s' "$n"; return 0; }; done
+  for n in "${names[@]}"; do
+    if [[ $n == claude ]]; then [[ $claudes == *[0-9]* ]] || continue
+    else pgrep -x "$n" >/dev/null 2>&1 || continue; fi
+    printf '%s' "$n"; return 0
+  done
   return 1
 }
 inside() { [[ $1 == "$old" || $1 == "$old"/* ]]; }
@@ -56,17 +61,24 @@ moved() { printf '%s' "$new${1#"$old"}"; }
 say() { printf '  %-9s %s\n' "$1" "$2"; }
 manual=()
 
-# A process that sat in old when it moved now reports the new path.
+# A process that sat in old when it moved now reports the new path. Only a
+# Claude Code session holds the project rename: it keeps writing transcripts
+# to the project folder it started in. lsof runs from / so neither it nor
+# this script's subshells count as processes inside the folder.
 step "Processes with a working directory inside $old${new:+ or $new}"
-live=0
-cwds=$(lsof -d cwd -Fpcn 2>/dev/null | awk '/^p/{p=substr($0,2)} /^c/{c=substr($0,2)} /^n/{print p "\t" c "\t" substr($0,2)}')
+live=0 nproc=0
+# ps, not pgrep: pgrep leaves out its own ancestors, so a run from inside a
+# Claude Code session would miss that session.
+claudes=" $(ps -axo pid=,comm= | awk '$2 ~ /(^|\/)claude$/ {printf "%s ", $1}') "
+cwds=$(cd / && lsof -d cwd -Fpcn 2>/dev/null | awk '/^p/{p=substr($0,2)} /^c/{c=substr($0,2)} /^n/{print p "\t" c "\t" substr($0,2)}')
 while IFS=$'\t' read -r pid cmd dir; do
   [[ $pid == "$$" ]] && continue
   inside "$dir" || { [[ -n $new ]] && [[ $dir == "$new" || $dir == "$new"/* ]]; } || continue
-  live=1; say "$pid" "$cmd  $dir"
+  nproc=1
+  if [[ $claudes == *" $pid "* ]]; then live=1; say "$pid" "Claude Code session  $dir"; else say "$pid" "$cmd  $dir"; fi
 done <<< "$cwds"
-(( live )) && manual+=("close the sessions and shells listed under Processes: a Claude Code session keeps writing to the old project folder, a shell keeps the old path")
-(( live )) || say "none" ""
+(( live )) && manual+=("close the Claude Code sessions listed under Processes, then rerun with --apply: they keep writing to the old project folder")
+(( nproc )) || say "none" ""
 
 step "Claude Code projects (~/.claude/projects/<encoded path>)"
 projects="$HOME/.claude/projects"
@@ -95,9 +107,7 @@ while IFS=$'\t' read -r l t abs; do
   [[ $t == /* ]] || nt=$(python3 -I -c 'import os,sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))' "$nt" "$(dirname "$l")")
   if (( apply )); then ln -sfn "$nt" "$l" && say "relinked" "$l -> $nt"; else say "relink" "$l -> $nt"; fi
 done < <(
-  # mise's own link farms are keyed by a hash of the path: re-pointing one
-  # does not move the trust, so they are reported with the manual steps.
-  { find "$HOME" -maxdepth 3 \( -path "$HOME/Library" -o -path "$HOME/dev" -o -path "$HOME/opt" -o -path "$HOME/.local/state/mise" \) -prune -o -type l -print
+  { find "$HOME" -maxdepth 3 \( -path "$HOME/Library" -o -path "$HOME/dev" -o -path "$HOME/opt" \) -prune -o -type l -print
     find "$projects" "$HOME/.claude-swap-backup/sessions" -mindepth 2 -maxdepth 2 -type l
   } 2>/dev/null | python3 -I -c '
 import os, sys
@@ -106,7 +116,10 @@ for l in sys.stdin.read().splitlines():
     print(l, t, os.path.normpath(os.path.join(os.path.dirname(l), t)), sep="\t")'
 )
 for f in "$HOME"/.local/state/mise/trusted-configs/*; do
-  [[ -L $f ]] && inside "$(readlink "$f")" && manual+=("mise trust the moved config (was $(readlink "$f")): cd '$(moved "$(dirname "$(readlink "$f")")")' && mise trust")
+  # Each link's name hashes the config path: re-pointing it carries no trust.
+  [[ -L $f ]] || continue
+  c=$(readlink "$f"); inside "$c" || continue
+  if [[ -z $new ]]; then say "mise" "trusted: $c"; else manual+=("mise trust '$(moved "$c")'"); fi
 done
 
 # Store table: kind|apps that must be quit|path|rg glob. text rewrites in
@@ -138,10 +151,14 @@ sqlite|zed|$AS/Zed/db|*/db.sqlite workspaces.paths workspaces.identity_paths tru
 text|opencode|$HOME/.local/share/opencode/storage/project|*.json
 text|opencode|$HOME/.local/share/opencode/storage/session|*.json
 sqlite|opencode|$HOME/.local/share/opencode|opencode.db project.worktree project.sandboxes session.directory project_directory.directory
-text|Antigravity|$HOME/.gemini|{projects.json,trustedFolders.json,settings.json,config/projects/*.json,antigravity-cli/cache/projects.json}
+text|Antigravity|$HOME/.gemini/projects.json|
+text|Antigravity|$HOME/.gemini/trustedFolders.json|
+text|Antigravity|$HOME/.gemini/antigravity-cli/settings.json|
+text|Antigravity|$HOME/.gemini/antigravity-cli/cache/projects.json|
+text|Antigravity|$HOME/.gemini/config/projects|*.json
 binary|t3code|$AS/t3code-v2/IndexedDB|
 text||$AS/rtk/trusted_filters.json|
-text||$HOME/.config|!gcloud/**
+text||$HOME/.config|!**/gcloud/**
 text||$HOME/.zshrc|
 text||$HOME/.zshenv|
 text||$HOME/.zprofile|
@@ -155,11 +172,14 @@ SQLPY=$(cat <<'PY'
 import re, sqlite3, sys
 mode, db, old, new, *cols = sys.argv[1:]
 rx = re.compile(re.escape(old) + r"(?![\w-]|\.\w)")
-try:
-    con = sqlite3.connect(f"file:{db}?mode=ro" if mode == "count" else db, uri=True)
-    con.execute("select 1 from sqlite_master")
-except sqlite3.Error:  # some live WAL databases refuse mode=ro; read the file as is
-    con = sqlite3.connect(f"file:{db}?immutable=1", uri=True)
+if mode == "apply":
+    con = sqlite3.connect(db)
+else:
+    try:
+        con = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
+        con.execute("select 1 from sqlite_master")
+    except sqlite3.Error:  # some live WAL databases refuse mode=ro: count the main file, WAL rows unseen
+        con = sqlite3.connect(f"file:{db}?immutable=1", uri=True)
 con.create_function("bp", 1, lambda s: rx.sub(lambda _: new, s) if isinstance(s, str) else s)
 have = {(t, c) for (t,) in con.execute("select name from sqlite_master where type='table'")
         for (c,) in con.execute(f'select name from pragma_table_info("{t}")')}
@@ -189,19 +209,19 @@ while IFS='|' read -r kind apps path glob; do
     # shellcheck disable=SC2086  # dbglob is a glob by design
     files=$(shopt -s nullglob; printf '%s\n' "$path"/$dbglob)
   else
-    args=(-l -F -f "$pf" --hidden --no-ignore --max-filesize 50M "$path")
+    # -L: Stow links configs under ~/.config into a repo; rg skips links otherwise.
+    args=(-l -L -F -f "$pf" --hidden --no-ignore --max-filesize 50M -g '!*.bench-paths-bak' "$path")
     [[ $kind == binary ]] && args=(-a "${args[@]}")
     [[ -n $glob ]] && args+=(-g "$glob")
-    files=$(rg "${args[@]}" 2>/dev/null | grep -v '\.bench-paths-bak$')
+    files=$(rg "${args[@]}" 2>/dev/null)
   fi
   [[ -n $files ]] || continue
   # One store, one action: the kind and the gating app decide it for every file.
-  busy=""; [[ -n $apps ]] && busy=$(running "$apps")
   act=rewrite
   if [[ -z $new ]]; then act=list
   elif [[ $kind == source ]]; then act=manual; why="a copy: change the source it is synced from, then sync"
   elif [[ $kind == binary ]]; then act=manual; why="app-internal state, not rewritten: open the folder in $apps after the move and check it"
-  elif [[ -n $busy ]]; then act=manual; why="quit every $busy process, then rerun with --apply"
+  elif [[ -n $apps ]] && busy=$(running "$apps"); then act=manual; why="quit every $busy process, then rerun with --apply"
   fi
   nf=0 nr=0
   while IFS= read -r f; do
@@ -226,7 +246,7 @@ while IFS='|' read -r kind apps path glob; do
     manual)  manual+=("$label — $why") ;;
     rewrite) if (( apply )); then say "rewrote" "$label"; else say "rewrite" "$label"; fi ;;
   esac
-  [[ -n $new && $kind == launchd ]] && manual+=("reload each rewritten agent under $path: launchctl bootout gui/$UID <plist>; launchctl bootstrap gui/$UID <plist>")
+  [[ $act == rewrite && $kind == launchd ]] && manual+=("reload each rewritten agent under $path: launchctl bootout gui/$UID <plist>; launchctl bootstrap gui/$UID <plist>")
 done < <(stores)
 
 step "Git worktrees (absolute links between a repo and its worktrees)"
@@ -244,14 +264,14 @@ done < <([[ -d $tree ]] && find "$tree" -maxdepth 6 -name node_modules -prune -o
 step "Containers with a mount inside $old"
 if have docker && ids=$(docker ps -q 2>/dev/null) && [[ -n $ids ]]; then
   # shellcheck disable=SC2086
-  docker inspect -f '{{.Name}}{{range .Mounts}} {{.Source}}{{end}}' $ids 2>/dev/null | while read -r name srcs; do
-    for s in $srcs; do inside "$s" && say "mount" "$name $s"; done
-  done
+  while read -r name srcs; do
+    for s in $srcs; do inside "$s" || continue; say "mount" "$name $s"; manual+=("recreate container $name: its mount $s keeps the old source"); done
+  done < <(docker inspect -f '{{.Name}}{{range .Mounts}} {{.Source}}{{end}}' $ids 2>/dev/null)
 fi
 
 step "Files in other repositories under ~/dev and ~/opt (their owners change them)"
 rg -l -F -f "$pf" "$HOME/dev" "$HOME/opt" --hidden --max-filesize 1M -g '!**/node_modules/**' -g '!.git' 2>/dev/null \
-  | while IFS= read -r f; do inside "$f" || say "repo" "$f"; done
+  | while IFS= read -r f; do inside "$f" || [[ -n $new && ( $f == "$new" || $f == "$new"/* ) ]] || say "repo" "$f"; done
 
 if [[ -n $new ]]; then
   step "Manual steps"
