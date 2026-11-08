@@ -92,17 +92,20 @@ fi
 # reorg or a rename leaves the entry describing a layout that is gone — install.sh
 # would rebuild the old one. So correct located entries and never touch the
 # selection: nothing is added, nothing is removed, and an entry whose clone is
-# nowhere is left alone and named, since keeping or dropping it is that choice.
+# nowhere is left alone and named here; doctor tells an uncloned one from a dead one.
 step "docs/repos.txt (paths and renames follow the machine)"
 if [[ -s "$DOCS/repos.txt" ]] && have fd; then
-  reported=0 missing=()
+  stale=0
   # Read the entries out before the first rewrite: the loop truncates the file
   # a process substitution would still be streaming from.
   entries=$(parse_repos "$DOCS/repos.txt")
   while read -r target url; do
     [[ -d "$HOME/$target/.git" ]] && continue
-    moved=$(find_clone "$url") || { missing+=("$target $url"); continue; }
-    reported=1
+    stale=1
+    moved=$(find_clone "$url") || {
+      warn "repos.txt: $target ($url) has no clone under ~/dev or ~/opt — bench-doctor says whether it is dead"
+      continue
+    }
     if [[ "$moved" == *$'\n'* ]]; then
       warn "repos.txt: $url is cloned more than once — pick one by hand:"
       printf '%s\n' "$moved" | indent
@@ -116,11 +119,7 @@ if [[ -s "$DOCS/repos.txt" ]] && have fd; then
       warn "repos.txt: could not rewrite the entry for $target — fix it by hand"
     fi
   done <<<"$entries"
-  if (( ${#missing[@]} )); then
-    warn "repos.txt: no clone on this machine for ${#missing[@]} entries — clone or drop each by hand:"
-    printf '%s\n' "${missing[@]}" | indent
-  fi
-  (( reported || ${#missing[@]} )) || ok "repos.txt: every entry points at its clone"
+  (( stale )) || ok "repos.txt: every entry points at its clone"
 fi
 
 step "home/ sync (Symlinks → skip, real files → copy back)"

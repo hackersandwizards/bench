@@ -263,12 +263,13 @@ printf 'dev/here https://example.invalid/here.git\n' > "$tdir/repos.txt"
 repos_block() {
   HOME="$tdir" DOCS="$tdir" bash -c ". '$REPO_ROOT/bin/_lib.sh'; $(sed -n '/^step "docs\/repos.txt/,/^fi$/p' "$REPO_ROOT/bin/bench-export")" 2>&1
 }
-assert_eq "all cloned: success line" "1" "$(repos_block | grep -c 'every entry points at its clone')"
+out=$(repos_block)
+assert_eq "all cloned: success line" "1" "$(grep -c 'every entry points at its clone' <<<"$out")"
 printf 'dev/gone https://example.invalid/gone.git\n' >> "$tdir/repos.txt"
 out=$(repos_block)
 assert_eq "unlocated entry: no success line" "0" "$(grep -c 'every entry points at its clone' <<<"$out")"
-assert_eq "unlocated entry: warned by name" "1" "$(grep -c 'dev/gone https://example.invalid/gone.git' <<<"$out")"
-assert_eq "entries left as they were" $'dev/here https://example.invalid/here.git\ndev/gone https://example.invalid/gone.git' "$(cat "$tdir/repos.txt")"
+assert_eq "unlocated entry: warned by name" "1" "$(grep -c 'dev/gone (https://example.invalid/gone.git)' <<<"$out")"
+assert_eq "entries left as they were" $'dev/here https://example.invalid/here.git\ndev/gone https://example.invalid/gone.git' "$(<"$tdir/repos.txt")"
 unset -f repos_block
 rm -rf "$tdir"
 
