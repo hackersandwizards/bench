@@ -254,6 +254,24 @@ assert_eq "finds a clone its parent repo ignores" "dev/parent/child" \
   "$(HOME="$tdir" find_clone https://github.com/example/child.git retried)"
 rm -rf "$tdir"
 
+step "bench-export names repos.txt entries without a clone"
+# The block is run alone with HOME and DOCS at a fixture. example.invalid keeps
+# canonical_url offline, so an unlocated entry stays unlocated.
+tdir=$(mktemp -d)
+git init -q "$tdir/dev/here"
+printf 'dev/here https://example.invalid/here.git\n' > "$tdir/repos.txt"
+repos_block() {
+  HOME="$tdir" DOCS="$tdir" bash -c ". '$REPO_ROOT/bin/_lib.sh'; $(sed -n '/^step "docs\/repos.txt/,/^fi$/p' "$REPO_ROOT/bin/bench-export")" 2>&1
+}
+assert_eq "all cloned: success line" "1" "$(repos_block | grep -c 'every entry points at its clone')"
+printf 'dev/gone https://example.invalid/gone.git\n' >> "$tdir/repos.txt"
+out=$(repos_block)
+assert_eq "unlocated entry: no success line" "0" "$(grep -c 'every entry points at its clone' <<<"$out")"
+assert_eq "unlocated entry: warned by name" "1" "$(grep -c 'dev/gone https://example.invalid/gone.git' <<<"$out")"
+assert_eq "entries left as they were" $'dev/here https://example.invalid/here.git\ndev/gone https://example.invalid/gone.git' "$(cat "$tdir/repos.txt")"
+unset -f repos_block
+rm -rf "$tdir"
+
 step "JetBrains sweep removes only superseded versions"
 tdir=$(mktemp -d)
 mkdir -p "$tdir/Applications/Zzzide.app/Contents/Resources" \
