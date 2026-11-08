@@ -288,7 +288,7 @@ rm -rf "$tdir"
 step "Claude temp sweep removes only finished sessions"
 tdir=$(mktemp -d)
 home="$tdir/home" root="$home/Library/Caches/claude-code-tmp/claude-$(id -u)" stub="$tdir/stub"
-mkdir -p "$home/.claude/sessions" "$root/-p" "$stub"
+mkdir -p "$home/.claude/sessions" "$home/.claude-swap-backup/sessions/1-x/sessions" "$root/-p" "$stub"
 ids=(aaaaaaaa bbbbbbbb cccccccc dddddddd eeeeeeee)
 for i in "${ids[@]}"; do mkdir -p "$root/-p/$i-0000-0000-0000-000000000000/scratchpad"; touch "$root/-p/$i-0000-0000-0000-000000000000/scratchpad/n"; done
 mkdir -p "$root/-p/not-a-uuid" "$root/odd"
@@ -299,9 +299,11 @@ sleep 120 >/dev/null 2>&1 & active=$!
 sleep 120 >/dev/null 2>&1 & reused=$!
 exec 9<"$root/-p/eeeeeeee-0000-0000-0000-000000000000/scratchpad/n"
 record() { printf '{"pid":%s,"procStart":"%s","sessionId":"%s-0000-0000-0000-000000000000"}\n' "$1" "$2" "$3"; }
-record "$active" "$(TZ=UTC LC_ALL=C ps -o lstart= -p "$active")" aaaaaaaa > "$home/.claude/sessions/$active.json"
+record "$active" "$(TZ=UTC LC_ALL=C ps -o lstart= -p "$active")" aaaaaaaa > "$home/.claude-swap-backup/sessions/1-x/sessions/$active.json"
 record "$reused" "Thu Jan  1 00:00:00 2026" dddddddd > "$home/.claude/sessions/$reused.json"
 printf '#!/bin/sh\necho %s\n' "$active" > "$stub/pgrep"; chmod +x "$stub/pgrep"
+# The full-clean steps stay inert even if --dry-run ever stopped short of them.
+printf '#!/bin/sh\nexit 0\n' | tee "$stub/brew" > "$stub/fd"; chmod +x "$stub/brew" "$stub/fd"
 sweep() { HOME="$home" PATH="$stub:$PATH" bash -c ". '$REPO_ROOT/bin/_lib.sh'; $(sed -n '/^sweep_cc_tmp()/,/^}/p' "$REPO_ROOT/bin/bench-clean"); sweep_cc_tmp" 2>&1; }
 left() { command ls "$root/-p" | tr '\n' ' '; }
 all="aaaaaaaa-0000-0000-0000-000000000000 bbbbbbbb-0000-0000-0000-000000000000 cccccccc-0000-0000-0000-000000000000 dddddddd-0000-0000-0000-000000000000 eeeeeeee-0000-0000-0000-000000000000 ffffffff-0000-0000-0000-000000000000 not-a-uuid "
@@ -310,12 +312,11 @@ assert_eq "dry run removes nothing" "$all" "$(left)"
 assert_eq "dry run names the finished and the reused-pid session" "2" "$(grep -c 'would remove -p/' "$tdir/dry")"
 assert_fail "dry run stops before the cache steps" grep -q 'JetBrains' "$tdir/dry"
 assert_fail "an unknown flag is refused, never a full clean" env HOME="$home" PATH="$stub:$PATH" "$REPO_ROOT/bin/bench-clean" --dryrun
-cp "$home/.claude/sessions/$active.json" "$tdir/rec"
-printf 'not json' > "$home/.claude/sessions/$active.json"
+printf 'not json' > "$home/.claude/sessions/broken.json"
 sweep >"$tdir/out"
 assert_eq "unreadable record stops the run" "$all" "$(left)"
 assert_ok "unreadable record is warned" grep -q 'unreadable record' "$tdir/out"
-cp "$tdir/rec" "$home/.claude/sessions/$active.json"
+rm -f "$home/.claude/sessions/broken.json"
 printf '#!/bin/sh\necho 1\n' > "$stub/pgrep"
 sweep >"$tdir/out"
 assert_eq "running claude without a record stops the run" "$all" "$(left)"
@@ -324,11 +325,17 @@ printf '#!/bin/sh\necho %s\n' "$active" > "$stub/pgrep"
 printf '#!/bin/sh\nexit 1\n' > "$stub/lsof"; chmod +x "$stub/lsof"
 sweep >"$tdir/out"
 assert_eq "open-file control failing stops the run" "$all" "$(left)"
+assert_ok "open-file control failing is warned" grep -q 'control failed' "$tdir/out"
 rm -f "$stub/lsof"
+printf '#!/bin/sh\nexit 2\n' > "$stub/pgrep"
+sweep >"$tdir/out"
+assert_eq "pgrep failing stops the run" "$all" "$(left)"
+assert_ok "pgrep failing is warned" grep -q 'pgrep failed' "$tdir/out"
+printf '#!/bin/sh\necho %s\n' "$active" > "$stub/pgrep"
 sweep >"$tdir/out"
 assert_eq "live, paused, open, symlinked and foreign entries stay; finished and reused-pid go" \
   "aaaaaaaa-0000-0000-0000-000000000000 cccccccc-0000-0000-0000-000000000000 eeeeeeee-0000-0000-0000-000000000000 ffffffff-0000-0000-0000-000000000000 not-a-uuid " "$(left)"
-assert_ok "a symlinked session entry leaves its target alone" test -f "$tdir/rec"
+assert_ok "a symlinked session entry leaves its target alone" test -f "$tdir/out"
 assert_ok "a foreign top-level entry stays" test -d "$root/odd"
 exec 9<&-
 kill "$active" "$reused" 2>/dev/null; wait "$active" "$reused" 2>/dev/null

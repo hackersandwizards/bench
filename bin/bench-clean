@@ -2,7 +2,8 @@
 # Reclaim disk: purge regenerable caches, drop superseded JetBrains
 # versions, sweep .DS_Store, remove finished Claude Code session temp folders.
 # --dry-run reports the temp-folder sweep and does nothing else.
-# Removes only auto-regenerating caches and superseded files, never installed tools.
+# Removes only auto-regenerating caches, superseded files and finished sessions' temp folders, never
+# installed tools.
 set -u
 
 # shellcheck source-path=SCRIPTDIR
@@ -13,70 +14,63 @@ set -u
 # stops the whole run, so a broken check keeps files and shows up as a warn.
 sweep_cc_tmp() {  # sweep_cc_tmp [--dry-run]
   local dry="${1:-}" days=14 root base="$HOME/Library/Caches/claude-code-tmp"
-  local rec line pid start sid now live="|" pids=" " open
-  root="$base/claude-$(id -u)"
+  local rec line pid start sid now running live="|" pids="|" open
+  root="$base/claude-$UID"
   [[ -d "$root" ]] || { skip "Claude temp: no folder yet"; return 0; }
   [[ ! -L "$base" && ! -L "$root" ]] || { warn "Claude temp: $root is a symlink, nothing swept"; return 0; }
   have jaq || { warn "Claude temp: jaq missing, nothing swept"; return 0; }
-  root=$(cd -P "$root" && pwd -P) || return 0
+  root=$(cd "$root" && pwd -P) || { warn "Claude temp: cannot enter $root, nothing swept"; return 0; }
+
+  # Before the record scan, so a claude started during the scan cannot look unrecorded. Without -a,
+  # macOS pgrep leaves out its own ancestors, the session running this among them.
+  running=$(pgrep -ax claude); (( $? <= 1 )) || { warn "Claude temp: pgrep failed, nothing swept"; return 0; }
 
   # Accounts other than the default keep their records under cswap's config dirs.
   for rec in "$HOME"/.claude/sessions/*.json "$HOME"/.claude-swap-backup/sessions/*/sessions/*.json; do
     [[ -f "$rec" ]] || continue
     line=$(jaq -r '[.pid, .procStart, .sessionId] | @tsv' "$rec" 2>/dev/null)
     IFS=$'\t' read -r pid start sid <<<"$line"
-    if ! [[ "$pid" =~ ^[0-9]+$ && -n "${start:-}" && -n "${sid:-}" ]]; then
+    if ! [[ "$pid" =~ ^[0-9]+$ && -n "$start" && -n "$sid" ]]; then
       [[ -e "$rec" ]] || continue  # its process ended while this loop ran
       warn "Claude temp: unreadable record $rec, nothing swept"; return 0
     fi
     # procStart is in UTC; a differing start time means the pid now belongs to another process.
-    now=$(TZ=UTC LC_ALL=C ps -o lstart= -p "$pid" 2>/dev/null | awk '{$1=$1};1')
-    [[ -n "$now" && "$now" == "$(awk '{$1=$1};1' <<<"$start")" ]] || continue
-    live+="$sid|"; pids+="$pid "
+    now=$(TZ=UTC LC_ALL=C ps -o lstart= -p "$pid" 2>/dev/null)
+    [[ -n "$now" && "${now// /}" == "${start// /}" ]] || continue
+    live+="$sid|"; pids+="$pid|"
   done
-  # Without -a, macOS pgrep leaves out its own ancestors, the session running this among them.
-  for pid in $(pgrep -ax claude); do
-    [[ "$pids" == *" $pid "* ]] || { warn "Claude temp: running claude $pid has no matching record, nothing swept"; return 0; }
+  for pid in $running; do
+    [[ "$pids" == *"|$pid|"* ]] || ! ps -p "$pid" >/dev/null 2>&1 || {
+      warn "Claude temp: running claude $pid has no matching record, nothing swept"; return 0; }
   done
 
   # The subshell's cwd is the control: lsof must report the root itself or its listing is not usable.
-  line=$(cd "$root" && lsof -nP -u "$(id -u)" -Fn 2>/dev/null; echo)
-  [[ $'\n'"$line" == *$'\n'"n$root"$'\n'* ]] || { warn "Claude temp: open-file control failed, nothing swept"; return 0; }
+  line=$(cd "$root" && lsof -nP -u "$UID" -Fn 2>/dev/null)
+  [[ $'\n'"$line"$'\n' == *$'\n'"n$root"$'\n'* ]] || { warn "Claude temp: open-file control failed, nothing swept"; return 0; }
   open="|$(ROOT="n$root/" awk 'index($0, ENVIRON["ROOT"]) == 1 { split(substr($0, length(ENVIRON["ROOT"]) + 1), a, "/"); print a[1] "/" a[2] }' <<<"$line" | sort -u | tr '\n' '|')"
 
-  local proj name dir id recent rc removed=0 kept=0 kb=0 size verb=removed
+  local dir key id recent rc removed=0 kept=0 kb=0 size verb=removed others
   [[ "$dry" == --dry-run ]] && verb="would remove"
-  for proj in "$root"/*; do
-    name=${proj##*/}
-    if [[ ! -d "$proj" || -L "$proj" || "$name" != -* ]]; then
-      [[ -e "$proj" || -L "$proj" ]] && { skip "Claude temp: kept $name (not a project folder)"; kept=$((kept + 1)); }
-      continue
+  keep() { skip "Claude temp: kept $1"; kept=$((kept + 1)); }
+  for dir in "$root"/-*/*; do
+    [[ -e "$dir" || -L "$dir" ]] || continue
+    id=${dir##*/}; key=${dir#"$root"/}
+    if [[ ! -d "$dir" || -L "$dir" || -L "${dir%/*}" || ! "$id" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]]; then
+      keep "$key (not a session folder)"; continue
     fi
-    for dir in "$proj"/*; do
-      id=${dir##*/}
-      [[ -e "$dir" || -L "$dir" ]] || continue
-      if [[ ! -d "$dir" || -L "$dir" || ! "$id" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]]; then
-        skip "Claude temp: kept $name/$id (not a session folder)"; kept=$((kept + 1)); continue
-      fi
-      if [[ "$live" == *"|$id|"* ]]; then
-        skip "Claude temp: kept $name/$id (live session)"; kept=$((kept + 1)); continue
-      fi
-      if [[ "$open" == *"|$name/$id|"* ]]; then
-        skip "Claude temp: kept $name/$id (files open)"; kept=$((kept + 1)); continue
-      fi
-      recent=$(find "$dir" -mmin "-$((days * 1440))" -print -quit 2>/dev/null); rc=$?
-      if (( rc != 0 )) || [[ -n "$recent" ]]; then
-        skip "Claude temp: kept $name/$id (changed within $days days or unreadable)"; kept=$((kept + 1)); continue
-      fi
-      size=$(du -sk "$dir" 2>/dev/null | awk '{print $1}')
-      if [[ "$dry" == --dry-run ]] || rm -rf "$dir"; then
-        ok "Claude temp: $verb $name/$id (${size:-?} KB)"; removed=$((removed + 1)); kb=$((kb + ${size:-0}))
-      else
-        warn "Claude temp: removing $name/$id failed"; kept=$((kept + 1))
-      fi
-    done
+    if [[ "$live" == *"|$id|"* ]]; then keep "$key (live session)"; continue; fi
+    if [[ "$open" == *"|$key|"* ]]; then keep "$key (files open)"; continue; fi
+    recent=$(find "$dir" -mmin "-$((days * 1440))" -print -quit 2>/dev/null); rc=$?
+    if (( rc != 0 )) || [[ -n "$recent" ]]; then keep "$key (changed within $days days or unreadable)"; continue; fi
+    size=$(du -sk "$dir" 2>/dev/null | awk '{print $1}')
+    if [[ "$dry" == --dry-run ]] || rm -rf "$dir"; then
+      ok "Claude temp: $verb $key (${size:-?} KB)"; removed=$((removed + 1)); kb=$((kb + ${size:-0}))
+    else
+      warn "Claude temp: removing $key failed"; kept=$((kept + 1))
+    fi
   done
-  ok "Claude temp: $verb $removed ($kb KB), kept $kept"
+  others=$(find "$root" -mindepth 1 -maxdepth 1 ! -name '-*' 2>/dev/null | wc -l)
+  ok "Claude temp: $verb $removed ($kb KB), kept $kept, ${others// /} other top-level entries left alone"
 }
 
 case "${1:-}" in
