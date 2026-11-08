@@ -9,8 +9,6 @@ deno = "latest"
 bun = "latest"
 "npm:npm" = "latest"
 uv = "latest"
-erlang = "latest"
-elixir = "latest"
 "pypi:claude-swap" = { version = "latest", with = ["rumps"] }
 "pypi:git+https://github.com/youssofal/MTPLX" = { version = "latest", with = ["llguidance"] }
 "pypi:scrapling" = { version = "latest", extras = "shell" }
