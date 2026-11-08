@@ -19,11 +19,15 @@ sweep_cc_tmp() {  # sweep_cc_tmp [--dry-run]
   [[ -d "$root" ]] || { skip "Claude temp: no folder yet"; return 0; }
   [[ ! -L "$base" && ! -L "$root" ]] || { warn "Claude temp: $root is a symlink, nothing swept"; return 0; }
   have jaq || { warn "Claude temp: jaq missing, nothing swept"; return 0; }
-  root=$(cd "$root" && pwd -P) || { warn "Claude temp: cannot enter $root, nothing swept"; return 0; }
+  root=$(cd "$root" 2>/dev/null && pwd -P) || { warn "Claude temp: cannot enter $root, nothing swept"; return 0; }
 
   # Before the record scan, so a claude started during the scan cannot look unrecorded. Without -a,
   # macOS pgrep leaves out its own ancestors, the session running this among them.
   running=$(pgrep -ax claude); (( $? <= 1 )) || { warn "Claude temp: pgrep failed, nothing swept"; return 0; }
+  # Controls that must hit: pgrep lists this shell, ps sees it. Otherwise "none running" means nothing.
+  if ! { pgrep -ax bash | grep -qx "$$" && ps -p "$$" >/dev/null 2>&1; }; then
+    warn "Claude temp: pgrep or ps control failed, nothing swept"; return 0
+  fi
 
   # Accounts other than the default keep their records under cswap's config dirs.
   for rec in "$HOME"/.claude/sessions/*.json "$HOME"/.claude-swap-backup/sessions/*/sessions/*.json; do
@@ -69,7 +73,7 @@ sweep_cc_tmp() {  # sweep_cc_tmp [--dry-run]
       warn "Claude temp: removing $key failed"; kept=$((kept + 1))
     fi
   done
-  others=$(find "$root" -mindepth 1 -maxdepth 1 ! -name '-*' 2>/dev/null | wc -l)
+  others=$(find "$root" -mindepth 1 -maxdepth 1 ! \( -type d -name '-*' \) 2>/dev/null | wc -l)
   ok "Claude temp: $verb $removed ($kb KB), kept $kept, ${others// /} other top-level entries left alone"
 }
 
