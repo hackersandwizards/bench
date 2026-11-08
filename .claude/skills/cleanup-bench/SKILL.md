@@ -16,12 +16,13 @@ Run every `mo` command with `</dev/null` and strip its ANSI codes
 ## 1. Guard
 
 `~/.config/mole/whitelist` replaces mole's built-in defaults once it exists, and both `mo clean`
-and `mo purge` honour it. Skip steps 2 and 3 and report the gap unless it holds all five:
+and `mo purge` honour it. Skip steps 2 and 3 and report the gap unless it holds all six:
 
 | Line | Protects |
 |---|---|
 | `$HOME/.Trash` | the Trash from `mo clean` |
 | `$HOME/Library/Caches/antidote/*` | the zsh plugins antidote clones there |
+| `$HOME/Library/Caches/claude-code-tmp/*` | Claude Code sessions' temp files; `bench-clean` removes only finished ones |
 | `$HOME/dev/hackersandwizards/internal/os/*` | Company OS, in use all day |
 | `$HOME/.cache/puppeteer/*` | the Chrome for Testing builds repos pin, which `mo clean` deletes whole |
 | `$HOME/Library/Application Support/Google/Chrome/*` | Benedikt's Chrome profiles, whose caches `mo clean` empties |

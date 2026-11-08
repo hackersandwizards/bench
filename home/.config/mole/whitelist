@@ -1,6 +1,7 @@
 # mole defaults (1.57.0) plus: Trash, antidote plugins, company os (purge), Claude app log
 $HOME/.Trash
 $HOME/Library/Caches/antidote/*
+$HOME/Library/Caches/claude-code-tmp/*
 $HOME/Library/Caches/ms-playwright*
 $HOME/.gradle/caches/*
 $HOME/.gradle/daemon/*
