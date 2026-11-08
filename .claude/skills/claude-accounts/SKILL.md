@@ -32,11 +32,12 @@ keychain item that `cswap` never writes. A `cswap switch` then reaches a running
 next turn; the rate-limit `resetsAt` in `~/.t3/userdata/logs/provider/events.*.log` shows which
 account served each turn. That works while the accounts' windows reset at different times.
 
-- The T3 desktop app runs its own server and tunnel. The launchd service that `t3 up` installs
-  holds `~/.t3`, and the app's backend then exits `ServerAlreadyRunning`. App and service never
-  share `~/.t3`: an app paired to the service as its client runs on its own `T3CODE_HOME`.
-  `t3 connect` is `t3 up --connect` and installs that service again, through `bunx` or `npx`
-  alike; the app's tunnel needs no command.
+- The T3 desktop app runs its own server unless `localEnvironmentEnabled` is false in
+  `~/.t3/userdata/desktop-settings.json`. The launchd service from `t3 up` or `t3 service install`
+  holds `~/.t3`, so with the service running the app must run remote-only (that setting false) and be
+  paired to the service once with `t3 pair` and its `t3code://pair` link; otherwise it shows "This T3
+  home is unavailable" and quits. `t3 connect` is `t3 up --connect`. T3 Connect's tunnel needs
+  outbound port 7844; a network that allows only 443 leaves the Mac unreachable from the phone.
 - A session import needs a project first, and the Claude provider skips sessions older than 30
   days or whose folder is gone.
 
