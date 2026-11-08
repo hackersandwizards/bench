@@ -13,8 +13,8 @@ Terminal setup for hackers&wizards: zsh, Ghostty, Starship, fzf, modern CLI repl
 Grant the terminal Full Disk Access (System Settings -> Privacy & Security) before the wizard's Safari-favorites step: it reads `~/Library/Safari/Bookmarks.plist` and can only warn without it.
 
 ```bash
-git clone https://github.com/hackersandwizards/bench.git ~/opt/bench
-cd ~/opt/bench
+git clone https://github.com/hackersandwizards/bench.git ~/dev/hackersandwizards/internal/bench
+cd ~/dev/hackersandwizards/internal/bench
 ./install.sh        # interactive wizard, idempotent, re-runnable
 ./macos.sh          # about 60 macOS system defaults (also offered as an install.sh step)
 ```
