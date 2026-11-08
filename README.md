@@ -93,6 +93,7 @@ bin/
   bench-doctor          Health check
   bench-prefs-diff      Capture a settings change as defaults keys for macos.sh
   bench-clean           Reclaim disk: caches, .DS_Store, stale JetBrains versions
+  bench-paths           List or rewrite every stored reference to a folder that moves (docs/path-stores.md)
   bench-test            Tests for _lib.sh helpers, bin/ scripts and repo invariants (plain bash asserts)
   safari-favorites      Export/merge the Safari favorites bar (bench-export, bench-doctor, install.sh)
   transcribe            Speech to text: whisper-cli with the fixed model and -mc 0, writes .txt and .srt
@@ -166,6 +167,7 @@ bench-update                   # upgrade brew, antidote, mise tools, Rust toolch
 bench-prefs-diff snap|diff     # capture a settings change as defaults keys for macos.sh
 bench-export                   # snapshot installed packages + sync home/ from $HOME
 bench-clean                    # reclaim disk: caches, .DS_Store, stale IDE versions (alias: cleanup)
+bench-paths <old> [<new>]      # before moving a folder: every reference to it; --apply after the move
 bench-test                     # tests for bin/_lib.sh helpers, bin/ scripts and repo invariants
 ZSH_PROFILE=1 zsh -i -c exit   # profile shell startup (zprof report)
 ```

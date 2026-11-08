@@ -328,5 +328,71 @@ assert_eq "an upgrade poured after the cache regenerates it" "new" \
   "$(HOME="$tdir/home" PATH="$tdir/bin:$PATH" zsh -fc "$(sed -n '/^zmodload -F zsh\/stat/,/^}/p' "$REPO_ROOT/init.zsh"); _init_cache foo")"
 rm -rf "$tdir"
 
+step "bench-paths"
+# A temp HOME holding one store of each kind, with a sibling repo-old whose
+# path starts like the moved one: every rewrite must leave it alone. Shims
+# pin which apps run (RUNNING) and which processes sit where (LSOF_OUT).
+tdir=$(mktemp -d); H="$tdir/home"; bp="$REPO_ROOT/bin/bench-paths"
+mkdir -p "$tdir/bin" "$H/opt/repo/home" "$H/opt/repo-old" "$H/opt/repo/.git" "$H/.codex" "$H/.claude/scheduled-tasks/t" \
+  "$H/Library/Application Support/JetBrains/IntelliJIdea2026.3/options" "$H/Library/Application Support/Zed/db/0-stable" \
+  "$H/.claude/projects/-tmp"
+# shellcheck disable=SC2016  # literal $ in shim and fixture text
+printf '#!/bin/sh\n[ "$1" = -x ] && case " $RUNNING " in *" $2 "*) exit 0;; esac\nexit 1\n' > "$tdir/bin/pgrep"
+# shellcheck disable=SC2016  # literal $ in shim and fixture text
+printf '#!/bin/sh\nprintf "%%s" "$LSOF_OUT"\n' > "$tdir/bin/lsof"
+printf '#!/bin/sh\nexit 1\n' > "$tdir/bin/docker"
+chmod +x "$tdir/bin/"*
+printf '{"projects":{"%s/opt/repo":{},"%s/opt/repo-old":{},"%s/opt/repo/sub":{}}}\n' "$H" "$H" "$H" > "$H/.claude.json"
+printf 'Work in %s/opt/repo.\nKeep %s/opt/repo.bak\n' "$H" "$H" > "$H/.claude/scheduled-tasks/t/SKILL.md"
+# shellcheck disable=SC2016  # literal $ in shim and fixture text
+printf '<option value="$USER_HOME$/opt/repo" />\n' > "$H/Library/Application Support/JetBrains/IntelliJIdea2026.3/options/recentProjects.xml"
+printf 'source ~/opt/repo/init.zsh\n' > "$H/opt/repo/home/.zshrc"
+ln -s opt/repo/home/.zshrc "$H/.zshrc"
+e=$(printf '%s' "$H/opt/repo" | sed 's/[^A-Za-z0-9]/-/g')
+mkdir -p "$H/.claude/projects/$e" "$H/.claude/projects/$e-old"
+printf '{"cwd":"%s/opt/repo"}\n' "$H" > "$H/.claude/projects/$e/s.jsonl"
+printf '{"cwd":"%s/opt/repo-old"}\n' "$H" > "$H/.claude/projects/$e-old/s.jsonl"
+ln -s "$H/opt/repo/.git" "$H/.claude/projects/$e/memory"
+sqlite3 "$H/.codex/state_5.sqlite" "create table threads(cwd text); insert into threads values('$H/opt/repo'),('$H/opt/repo/sub'),('$H/opt/repo-old');
+  create table project_roots(path text);"
+sqlite3 "$H/Library/Application Support/Zed/db/0-stable/db.sqlite" "create table trusted_worktrees(absolute_path text); insert into trusted_worktrees values('$H/opt/repo');"
+bpx() { env HOME="$H" PATH="$tdir/bin:$PATH" RUNNING="${RUNNING:-}" LSOF_OUT="${LSOF_OUT:-}" "$bp" "$@" 2>&1; }
+
+out=$(bpx "$H/opt/repo")
+assert_ok "list: absolute spelling, sibling and sub-path counted apart" grep -qF ".claude.json: 1 file(s), 2 ref(s)" <<< "$out"
+assert_ok "list: a .bak suffix is another path" grep -qF "scheduled-tasks [*.md]: 1 file(s), 1 ref(s)" <<< "$out"
+assert_ok "list: JetBrains \$USER_HOME\$ spelling" grep -qE "JetBrains .*: 1 file\(s\), 1 ref\(s\)" <<< "$out"
+assert_eq "list: sqlite counts prefix and exact rows, not the sibling" "1" "$(grep -c 'state_\*.sqlite.*2 ref' <<< "$out")"
+assert_eq "list: the Claude project of the repo, not of repo-old" "found     $e" "$(grep 'found     -' <<< "$out" | sed 's/^  //')"
+assert_fail "apply before the move is refused" bpx --apply "$H/opt/repo" "$H/opt/new"
+
+mv "$H/opt/repo" "$H/opt/new"
+out=$(RUNNING=zed LSOF_OUT=$'p42\ncclaude\nn'"$H/opt/new" bpx --apply "$H/opt/repo" "$H/opt/new")
+assert_eq "a live session in the moved tree holds the project rename" "1" "$(grep -c "mv '.*$e'.*after the listed sessions close" <<< "$out")"
+assert_ok "and leaves the project folder in place" test -d "$H/.claude/projects/$e"
+assert_eq "a running app's store is left for its quit" "$H/opt/repo" \
+  "$(sqlite3 "$H/Library/Application Support/Zed/db/0-stable/db.sqlite" 'select absolute_path from trusted_worktrees')"
+assert_eq "and named as a manual step" "1" "$(grep -c 'Zed/db.*quit every zed process' <<< "$out")"
+assert_eq "text store rewritten, sibling key untouched" \
+  "{\"projects\":{\"$H/opt/new\":{},\"$H/opt/repo-old\":{},\"$H/opt/new/sub\":{}}}" "$(cat "$H/.claude.json")"
+assert_ok "with a backup next to it" grep -q "$H/opt/repo\"" "$H/.claude.json.bench-paths-bak"
+assert_eq "a sentence's dot ends the path, a .bak suffix does not" "Work in $H/opt/new.
+Keep $H/opt/repo.bak" "$(cat "$H/.claude/scheduled-tasks/t/SKILL.md")"
+# shellcheck disable=SC2016  # literal $ in shim and fixture text
+assert_eq "JetBrains macro spelling rewritten" '<option value="$USER_HOME$/opt/new" />' \
+  "$(cat "$H/Library/Application Support/JetBrains/IntelliJIdea2026.3/options/recentProjects.xml")"
+assert_eq "relative symlink re-pointed, still relative" "opt/new/home/.zshrc" "$(readlink "$H/.zshrc")"
+assert_eq "symlinked config edited at its target" "source ~/opt/new/init.zsh" "$(cat "$H/opt/new/home/.zshrc")"
+assert_eq "sqlite: prefix and exact rewritten, sibling kept" "$H/opt/new
+$H/opt/new/sub
+$H/opt/repo-old" "$(sqlite3 "$H/.codex/state_5.sqlite" 'select cwd from threads')"
+
+out=$(bpx --apply "$H/opt/repo" "$H/opt/new")
+n=$(printf '%s' "$H/opt/new" | sed 's/[^A-Za-z0-9]/-/g')
+assert_ok "with no live session the project folder is renamed" test -d "$H/.claude/projects/$n"
+assert_ok "the repo-old project stays" test -d "$H/.claude/projects/$e-old"
+assert_eq "its memory link follows the move" "$H/opt/new/.git" "$(readlink "$H/.claude/projects/$n/memory")"
+rm -rf "$tdir"; unset -f bpx
+
 step "$passed passed, $failed failed"
 (( failed == 0 ))

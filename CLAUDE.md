@@ -22,7 +22,7 @@ secrets.zsh           # Untracked, gitignored - API keys go here
 install.sh            # Fresh-machine bootstrap (sources bin/_lib.sh)
 macos.sh              # Opt-in macOS system defaults
 Brewfile              # Executable source of truth for brew packages
-bin/                  # Maintenance commands (bench-doctor/update/export, _lib.sh) and transcribe, the one speech-to-text path
+bin/                  # Maintenance commands (bench-doctor/update/export/paths, _lib.sh) and transcribe, the one speech-to-text path
 macos/                # Hotkey-driven scripts (ghostty-grid.js, idea-reset-layout.py); bound in skhd/skhdrc
 skhd/                 # skhd hotkey config, symlinked to ~/.config/skhd/skhdrc by install.sh
 assets/               # Desktop wallpapers copied from the brand repository; origin and version in assets/SOURCE.txt
@@ -32,7 +32,7 @@ fonts/                # Only fonts with verified redistribution rights (repo is 
 .codex/               # Codex CLI config
 ghostty/              # Ghostty terminal config
 home/                 # Dotfile templates symlinked via Stow; .config/mise/ holds the mise config
-docs/                 # Package + machine-state snapshots, replayed by install.sh (offline-readable); secret-keys.txt (expected key names) is hand-maintained, never dumped by bench-export; fonts.txt (restore checklist) is a union bench-export only adds to, pruned by hand; repos.txt (default clones) is hand-maintained in its selection, with bench-export repointing an entry whose clone moved or was renamed
+docs/                 # Package + machine-state snapshots, replayed by install.sh (offline-readable); secret-keys.txt (expected key names) is hand-maintained, never dumped by bench-export; fonts.txt (restore checklist) is a union bench-export only adds to, pruned by hand; path-stores.md (every store keeping a ~/dev or ~/opt path, the list behind bench-paths) is hand-maintained; repos.txt (default clones) is hand-maintained in its selection, with bench-export repointing an entry whose clone moved or was renamed
 ```
 
 ## Conventions
