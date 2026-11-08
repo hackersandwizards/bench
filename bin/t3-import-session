@@ -1,0 +1,120 @@
+#!/usr/bin/env bash
+# Import one ended Claude Code session into the T3 project whose root is the session's cwd.
+# Usage: t3-import-session <session-id>
+# T3's import works per project: it also picks up the project's other sessions T3 has not yet seen.
+# It drives T3's own RPC (agentSessions.scan, then .import) as the T3 app does; a T3 update may change it.
+# shellcheck disable=SC2016 # jaq, sed and JavaScript read the $ in single quotes, not the shell
+set -euo pipefail
+
+id=${1:?usage: t3-import-session <session-id>}
+home=${T3CODE_HOME:-$HOME/.t3}
+t3="$home/bin/t3"
+
+shopt -s nullglob
+transcripts=("$HOME"/.claude/projects/*/"$id".jsonl)
+[[ ${#transcripts[@]} -eq 1 ]] || { echo "Expected one transcript for $id under ~/.claude/projects, found ${#transcripts[@]}." >&2; exit 1; }
+transcript=${transcripts[0]}
+
+# A live claude process, a resumed one included, registers its session in <config dir>/sessions/<pid>.json.
+# procStart is in UTC; a differing start time means the pid now belongs to another process.
+for reg in "$HOME"/.claude/sessions/*.json "$HOME"/.claude-swap-backup/sessions/*/sessions/*.json; do
+  line=$(jaq -r --arg id "$id" 'select(.sessionId == $id) | [.pid, .procStart] | @tsv' "$reg" 2>/dev/null) || continue
+  IFS=$'\t' read -r pid start <<<"$line"
+  [[ -n $pid ]] || continue
+  now=$(TZ=UTC LC_ALL=C ps -o lstart= -p "$pid" 2>/dev/null) || continue
+  if [[ "${now// /}" == "${start// /}" ]]; then
+    echo "Session $id is still open in claude (PID $pid). Close it, then run this again." >&2
+    exit 1
+  fi
+done
+
+runtime="$home/userdata/server-runtime.json"
+if ! { [[ -r $runtime ]] && kill -0 "$(jaq -r .pid "$runtime")" 2>/dev/null; }; then
+  echo "No running T3 server under $home." >&2
+  exit 1
+fi
+origin=$(jaq -r .origin "$runtime")
+
+# T3 matches a session to a project by its first recorded cwd. Where that folder has moved, the
+# git root of the session's last cwd is the project root, and the old path links there while T3 reads it.
+cwd_of() { grep -o '"cwd":"[^"]*"' | sed -n "$1" | sed 's/^/{/;s/$/}/' | jaq -r .cwd; }
+first=$(grep -m1 -o '"cwd":"[^"]*"' "$transcript" | cwd_of 1p) || true
+[[ -n $first ]] || { echo "No cwd recorded in $transcript." >&2; exit 1; }
+cwd=$first link='' made=()
+if [[ ! -e $first && ! -L $first ]]; then
+  cwd=$(cwd_of '$p' <"$transcript")
+  [[ -d $cwd ]] && cwd=$(git -C "$cwd" rev-parse --show-toplevel 2>/dev/null || echo "$cwd")
+  [[ -d $cwd ]] || { echo "The session's folder $first is gone; T3 skips such sessions." >&2; exit 1; }
+  dir=$(dirname "$first")
+  while [[ ! -e $dir ]]; do made=("$dir" "${made[@]}"); dir=$(dirname "$dir"); done
+fi
+
+sid=''
+cleanup() {
+  [[ -z $sid ]] || "$t3" auth session revoke "$sid" >/dev/null 2>&1 ||
+    echo "Revoke failed: run t3 auth session revoke $sid" >&2
+  [[ -z $link ]] || rm "$link" || true
+  for ((i = ${#made[@]} - 1; i >= 0; i--)); do rmdir "${made[i]}" || true; done
+}
+trap cleanup EXIT
+
+if [[ $cwd != "$first" ]]; then
+  mkdir -p "$(dirname "$first")"
+  ln -s "$cwd" "$first"
+  link=$first
+fi
+
+issued=$("$t3" auth session issue --json --ttl 10m --label t3-import-session \
+  --scope orchestration:read --scope orchestration:operate)
+sid=$(jaq -r .sessionId <<<"$issued")
+token=$(jaq -r .token <<<"$issued")
+unset issued
+
+# Scan first: import only sees sessions the latest scan found. The token reaches bun on stdin, never argv.
+project=$(printf '%s' "$token" | bun -e '
+const [origin, cwd] = process.argv.slice(1);
+const token = (await Bun.stdin.text()).trim();
+const fail = (msg) => { console.error(msg); process.exit(1); };
+const res = await fetch(`${origin}/api/auth/websocket-ticket/rpc`, { method: "POST", headers: { authorization: `Bearer ${token}` } });
+if (!res.ok) fail(`T3 refused the ticket: ${res.status} ${await res.text()}`);
+const { ticket } = await res.json();
+const ws = new WebSocket(`${origin.replace(/^http/, "ws")}/ws?orchestrationProtocol=2&wsTicket=${encodeURIComponent(ticket)}`);
+let next = 0;
+const pending = new Map();
+ws.onmessage = (event) => {
+  for (const line of String(event.data).split("\n").filter(Boolean)) {
+    const msg = JSON.parse(line);
+    if (msg._tag === "Ping") ws.send(JSON.stringify({ _tag: "Pong" }));
+    if (msg._tag !== "Exit" || !pending.has(msg.requestId)) continue;
+    pending.get(msg.requestId)(msg.exit);
+    pending.delete(msg.requestId);
+  }
+};
+setTimeout(() => fail("T3 did not answer within 10 minutes."), 600_000);
+ws.onerror = () => fail(`WebSocket to ${origin} failed.`);
+ws.onclose = () => pending.size && fail(`T3 closed the connection before answering.`);
+await new Promise((resolve) => (ws.onopen = resolve));
+const call = (tag, payload) => new Promise((resolve) => {
+  const id = String(++next);
+  pending.set(id, (exit) => exit._tag === "Success" ? resolve(exit.value) : fail(`T3 ${tag} failed: ${JSON.stringify(exit.cause)}`));
+  ws.send(JSON.stringify({ _tag: "Request", id, tag, payload, headers: [] }));
+});
+const scan = await call("agentSessions.scan", {});
+const project = scan.candidates.find((c) => c.path === cwd);
+if (!project?.projectId) fail(`T3 has no project at ${cwd}. Add it with: t3 project add ${cwd}`);
+await call("agentSessions.import", { projectId: project.projectId, expectedWorkspaceRoot: cwd });
+console.log(project.title);
+process.exit(0);
+' "$origin" "$cwd")
+unset token
+
+if ! thread=$("$t3" thread show "import:claudeAgent:$id" --json); then
+  echo "T3 ran the import for project $project but holds no thread for $id." >&2
+  log="$home/userdata/logs/server.trace.ndjson"
+  why=$(grep -F 'Could not read imported transcript' "$log" 2>/dev/null | grep -F "$transcript" |
+    jaq -r '.events[]?.name | fromjson? | .[1].cause | .cause.message // .message' | tail -1) || true
+  if [[ -n $why ]]; then echo "T3: $why" >&2
+  else echo "T3 logged no reason. Its scan reads only the newest transcripts, so it may not have seen this one." >&2; fi
+  exit 1
+fi
+jaq -r --arg cwd "$cwd" --arg project "$project" '"Project: \($project) (\($cwd))\nThread:  \(.thread.title)\nLink:    \(.thread.link // "")"' <<<"$thread"

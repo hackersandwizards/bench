@@ -96,6 +96,7 @@ bin/
   bench-paths           List or rewrite every stored reference to a folder that moves (docs/path-stores.md)
   bench-test            Tests for _lib.sh helpers, bin/ scripts and repo invariants (plain bash asserts)
   safari-favorites      Export/merge the Safari favorites bar (bench-export, bench-doctor, install.sh)
+  t3-import-session     Import one ended Claude session into its T3 project (t3-import-session <session-id>)
   transcribe            Speech to text: whisper-cli with the fixed model and -mc 0, writes .txt and .srt
 macos/                Hotkey-driven scripts (ghostty-grid.js, idea-reset-layout.py); bound in skhd/skhdrc
 skhd/                 skhd hotkey config, symlinked to ~/.config/skhd/skhdrc by install.sh

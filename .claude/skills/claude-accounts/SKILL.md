@@ -40,6 +40,9 @@ account served each turn. That works while the accounts' windows reset at differ
   outbound port 7844; a network that allows only 443 leaves the Mac unreachable from the phone.
 - A session import needs a project first, and the Claude provider skips sessions older than 30
   days or whose folder is gone.
+- `t3-import-session <session-id>` imports an ended session into the project of its cwd, together
+  with every other session of that project T3 has not seen. T3 skips a transcript whose user and
+  assistant text exceeds its 32 MiB history budget (measured on 0.1.7 with a 769 MB transcript).
 
 ## Daily use
 

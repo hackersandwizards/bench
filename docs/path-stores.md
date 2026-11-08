@@ -62,7 +62,7 @@ The app gate checks the process name with `pgrep -x`. The Claude Code gate count
 
 These stores record where something happened. A stale entry there breaks nothing, or the tool drops or relearns it on its own: zoxide skips a folder that no longer exists.
 
-- Claude Code: transcripts `~/.claude/projects/*/*.jsonl`, `history.jsonl`, `file-history/`, `shell-snapshots/`, `paste-cache/`, `backups/`, `.claude.json.backup` and `.claude.json.tmp.*`, cswap's `sessions/*/shell-snapshots/`; live registries `~/.claude/sessions/<pid>.json`, `jobs/*/state.json`, `daemon/roster.json`, which end with their process.
+- Claude Code: transcripts `~/.claude/projects/*/*.jsonl`, `history.jsonl`, `file-history/`, `shell-snapshots/`, `paste-cache/`, `backups/`, `.claude.json.backup` and `.claude.json.tmp.*`, cswap's `sessions/*/shell-snapshots/`; live registries `~/.claude/sessions/<pid>.json`, `jobs/*/state.json`, `daemon/roster.json`, which end with their process. One exception: T3 files a transcript under its first recorded `cwd` and skips it when that folder is gone, so `t3-import-session` links the old path to the new one while it imports.
 - Codex: `logs_*.sqlite`, `memories_*.sqlite`, `threads.title`, `threads.preview` and `threads.first_user_message` in `state_*.sqlite`.
 - Shell and CLI history: atuin `history.db`, zoxide `db.zo`, rtk `history.db` and `tee/*.log`, wrangler logs in `~/Library/Preferences/.wrangler/logs`.
 - macOS: Finder's Go-to-folder history in `com.apple.finder.plist`, the open/save panel's recents, `com.apple.sharedfilelist` recents, Office and Safari sandbox bookmarks, `Knowledge/knowledgeC.db`.
