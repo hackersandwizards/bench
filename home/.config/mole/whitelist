@@ -14,7 +14,7 @@ $HOME/Library/Caches/tealdeer/tldr-pages
 $HOME/Library/Application Support/JetBrains*
 $HOME/Library/Caches/com.apple.finder
 $HOME/Library/Mobile Documents*
-$HOME/dev/hackersandwizards/internal/company/os/*
+$HOME/dev/hackersandwizards/internal/os/*
 $HOME/Library/Logs/Claude/*
 $HOME/.cache/puppeteer/*
 $HOME/Library/Application Support/Google/Chrome/*

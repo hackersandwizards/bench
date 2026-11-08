@@ -2,11 +2,11 @@
 # Which repos are listed is hand-maintained; bench-export never adds or removes
 # one, and only repoints an entry whose clone it finds. https URLs on purpose —
 # home/.gitconfig routes credentials through gh (github) and glab (gitlab).
-dev/hackersandwizards/internal/company/os https://github.com/hackersandwizards/os.git
-dev/hackersandwizards/internal/company/talks https://github.com/hackersandwizards/talks.git
-dev/hackersandwizards/internal/company/website https://gitlab.com/hackersandwizards/website.git
-dev/hackersandwizards/internal/company/trainer-hub https://github.com/hackersandwizards/trainer-hub.git
-dev/hackersandwizards/internal/trainings/agentic-engineering-training-nextjs https://github.com/hackersandwizards/agentic-engineering-training-nextjs.git
-opt/local-mlx-stack https://github.com/hackersandwizards/local-mlx-stack.git
-dev/hackersandwizards/internal/tools/mcp-fathom-server https://github.com/hackersandwizards/mcp-fathom-server.git
+dev/hackersandwizards/internal/os https://github.com/hackersandwizards/os.git
+dev/hackersandwizards/internal/talks https://github.com/hackersandwizards/talks.git
+dev/hackersandwizards/public/website https://gitlab.com/hackersandwizards/website.git
+dev/hackersandwizards/trainings/trainer-hub https://github.com/hackersandwizards/trainer-hub.git
+dev/hackersandwizards/trainings/agentic-engineering-training-nextjs https://github.com/hackersandwizards/agentic-engineering-training-nextjs.git
+dev/hackersandwizards/internal/local-mlx-stack https://github.com/hackersandwizards/local-mlx-stack.git
+dev/_archive/hackersandwizards/mcp-fathom-server https://github.com/hackersandwizards/mcp-fathom-server.git
 opt/qonto-mcp-server https://github.com/hackersandwizards/qonto-mcp-server.git

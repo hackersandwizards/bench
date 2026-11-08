@@ -22,7 +22,7 @@ and `mo purge` honour it. Skip steps 2 and 3 and report the gap unless it holds 
 |---|---|
 | `$HOME/.Trash` | the Trash from `mo clean` |
 | `$HOME/Library/Caches/antidote/*` | the zsh plugins antidote clones there |
-| `$HOME/dev/hackersandwizards/internal/company/os/*` | Company OS, in use all day |
+| `$HOME/dev/hackersandwizards/internal/os/*` | Company OS, in use all day |
 | `$HOME/.cache/puppeteer/*` | the Chrome for Testing builds repos pin, which `mo clean` deletes whole |
 | `$HOME/Library/Application Support/Google/Chrome/*` | Benedikt's Chrome profiles, whose caches `mo clean` empties |
 
