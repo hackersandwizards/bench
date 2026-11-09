@@ -124,7 +124,8 @@ done
 
 # Store table: kind|apps that must be quit|path|rg glob. text rewrites in
 # place; sqlite rewrites the named table.column list; launchd is text plus a
-# reload; source is a copy whose source must change; binary is listed only.
+# reload; zoxide goes through its CLI; source is a copy whose source must
+# change; binary is listed only.
 AS="$HOME/Library/Application Support"
 stores() {
   cat <<EOF
@@ -162,6 +163,8 @@ text||$HOME/.config|!**/gcloud/**
 text||$HOME/.zshrc|
 text||$HOME/.zshenv|
 text||$HOME/.zprofile|
+sqlite||$HOME/.local/share/atuin|history.db history.cwd
+zoxide||${_ZO_DATA_DIR:-$AS/zoxide}/db.zo|
 launchd||$HOME/Library/LaunchAgents|*.plist
 EOF
 }
@@ -169,7 +172,7 @@ EOF
 # Counts or rewrites the given table.column list with the same end-of-path
 # rule as the perl above. argv: count|apply db old new table.column...
 SQLPY=$(cat <<'PY'
-import re, sqlite3, sys
+import os, re, sqlite3, sys
 mode, db, old, new, *cols = sys.argv[1:]
 rx = re.compile(re.escape(old) + r"(?![\w-]|\.\w)")
 if mode == "apply":
@@ -184,6 +187,7 @@ con.create_function("bp", 1, lambda s: rx.sub(lambda _: new, s) if isinstance(s,
 have = {(t, c) for (t,) in con.execute("select name from sqlite_master where type='table'")
         for (c,) in con.execute(f'select name from pragma_table_info("{t}")')}
 if mode == "apply":
+    os.umask(0o077)  # a backup of a private database stays private, even while it is written
     con.backup(sqlite3.connect(db + ".bench-paths-bak"))
 total = 0
 for tc in cols:
@@ -199,6 +203,29 @@ print(total)
 PY
 )
 
+# zoxide entries inside old, as "<score> <path>", from the $zo_rows the store
+# loop read with one query.
+zo_inside() {
+  local s p
+  while read -r s p; do
+    inside "$p" && printf '%s %s\n' "$s" "$p"
+  done <<< "$zo_rows"
+}
+# The CLI exposes frecency, not rank, and add stamps now: a quarter of the
+# score matches the old score at this moment only. An older entry then decays
+# as a freshly used one. An entry with no folder left is dropped.
+rewrite_zoxide() {
+  local rows r p t
+  rows=$(zo_inside)
+  cp "$1" "$1.bench-paths-bak" || return 1
+  while read -r r p; do
+    t=$(moved "$p")
+    if [[ -d $t ]]; then zoxide add -s "$(awk -v r="$r" 'BEGIN { print r / 4 }')" "$t" || return 1
+    else say "dropped" "$p"; fi
+    zoxide remove "$p" || return 1
+  done <<< "$rows"
+}
+
 step "Stores"
 pf=$(mktemp); trap 'rm -f "$pf"' EXIT
 pats > "$pf"
@@ -208,6 +235,9 @@ while IFS='|' read -r kind apps path glob; do
     read -r dbglob cols <<< "$glob"
     # shellcheck disable=SC2086  # dbglob is a glob by design
     files=$(shopt -s nullglob; printf '%s\n' "$path"/$dbglob)
+  elif [[ $kind == zoxide ]]; then
+    zo_rows=$(zoxide query --list --all --score 2>&1) || { warn "zoxide cannot read $path: $zo_rows"; continue; }
+    files=$path
   else
     # -L: Stow links configs under ~/.config into a repo; rg skips links otherwise.
     args=(-l -L -F -f "$pf" --hidden --no-ignore --max-filesize 50M -g '!*.bench-paths-bak' "$path")
@@ -228,6 +258,12 @@ while IFS='|' read -r kind apps path glob; do
     if [[ $kind == sqlite ]]; then
       # shellcheck disable=SC2086  # cols is a word list by design
       n=$(python3 -I -c "$SQLPY" count "$f" "$old" "" $cols)
+    elif [[ $kind == zoxide ]]; then
+      n=$(zo_inside | grep -c '')
+      # Before the move a folder sits at old, after it at new; at neither it is dropped.
+      if [[ -n $new ]] && (( !apply )); then
+        while read -r _ p; do [[ -d $p || -d $(moved "$p") ]] || say "drop" "$p"; done < <(zo_inside)
+      fi
     else n=$(count_refs "$f"); fi
     (( n )) || [[ $kind == binary ]] || continue
     nf=$((nf + 1)) nr=$((nr + n))
@@ -235,6 +271,7 @@ while IFS='|' read -r kind apps path glob; do
       real=$(realpath "$f")
       # shellcheck disable=SC2086
       if [[ $kind == sqlite ]]; then python3 -I -c "$SQLPY" apply "$real" "$old" "$new" $cols >/dev/null
+      elif [[ $kind == zoxide ]]; then rewrite_zoxide "$real"
       else rewrite_file "$real"; fi || warn "rewrite failed: $f"
     fi
   done <<< "$files"

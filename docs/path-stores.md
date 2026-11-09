@@ -42,6 +42,8 @@ Measured on 08.11.2026 with three sample paths (`~/dev/hackersandwizards/interna
 | `~/.config/**` except `gcloud/` (mole `purge_paths` and `whitelist`, Zed, Ghostty, skhd configs) | text, absolute or `$HOME` | none | text, at the symlink's target; the backup lands there too, which this repo's `.gitignore` covers |
 | `~/.zshrc`, `~/.zshenv`, `~/.zprofile` | zsh, `~` | none | text; open shells keep the old value until restarted |
 | `~/Library/Application Support/rtk/trusted_filters.json` | JSON, absolute | none | text |
+| atuin: `~/.local/share/atuin/history.db` (`history.cwd`, read by directory-scoped search) | SQLite, absolute | none | SQL update, backup via SQLite's backup API. `atuin store rebuild history` refills this table from `records.db`, which keeps the old paths |
+| zoxide: `db.zo` in `$_ZO_DATA_DIR`, else `~/Library/Application Support/zoxide` | binary, absolute | none | `zoxide add -s` and `zoxide remove`. The CLI exposes frecency rather than rank and stamps the access time on add, so an entry scores as before at the rewrite and an older one decays faster afterwards. An entry whose folder is gone from the moved tree is dropped, and the plan names it |
 
 The app gate checks the process name with `pgrep -x`. The Claude Code gate counts every `claude` process from `ps`, since `pgrep` leaves out its own caller, so a run from inside a Claude Code session always leaves `~/.claude.json` for later. That is a choice made without testing whether Claude Code re-reads the file before writing it: a session holding the old content could write it back.
 
@@ -60,11 +62,11 @@ The app gate checks the process name with `pgrep -x`. The Claude Code gate count
 
 ## History, not rewritten
 
-These stores record where something happened. A stale entry there breaks nothing, or the tool drops or relearns it on its own: zoxide skips a folder that no longer exists.
+These stores record where something happened. A stale entry there breaks nothing, or the tool drops or relearns it on its own.
 
 - Claude Code: transcripts `~/.claude/projects/*/*.jsonl`, `history.jsonl`, `file-history/`, `shell-snapshots/`, `paste-cache/`, `backups/`, `.claude.json.backup` and `.claude.json.tmp.*`, cswap's `sessions/*/shell-snapshots/`; live registries `~/.claude/sessions/<pid>.json`, `jobs/*/state.json`, `daemon/roster.json`, which end with their process. One exception: T3 files a transcript under its first recorded `cwd` and skips it when that folder is gone, so `t3-import-session` links the old path to the new one while it imports.
 - Codex: `logs_*.sqlite`, `memories_*.sqlite`, `threads.title`, `threads.preview` and `threads.first_user_message` in `state_*.sqlite`.
-- Shell and CLI history: atuin `history.db`, zoxide `db.zo`, rtk `history.db` and `tee/*.log`, wrangler logs in `~/Library/Preferences/.wrangler/logs`.
+- Shell and CLI history: atuin `history.command` and `records.db`, rtk `history.db` and `tee/*.log`, wrangler logs in `~/Library/Preferences/.wrangler/logs`.
 - macOS: Finder's Go-to-folder history in `com.apple.finder.plist`, the open/save panel's recents, `com.apple.sharedfilelist` recents, Office and Safari sandbox bookmarks, `Knowledge/knowledgeC.db`.
 - Chrome for Testing crash dumps and the `Chrome-headless/scoped_dir*` profiles that headless runs leave behind.
 - JetBrains `tasks/*.zip` and `app-internal-state.db`, Zed `threads/`, Gemini and Antigravity conversations, opencode `storage/message` and `storage/part`, Docker buildx refs.

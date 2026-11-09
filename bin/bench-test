@@ -406,6 +406,7 @@ step "bench-paths"
 # path starts like the moved one: every rewrite must leave it alone. Shims
 # pin which apps run (RUNNING) and which processes sit where (LSOF_OUT).
 tdir=$(mktemp -d); H="$tdir/home"; bp="$REPO_ROOT/bin/bench-paths"
+export _ZO_DATA_DIR="$H/zoxide"
 mkdir -p "$tdir/bin" "$H/opt/repo/home" "$H/opt/repo-old" "$H/opt/repo/.git" "$H/.codex" "$H/.claude/scheduled-tasks/t" \
   "$H/Library/Application Support/JetBrains/IntelliJIdea2026.3/options" "$H/Library/Application Support/Zed/db/0-stable"
 # shellcheck disable=SC2016  # literal $ in shim and fixture text
@@ -430,6 +431,11 @@ ln -s "$H/opt/repo/.git" "$H/.claude/projects/$e/memory"
 sqlite3 "$H/.codex/state_5.sqlite" "create table threads(cwd text); insert into threads values('$H/opt/repo'),('$H/opt/repo/sub'),('$H/opt/repo-old');
   create table project_roots(path text);"
 sqlite3 "$H/Library/Application Support/Zed/db/0-stable/db.sqlite" "create table trusted_worktrees(absolute_path text); insert into trusted_worktrees values('$H/opt/repo');"
+mkdir -p "$H/.local/share/atuin"
+sqlite3 "$H/.local/share/atuin/history.db" "create table history(cwd text); insert into history values('$H/opt/repo'),('$H/opt/repo/sub'),('$H/opt/repo-old');"
+mkdir -p "$H/opt/repo/gone"
+zoxide add -s 3 "$H/opt/repo"; zoxide add "$H/opt/repo/home" "$H/opt/repo/gone" "$H/opt/repo-old"
+rmdir "$H/opt/repo/gone"
 mkdir -p "$H/.config/tool" "$H/opt/elsewhere"
 printf 'dir = "%s/opt/repo"\n' "$H" > "$H/opt/repo/home/tool.toml"
 ln -s ../../opt/repo/home/tool.toml "$H/.config/tool/tool.toml"
@@ -444,6 +450,9 @@ assert_ok "list: JetBrains \$USER_HOME\$ spelling" grep -qE "JetBrains .*: 1 fil
 assert_eq "list: sqlite counts prefix and exact rows, not the sibling" "1" "$(grep -c 'state_\*.sqlite.*2 ref' <<< "$out")"
 assert_eq "list: the Claude project of the repo, not of repo-old" "found     $e" "$(grep 'found     -' <<< "$out" | sed 's/^  //')"
 assert_ok "list: a config Stow links into ~/.config is followed" grep -qF "$H/.config [!**/gcloud/**]: 1 file(s), 1 ref(s)" <<< "$out"
+assert_ok "list: atuin's directory column" grep -qF "atuin [history.db history.cwd]: 1 file(s), 2 ref(s)" <<< "$out"
+assert_ok "list: zoxide entries, the sibling left out" grep -qF "zoxide/db.zo: 1 file(s), 3 ref(s)" <<< "$out"
+assert_ok "plan: a zoxide entry with no folder left is named" grep -qF "drop      $H/opt/repo/gone" <<< "$(bpx "$H/opt/repo" "$H/opt/new")"
 assert_eq "list: a relative argument names the same folder" "$out" "$(cd "$H/opt/repo/home" && bpx ..)"
 assert_fail "apply before the move is refused" bpx --apply "$H/opt/repo" "$H/opt/new"
 
@@ -469,6 +478,17 @@ assert_fail "the moved tree's own files are not listed as other repositories" gr
 assert_eq "sqlite: prefix and exact rewritten, sibling kept" "$H/opt/new
 $H/opt/new/sub
 $H/opt/repo-old" "$(sqlite3 "$H/.codex/state_5.sqlite" 'select cwd from threads')"
+assert_eq "atuin: prefix and exact rewritten, sibling kept" "$H/opt/new
+$H/opt/new/sub
+$H/opt/repo-old" "$(sqlite3 "$H/.local/share/atuin/history.db" 'select cwd from history')"
+assert_ok "atuin: a backup next to the database" test -s "$H/.local/share/atuin/history.db.bench-paths-bak"
+assert_eq "atuin: the backup is private" "600" "$(stat -f %Lp "$H/.local/share/atuin/history.db.bench-paths-bak")"
+assert_eq "zoxide: entries follow, the sibling stays, a vanished folder is dropped" "$H/opt/new
+$H/opt/new/home
+$H/opt/repo-old" "$(zoxide query --list --all | sort)"
+assert_ok "zoxide: a vanished folder is named" grep -qF "dropped   $H/opt/repo/gone" <<< "$out"
+assert_eq "zoxide: a just-used entry scores as before" "12.0" "$(zoxide query --list --score "$H/opt/new" | awk -v p="$H/opt/new" '$2 == p { print $1 }')"
+assert_ok "zoxide: a copy of the database first" test -s "$H/zoxide/db.zo.bench-paths-bak"
 
 out=$(LSOF_OUT=$'p43\nczsh\nn'"$H/opt/new" bpx --apply "$H/opt/repo" "$H/opt/new")
 n=$(printf '%s' "$H/opt/new" | sed 's/[^A-Za-z0-9]/-/g')
@@ -478,7 +498,7 @@ assert_eq "text store rewritten, sibling key untouched" \
 assert_ok "with a backup next to it" grep -q "$H/opt/repo\"" "$H/.claude.json.bench-paths-bak"
 assert_ok "the repo-old project stays" test -d "$H/.claude/projects/$e-old"
 assert_eq "its memory link follows the move" "$H/opt/new/.git" "$(readlink "$H/.claude/projects/$n/memory")"
-rm -rf "$tdir"; unset -f bpx
+rm -rf "$tdir"; unset -f bpx; unset _ZO_DATA_DIR
 
 step "$passed passed, $failed failed"
 (( failed == 0 ))
