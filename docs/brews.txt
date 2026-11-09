@@ -253,6 +253,6 @@ font-rubik
 font-sf-mono
 font-sf-pro
 font-space-mono
+libreoffice
 luanti
 t3-code
-vlc
