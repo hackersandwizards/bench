@@ -10,12 +10,13 @@ set -u
 # shellcheck source=_lib.sh
 . "$(dirname "$0")/_lib.sh"
 
-# Removes a session's folder or cache-break state, a bundled-skills version or a bash-edit-diff
-# snapshot only when every signal says finished; any signal it cannot read stops the whole run, so
-# a broken check keeps files and shows up as a warn. Other top-level entries are left alone.
+# Removes a session's folder or cache-break state, or a bundled-skills version, only when every
+# signal says finished; any signal it cannot read stops the whole run, so a broken check keeps
+# files and shows up as a warn. Other top-level entries are left alone.
 sweep_cc_tmp() {  # sweep_cc_tmp [--dry-run]
   local dry="${1:-}" days=14 root base="$HOME/Library/Caches/claude-code-tmp"
   local rec line pid start sid ver now running live="|" pids="|" versions="|" open
+  local uuid='^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
   root="$base/claude-$UID"
   [[ -d "$root" ]] || { skip "Claude temp: no folder yet"; return 0; }
   [[ ! -L "$base" && ! -L "$root" ]] || { warn "Claude temp: $root is a symlink, nothing swept"; return 0; }
@@ -33,10 +34,11 @@ sweep_cc_tmp() {  # sweep_cc_tmp [--dry-run]
   # Accounts other than the default keep their records under cswap's config dirs.
   for rec in "$HOME"/.claude/sessions/*.json "$HOME"/.claude-swap-backup/sessions/*/sessions/*.json; do
     [[ -f "$rec" ]] || continue
-    # version last: read collapses an empty tab-separated field into the next one.
+    # read collapses an empty tab-separated field into the next one, so a missing sessionId would
+    # take the version's place: version goes last and sid must be a UUID.
     line=$(jaq -r '[.pid, .procStart, .sessionId, .version // ""] | @tsv' "$rec" 2>/dev/null)
     IFS=$'\t' read -r pid start sid ver <<<"$line"
-    if ! [[ "$pid" =~ ^[0-9]+$ && -n "$start" && -n "$sid" ]]; then
+    if ! [[ "$pid" =~ ^[0-9]+$ && -n "$start" && "$sid" =~ $uuid ]]; then
       [[ -e "$rec" ]] || continue  # its process ended while this loop ran
       warn "Claude temp: unreadable record $rec, nothing swept"; return 0
     fi
@@ -55,24 +57,22 @@ sweep_cc_tmp() {  # sweep_cc_tmp [--dry-run]
   # The subshell's cwd is the control: lsof must report the root itself or its listing is not usable.
   line=$(cd "$root" && lsof -nP -u "$UID" -Fn 2>/dev/null)
   [[ $'\n'"$line"$'\n' == *$'\n'"n$root"$'\n'* ]] || { warn "Claude temp: open-file control failed, nothing swept"; return 0; }
-  open="|$(ROOT="n$root/" awk 'index($0, ENVIRON["ROOT"]) == 1 { split(substr($0, length(ENVIRON["ROOT"]) + 1), a, "/"); print a[1] "/" a[2] }' <<<"$line" | sort -u | tr '\n' '|')"
+  open="|$(ROOT="n$root/" awk 'index($0, ENVIRON["ROOT"]) == 1 { split(substr($0, length(ENVIRON["ROOT"]) + 1), a, "/"); print (a[2] == "" ? a[1] : a[1] "/" a[2]) }' <<<"$line" | sort -u | tr '\n' '|')"
 
   local dir key id recent rc removed=0 kept=0 kb=0 size verb=removed others
-  local uuid='^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
   [[ "$dry" == --dry-run ]] && verb="would remove"
   keep() { skip "Claude temp: kept $1"; kept=$((kept + 1)); }
-  for dir in "$root"/-*/* "$root"/cache-break-state-*.json "$root"/bundled-skills/* "$root"/bash-edit-diff/*; do
+  for dir in "$root"/-*/* "$root"/cache-break-state-*.json "$root"/bundled-skills/*; do
     [[ -e "$dir" || -L "$dir" ]] || continue
     id=${dir##*/}; key=${dir#"$root"/}
     if [[ -L "$dir" || -L "${dir%/*}" ]]; then keep "$key (symlink)"; continue; fi
     case "$key" in
       cache-break-state-*) id=${id#cache-break-state-}; id=${id%.json}; [[ -f "$dir" && "$id" =~ $uuid ]] ;;
-      bundled-skills/*) [[ -d "$dir" ]] && [[ "$versions" != "*" && "$versions" != *"|$id|"* ]] ;;
-      bash-edit-diff/*) true ;;
+      bundled-skills/*) [[ -d "$dir" && "$versions" != "*" && "$versions" != *"|$id|"* ]] ;;
       *) [[ -d "$dir" && "$id" =~ $uuid ]] ;;
     esac || { keep "$key (not a finished session's entry)"; continue; }
     if [[ "$live" == *"|$id|"* ]]; then keep "$key (live session)"; continue; fi
-    if [[ "$open" == *"|$key|"* || "$open" == *"|$key/|"* ]]; then keep "$key (files open)"; continue; fi
+    if [[ "$open" == *"|$key|"* ]]; then keep "$key (files open)"; continue; fi
     recent=$(find "$dir" -mmin "-$((days * 1440))" -print -quit 2>/dev/null); rc=$?
     if (( rc != 0 )) || [[ -n "$recent" ]]; then keep "$key (changed within $days days or unreadable)"; continue; fi
     size=$(du -sk "$dir" 2>/dev/null | awk '{print $1}')
@@ -83,7 +83,7 @@ sweep_cc_tmp() {  # sweep_cc_tmp [--dry-run]
     fi
   done
   others=$(find "$root" -mindepth 1 -maxdepth 1 ! \( -type d -name '-*' \) ! -name 'cache-break-state-*.json' \
-    ! -name bundled-skills ! -name bash-edit-diff 2>/dev/null | wc -l)
+    ! -name bundled-skills 2>/dev/null | wc -l)
   ok "Claude temp: $verb $removed ($kb KB), kept $kept, ${others// /} other top-level entries left alone"
 }
 
