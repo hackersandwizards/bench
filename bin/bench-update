@@ -6,13 +6,10 @@ set -u
 # shellcheck source=_lib.sh
 . "$(dirname "$0")/_lib.sh"
 
-if have brew && brew_bottles_supported; then
+if brew_ready; then
   run "Homebrew update"   brew update
   run "Homebrew upgrade"  brew upgrade
   run "Homebrew cleanup"  brew cleanup -s
-elif have brew; then
-  step "Homebrew"
-  brew_unsupported_notice
 fi
 
 if [[ -f "$ANTIDOTE_SH" ]]; then

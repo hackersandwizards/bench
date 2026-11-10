@@ -87,6 +87,8 @@ brew_unsupported_notice() {
   warn "Homebrew has no bottles for macOS $major yet (newest: $(brew_newest_macos)) — skipping brew steps"
   skip "tag is arm64_dunno; formulae.brew.sh 404s until Homebrew ships macOS $major support"
 }
+# True when brew can run its steps; prints the notice when it is there without bottles.
+brew_ready() { have brew || return 1; brew_bottles_supported && return 0; brew_unsupported_notice; return 1; }
 
 # shellcheck disable=SC2034  # consumed by bench-* and install.sh
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -105,18 +107,12 @@ hooks_path() {
 # shellcheck disable=SC2034  # consumed by bench-update / bench-doctor
 ANTIDOTE_SH="/opt/homebrew/opt/antidote/share/antidote/antidote.zsh"
 
-# shellcheck disable=SC2034  # consumed by bench-* and install.sh
-STOW_FILES=(
-  ".gitconfig"
-  ".vimrc"
-  ".tmux.conf"
-  ".gitignore_global"
-  ".commitTemplate.txt"
-  ".ssh/config"
-  ".config/zed/settings.json"
-  ".config/mise/config.toml"
-  ".config/mole/whitelist"
-)
+# Every file tracked under home/ but Stow's own ignore list, relative to $HOME.
+STOW_FILES=()
+while IFS= read -r f; do
+  [[ $f == .stow-local-ignore ]] || STOW_FILES+=("$f")
+done < <(git -C "$REPO_ROOT" ls-files -- home 2>/dev/null | sed 's|^home/||')
+(( ${#STOW_FILES[@]} )) || warn "no files tracked under home/ — is $REPO_ROOT a git checkout?"
 
 # Checklist lines of $1 absent from directory $2. Shared by install.sh's fonts
 # step and bench-doctor so the two reports can't drift. minimal: non-recursive

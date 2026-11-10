@@ -94,8 +94,7 @@ if have brew; then
     fi
   done
 fi
-if have brew && ! brew_bottles_supported; then
-  brew_unsupported_notice
+if have brew && ! brew_ready; then
   skip "Skipped Brewfile install — bottles unavailable until Homebrew ships support"
 elif have brew && ask "Run 'brew bundle' now?"; then
   # Cask pkg installers call sudo over and over, and macOS forgets the

@@ -93,11 +93,7 @@ case "${1:-}" in
   *) fail "usage: bench-clean [--dry-run]"; exit 2 ;;
 esac
 
-if have brew && brew_bottles_supported; then
-  run "Homebrew cleanup" brew cleanup -s
-elif have brew; then
-  brew_unsupported_notice
-fi
+brew_ready && run "Homebrew cleanup" brew cleanup -s
 # No bun install cache either: every Claude session's chrome-devtools MCP launcher (`bun -i -e`,
 # .mcp.json) holds files in it open, so removing it under them can break a running launcher or a
 # concurrent `bun install`. The weekly cleanup-bench runs `bun pm cache rm`.

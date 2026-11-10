@@ -316,7 +316,7 @@ step "bench-export Brewfile drift"
 tdir=$(mktemp -d)
 # shellcheck disable=SC2016  # literal $ in shim text
 printf '#!/bin/sh\ncase "$1 $2" in\n  "leaves ") echo stow ;;\n  "list --cask") printf "zed\\nhex\\nzzz-extra\\n" ;;\nesac\n' > "$tdir/brew"; chmod +x "$tdir/brew"
-out=$(PATH="$tdir:$PATH" bash -c ". '$REPO_ROOT/bin/_lib.sh'; $(sed -n '/^if have brew && ! brew_bottles_supported/,/^fi$/p' "$REPO_ROOT/bin/bench-export")" 2>&1)
+out=$(PATH="$tdir:$PATH" bash -c ". '$REPO_ROOT/bin/_lib.sh'; $(sed -n '/^have brew && step "Brewfile drift"/,/^fi$/p' "$REPO_ROOT/bin/bench-export")" 2>&1)
 assert_eq "names an installed cask the Brewfile lacks, and only that one" "1 0 0" \
   "$(grep -c 'zzz-extra' <<<"$out") $(grep -cE '^ +(zed|hex|stow)$' <<<"$out") $(grep -c 'in sync' <<<"$out")"
 rm -rf "$tdir"
@@ -336,6 +336,18 @@ assert_ok "global step passes when nothing is outdated" pipstep "" _pip_global_u
 assert_ok "user step passes when nothing is outdated" pipstep "" _pip_user_upgrade
 assert_fail "and installs nothing" test -e "$tdir/installs"
 unset -f pipstep; rm -rf "$tdir"
+
+step "bench-export home/ sync"
+# A real ~/.ssh/config can name client hosts, which no secret scan flags.
+tdir=$(mktemp -d)
+mkdir -p "$tdir/home/.ssh" "$tdir/repo-home"
+echo 'Host client-box' > "$tdir/home/.ssh/config"; echo 'set number' > "$tdir/home/.vimrc"
+out=$(HOME="$tdir/home" bash -c ". '$REPO_ROOT/bin/_lib.sh'; HOME_DIR='$tdir/repo-home'
+  $(sed -n '/^step "home\/ sync/,/^done$/p' "$REPO_ROOT/bin/bench-export")" 2>&1)
+assert_ok "a real dotfile is copied back" test -f "$tdir/repo-home/.vimrc"
+assert_fail "a real ~/.ssh/config is not" test -e "$tdir/repo-home/.ssh/config"
+assert_ok "and is named instead" grep -q '\.ssh/config: .*not copied' <<<"$out"
+rm -rf "$tdir"
 
 step "find_clone sees clones inside ignored directories"
 tdir=$(mktemp -d)

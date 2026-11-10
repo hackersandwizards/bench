@@ -32,29 +32,29 @@ dump_to() {
 # --- Brewfile drift check (never auto-overwrite: cask/mas entries are aspirational
 # fresh-install targets, not always present locally; `brew bundle dump --force`
 # would silently delete them). Report missing leaves and casks to add by hand.
-if have brew && ! brew_bottles_supported; then
-  step "Brewfile drift"
-  brew_unsupported_notice
-elif have brew; then
-  step "Brewfile drift"
+# leaves feeds the docs/brew-leaves.txt dump below too: one call, 1.5 s.
+have brew && step "Brewfile drift"
+if brew_ready && leaves=$(brew leaves) && casks=$(brew list --cask); then
   # Brewfile names a tap's formula or cask in full; brew lists it by its last part.
   declared() { awk -F'"' -v k="$1" '$0 ~ "^" k " " { n = $2; sub(/.*\//, "", n); print n }' "$REPO_ROOT/Brewfile" | sort -u; }
-  missing="$(comm -23 <(brew leaves | sed 's|.*/||' | sort -u) <(declared brew))"
-  missing_casks="$(comm -23 <(brew list --cask | sort -u) <(declared cask))"
+  missing="$(comm -23 <(awk -F/ '{ print $NF }' <<<"$leaves" | sort -u) <(declared brew))"
+  missing_casks="$(comm -23 <(sort -u <<<"$casks") <(declared cask))"
   if [[ -z "$missing$missing_casks" ]]; then
     ok "Brewfile in sync with brew leaves and casks"
   else
     warn "Installed leaves and casks missing from Brewfile — add by hand:"
     printf '%s\n' "$missing" "$missing_casks" | grep . | indent
   fi
+elif have brew && brew_bottles_supported; then
+  warn "brew leaves or brew list --cask failed — Brewfile drift not checked"
 fi
 
 # --- docs/ snapshots (replayed by install.sh, offline-readable) ---
 # Each tool is its own subprocess and stat-bound: fan out, then `wait`.
 step "docs/ snapshots"
-if have brew && brew_bottles_supported; then   # unsupported notice already shown above
+if [[ -n ${leaves:-} ]]; then   # set only when brew answered above
   dump_to "$DOCS/brew-taps.txt"   brew tap    &
-  dump_to "$DOCS/brew-leaves.txt" brew leaves &
+  dump_to "$DOCS/brew-leaves.txt" printf '%s\n' "$leaves" &
   dump_to "$DOCS/brews.txt"       brew list   &
 fi
 # pipefail inside each *_dump: a failing producer must fail dump_to, not hand sed
@@ -135,6 +135,11 @@ for rel in "${STOW_FILES[@]}"; do
     continue
   fi
   if [[ -L "$src" ]]; then
+    continue
+  fi
+  # It can name client hosts, and no secret scan flags a host name.
+  if [[ $rel == .ssh/config ]]; then
+    cmp -s "$src" "$dst" || warn "$rel: a real file that differs from home/ — not copied into this public repo; diff it and copy by hand"
     continue
   fi
   mkdir -p "$(dirname "$dst")"

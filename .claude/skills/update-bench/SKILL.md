@@ -66,11 +66,12 @@ Keep the full output; the warn lines are this step's product. Shapes to read cor
 ### 3. Refresh the repo's picture of the machine
 
 `bench-export`. It rewrites the `docs/` snapshots, union-merges `docs/fonts.txt`, and copies real
-`STOW_FILES` back into `home/`.
+`STOW_FILES` back into `home/`, except a real `~/.ssh/config`, which it names in a warn and leaves to
+a human.
 
-It also lists installed `brew leaves` the Brewfile does not declare, and refuses to write them. Add
-each by hand, in the section its neighbours sit in, with the `brew desc <name>` line as the comment
-above it. Name every addition in the commit body and the report.
+It also lists installed `brew leaves` and casks the Brewfile does not declare, and refuses to write
+them. Add each by hand, in the section its neighbours sit in, with the `brew desc <name>` line as the
+comment above a formula. Name every addition in the commit body and the report.
 
 Never prune `docs/fonts.txt`, and never `brew bundle dump --force`. `bin/bench-export` says why.
 Commit every line the union adds, entries an earlier commit pruned by hand included.
