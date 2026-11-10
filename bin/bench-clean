@@ -100,11 +100,12 @@ brew_ready && run "Homebrew cleanup" brew cleanup -s
 # No uv cache clean. It needs the cache lock, and this machine's Claude sessions hold it through
 # their uv-launched MCP children, so from inside one the step cannot succeed by construction: every
 # scheduled run reported the timeout. Clean it by hand from a plain shell if it ever needs it.
-# /Volumes and ~/OrbStack are shares other machines use. fd hides permission errors, so a non-zero
-# exit is a failed rm. Excludes are anchored at the search root.
+# /Volumes and ~/OrbStack are shares other machines use. fd hides permission errors, and rm -f
+# passes a file that vanished mid-walk, so a non-zero exit is a file it could not delete. Excludes
+# are anchored at the search root.
 have fd && run "Sweep .DS_Store" fd -H -I -t f -g '.DS_Store' / \
   --exclude '*BACKUP*' --exclude '*timemachine*' --exclude '*TimeMachine*' \
-  --exclude '/System/Volumes/Data' --exclude '/Volumes' --exclude "$HOME/OrbStack" -X rm
+  --exclude '/System/Volumes/Data' --exclude '/Volumes' --exclude "$HOME/OrbStack" -X rm -f
 
 run "Claude HTTP cache"  rm -rf "$HOME/Library/Application Support/Claude/Cache"
 
