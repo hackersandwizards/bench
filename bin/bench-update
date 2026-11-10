@@ -48,11 +48,15 @@ _pip_user_upgrade() {
       | xargs -r pip install --user --upgrade )
 }
 
-# jaq gated like every other tool: without it the pipelines would exit
-# through xargs's 0 and print a false ok.
-if have pip && have jaq; then
+# pip list --outdated answers [] with exit 0 when the index is unreachable, so
+# the index is probed first; pip index versions fails there.
+if ! have pip || ! have jaq; then
+  skip "Python pip: pip or jaq missing"
+elif pip index versions pip --disable-pip-version-check >/dev/null 2>&1; then
   run "Python pip globals"   _pip_global_upgrade
   run "Python pip user-site" _pip_user_upgrade
+else
+  warn "Python pip: package index unreachable, pip globals not checked"
 fi
 
 # `bun -g update --latest` writes `^` ranges. Re-add every global at @latest with

@@ -143,10 +143,12 @@ fi
 istep "Symlink home/ via Stow"
 if ! have stow; then
   warn "stow not installed — run the Brewfile step first or 'brew install stow'"
+elif ! rels=$(stow_files) || [[ -z $rels ]]; then
+  warn "no files tracked under home/ — run install.sh from a git clone of this repository"
 elif ask "Symlink dotfiles in home/ to \$HOME via stow?"; then
-  for rel in "${STOW_FILES[@]}"; do
+  while IFS= read -r rel; do
     backup "$HOME/$rel"
-  done
+  done <<<"$rels"
   mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
   mkdir -p "$HOME/.ssh/control" && chmod 700 "$HOME/.ssh/control"
   # --no-folding: a folded ~/.config would make every tool write its config,
@@ -408,7 +410,7 @@ fi
 istep "Enable Touch ID for sudo"
 pam=/etc/pam.d/sudo_local
 tid='^auth[[:space:]]+sufficient[[:space:]]+pam_tid\.so'
-if [[ -f $pam ]] && grep -qE "$tid" "$pam"; then
+if grep -qE "$tid" "$pam" 2>/dev/null; then
   ok "Touch ID for sudo already enabled"
 elif [[ ! -f $pam && ! -f $pam.template ]]; then
   warn "$pam.template missing — needs macOS Sonoma or later"

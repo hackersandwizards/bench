@@ -36,7 +36,8 @@ done
 
 echo
 echo "=== Stow symlinks ==="
-for rel in "${STOW_FILES[@]}"; do
+[[ -n $(stow_files) ]] || warn "no files tracked under home/ — is $REPO_ROOT a git clone?"
+while IFS= read -r rel; do
   if [[ -L "$HOME/$rel" ]]; then
     ok "$rel -> $(readlink "$HOME/$rel")"
   # A folded directory links a whole folder into the repo, so tools write there.
@@ -47,7 +48,10 @@ for rel in "${STOW_FILES[@]}"; do
   else
     warn "$rel: missing"
   fi
-done
+done < <(stow_files)
+# .gitignore hides these; a tool writing through a folded folder puts them here.
+untracked=$(git -C "$REPO_ROOT" ls-files -o -- home)
+[[ -z $untracked ]] || { warn "untracked files under home/ — move them out of the public repo:"; printf '%s\n' "$untracked" | indent; }
 
 echo
 echo "=== Config symlinks + skhd ==="

@@ -32,27 +32,32 @@ dump_to() {
 # --- Brewfile drift check (never auto-overwrite: cask/mas entries are aspirational
 # fresh-install targets, not always present locally; `brew bundle dump --force`
 # would silently delete them). Report missing leaves and casks to add by hand.
-# leaves feeds the docs/brew-leaves.txt dump below too: one call, 1.5 s.
+# leaves feeds the docs/brew-leaves.txt dump below too, so brew leaves runs once.
+leaves=""
 have brew && step "Brewfile drift"
-if brew_ready && leaves=$(brew leaves) && casks=$(brew list --cask); then
-  # Brewfile names a tap's formula or cask in full; brew lists it by its last part.
-  declared() { awk -F'"' -v k="$1" '$0 ~ "^" k " " { n = $2; sub(/.*\//, "", n); print n }' "$REPO_ROOT/Brewfile" | sort -u; }
-  missing="$(comm -23 <(awk -F/ '{ print $NF }' <<<"$leaves" | sort -u) <(declared brew))"
-  missing_casks="$(comm -23 <(sort -u <<<"$casks") <(declared cask))"
-  if [[ -z "$missing$missing_casks" ]]; then
-    ok "Brewfile in sync with brew leaves and casks"
+if brew_ready; then
+  if leaves=$(brew leaves) && casks=$(brew list --cask); then
+    # Brewfile names a tap's formula or cask in full; brew lists it by its last part.
+    declared() { awk -F'"' -v k="$1" '$0 ~ "^" k " " { n = $2; sub(/.*\//, "", n); print n }' "$REPO_ROOT/Brewfile" | sort -u; }
+    missing="$(comm -23 <(awk -F/ '{ print $NF }' <<<"$leaves" | sort -u) <(declared brew))"
+    missing_casks="$(comm -23 <(sort -u <<<"$casks") <(declared cask))"
+    if [[ -z "$missing$missing_casks" ]]; then
+      ok "Brewfile in sync with brew leaves and casks"
+    else
+      warn "Installed leaves and casks missing from Brewfile — add by hand:"
+      printf '%s\n' "$missing" "$missing_casks" | grep . | indent
+    fi
   else
-    warn "Installed leaves and casks missing from Brewfile — add by hand:"
-    printf '%s\n' "$missing" "$missing_casks" | grep . | indent
+    # A failed brew leaves may have printed part of the list: never snapshot it.
+    leaves=""
+    warn "brew leaves or brew list --cask failed — Brewfile drift not checked, brew snapshots kept"
   fi
-elif have brew && brew_bottles_supported; then
-  warn "brew leaves or brew list --cask failed — Brewfile drift not checked"
 fi
 
 # --- docs/ snapshots (replayed by install.sh, offline-readable) ---
 # Each tool is its own subprocess and stat-bound: fan out, then `wait`.
 step "docs/ snapshots"
-if [[ -n ${leaves:-} ]]; then   # set only when brew answered above
+if [[ -n $leaves ]]; then   # set only when brew answered above
   dump_to "$DOCS/brew-taps.txt"   brew tap    &
   dump_to "$DOCS/brew-leaves.txt" printf '%s\n' "$leaves" &
   dump_to "$DOCS/brews.txt"       brew list   &
@@ -127,7 +132,7 @@ if [[ -s "$DOCS/repos.txt" ]] && have fd; then
 fi
 
 step "home/ sync (Symlinks → skip, real files → copy back)"
-for rel in "${STOW_FILES[@]}"; do
+while IFS= read -r rel; do
   src="$HOME/$rel"
   dst="$HOME_DIR/$rel"
   if [[ ! -e "$src" ]]; then
@@ -148,6 +153,6 @@ for rel in "${STOW_FILES[@]}"; do
   else
     cp "$src" "$dst" && ok "$rel: copied"
   fi
-done
+done < <(stow_files)
 
 step "Done"

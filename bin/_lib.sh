@@ -107,12 +107,9 @@ hooks_path() {
 # shellcheck disable=SC2034  # consumed by bench-update / bench-doctor
 ANTIDOTE_SH="/opt/homebrew/opt/antidote/share/antidote/antidote.zsh"
 
-# Every file tracked under home/ but Stow's own ignore list, relative to $HOME.
-STOW_FILES=()
-while IFS= read -r f; do
-  [[ $f == .stow-local-ignore ]] || STOW_FILES+=("$f")
-done < <(git -C "$REPO_ROOT" ls-files -- home 2>/dev/null | sed 's|^home/||')
-(( ${#STOW_FILES[@]} )) || warn "no files tracked under home/ — is $REPO_ROOT a git checkout?"
+# Every file tracked under home/ but Stow's own ignore list, relative to $HOME,
+# one per line. Empty outside a git clone.
+stow_files() { git -C "$REPO_ROOT" ls-files -- home ':!home/.stow-local-ignore' 2>/dev/null | sed 's|^home/||'; }
 
 # Checklist lines of $1 absent from directory $2. Shared by install.sh's fonts
 # step and bench-doctor so the two reports can't drift. minimal: non-recursive
@@ -199,7 +196,8 @@ parse_repos() { awk 'NF == 2 && $1 !~ /^#/ { print $1, $2 }' "$1"; }
 # A remote URL reduced to host/path, so the ssh and https forms of one repo
 # compare equal. The URL is a repo's identity when its checkout has moved.
 repo_slug() {
-  printf '%s' "$1" | sed -e 's|^[a-z+]*://||' -e 's|^[^@/]*@||' -e 's|^\([^/:]*\):|\1/|' -e 's|\.git$||'
+  printf '%s' "$1" | sed -e 's|^[a-z+]*://||' -e 's|^[^@/]*@||' -e 's|^\([^/:]*\):[0-9]*/|\1/|' \
+                         -e 's|^\([^/:]*\):|\1/|' -e 's|\.git$||'
 }
 # The current URL of a repo renamed on its host. Both GitHub and GitLab keep
 # serving the old name, so nothing local notices: git ls-remote answers the old

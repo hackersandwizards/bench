@@ -72,6 +72,7 @@ assert_eq "host/path, no scheme or .git" "github.com/org/y" "$(repo_slug https:/
 assert_eq "missing .git suffix is fine"  "github.com/org/y" "$(repo_slug https://github.com/org/y)"
 assert_eq "ssh:// scheme and https user are dropped" "github.com/org/y github.com/org/y" \
   "$(repo_slug ssh://git@github.com/org/y.git) $(repo_slug https://user@github.com/org/y.git)"
+assert_eq "an ssh port is not part of the path" "github.com/org/y" "$(repo_slug ssh://git@github.com:22/org/y.git)"
 assert_fail "different repos stay different" \
   test "$(repo_slug https://github.com/org/y.git)" = "$(repo_slug https://github.com/org/other.git)"
 
@@ -236,7 +237,7 @@ step "install.sh Stow step"
 tdir=$(mktemp -d)
 stow_cmd=$(grep -oE '^ *if stow --dir=.* home;' "$REPO_ROOT/install.sh" | sed 's/^ *if stow /stow -n -v /; s/;$//')
 assert_eq "an empty home gets one link per tracked file, never a folder link" \
-  "$(printf '%s\n' "${STOW_FILES[@]}" | sort)" \
+  "$(stow_files | sort)" \
   "$(HOME="$tdir/home" REPO_ROOT="$REPO_ROOT" bash -c "mkdir -p \"\$HOME\"; $stow_cmd" 2>&1 | sed -n 's/^LINK: \([^ ]*\) =>.*/\1/p' | sort)"
 mkdir -p "$tdir/repo/home/.config/x" "$tdir/home/.config"
 echo keep > "$tdir/repo/home/.config/x/f"; echo foreign > "$tdir/home/.y"
@@ -293,6 +294,9 @@ rm -f "$tdir/args"
 assert_fail "refuses two inputs that would write one output" \
   env HOME="$tdir/home" PATH="$tdir/bin:$PATH" "$REPO_ROOT/bin/transcribe" -o "$tdir/out" "$tdir/a/talk.wav" "$tdir/b/talk.wav"
 assert_fail "before transcribing either" test -e "$tdir/args"
+: > "$tdir/a/TALK.mp3"
+assert_fail "and two that differ only in spelling or case" \
+  env HOME="$tdir/home" PATH="$tdir/bin:$PATH" "$REPO_ROOT/bin/transcribe" "$tdir/a/talk.wav" "$tdir/b/../a/TALK.mp3"
 rm -rf "$tdir"
 
 step "bench-export dumpers fail with their producer"
@@ -315,17 +319,21 @@ step "bench-export Brewfile drift"
 # A cask installed by hand reaches no record unless the drift check names it.
 tdir=$(mktemp -d)
 # shellcheck disable=SC2016  # literal $ in shim text
-printf '#!/bin/sh\ncase "$1 $2" in\n  "leaves ") echo stow ;;\n  "list --cask") printf "zed\\nhex\\nzzz-extra\\n" ;;\nesac\n' > "$tdir/brew"; chmod +x "$tdir/brew"
-out=$(PATH="$tdir:$PATH" bash -c ". '$REPO_ROOT/bin/_lib.sh'; $(sed -n '/^have brew && step "Brewfile drift"/,/^fi$/p' "$REPO_ROOT/bin/bench-export")" 2>&1)
+printf '#!/bin/sh\ncase "$1 $2" in\n  "leaves ") echo stow; exit ${LEAVESFAIL:-0} ;;\n  "list --cask") printf "zed\\nhex\\nzzz-extra\\n" ;;\nesac\n' > "$tdir/brew"; chmod +x "$tdir/brew"
+drift() { LEAVESFAIL="$1" PATH="$tdir:$PATH" bash -c ". '$REPO_ROOT/bin/_lib.sh'; $(sed -n '/^leaves=""$/,/^fi$/p' "$REPO_ROOT/bin/bench-export"); echo \"leaves=[\$leaves]\"" 2>&1; }
+out=$(drift 0)
 assert_eq "names an installed cask the Brewfile lacks, and only that one" "1 0 0" \
   "$(grep -c 'zzz-extra' <<<"$out") $(grep -cE '^ +(zed|hex|stow)$' <<<"$out") $(grep -c 'in sync' <<<"$out")"
+# A failing brew leaves can print part of its list; that part must never reach the snapshot.
+assert_ok "a failed brew leaves leaves nothing to snapshot" grep -qx 'leaves=\[\]' <<<"$(drift 1)"
+unset -f drift
 rm -rf "$tdir"
 
-step "bench-update pip steps fail with pip"
+step "bench-update pip steps fail with pip or its index"
 # Offline, pip list prints nothing and xargs -r exited 0: the step read as ok.
 tdir=$(mktemp -d)
 # shellcheck disable=SC2016  # literal $ in shim text
-printf '#!/bin/sh\ncase "$*" in *outdated*) [ -n "$PIPFAIL" ] && exit 1; echo "[]" ;; *) echo "$*" >> "%s/installs" ;; esac\n' "$tdir" > "$tdir/pip"; chmod +x "$tdir/pip"
+printf '#!/bin/sh\ncase "$*" in *outdated*) [ -n "$PIPFAIL" ] && exit 1; echo "[]" ;; index*) exit 1 ;; *) echo "$*" >> "%s/installs" ;; esac\n' "$tdir" > "$tdir/pip"; chmod +x "$tdir/pip"
 # shellcheck disable=SC2329  # called through assert_ok and assert_fail
 # _lib.sh puts Homebrew's Python first, so the shim goes on PATH after it.
 pipstep() { PIPFAIL="$1" bash -c ". '$REPO_ROOT/bin/_lib.sh'; PATH='$tdir':\$PATH; $(sed -n '/^_pip_global_upgrade()/,/^}/p;/^_pip_user_upgrade()/,/^}/p' "$REPO_ROOT/bin/bench-update")
@@ -335,6 +343,9 @@ assert_fail "user step fails when pip fails" pipstep 1 _pip_user_upgrade
 assert_ok "global step passes when nothing is outdated" pipstep "" _pip_global_upgrade
 assert_ok "user step passes when nothing is outdated" pipstep "" _pip_user_upgrade
 assert_fail "and installs nothing" test -e "$tdir/installs"
+# pip list --outdated answers [] with exit 0 offline; the index probe is what fails.
+out=$(PIPFAIL="" bash -c ". '$REPO_ROOT/bin/_lib.sh'; PATH='$tdir':\$PATH; $(sed -n '/^if ! have pip || ! have jaq/,/^fi$/p' "$REPO_ROOT/bin/bench-update")" 2>&1)
+assert_ok "an unreachable index is a warning, not ok" grep -q 'index unreachable' <<<"$out"
 unset -f pipstep; rm -rf "$tdir"
 
 step "bench-export home/ sync"
@@ -343,7 +354,7 @@ tdir=$(mktemp -d)
 mkdir -p "$tdir/home/.ssh" "$tdir/repo-home"
 echo 'Host client-box' > "$tdir/home/.ssh/config"; echo 'set number' > "$tdir/home/.vimrc"
 out=$(HOME="$tdir/home" bash -c ". '$REPO_ROOT/bin/_lib.sh'; HOME_DIR='$tdir/repo-home'
-  $(sed -n '/^step "home\/ sync/,/^done$/p' "$REPO_ROOT/bin/bench-export")" 2>&1)
+  $(sed -n '/^step "home\/ sync/,/^done /p' "$REPO_ROOT/bin/bench-export")" 2>&1)
 assert_ok "a real dotfile is copied back" test -f "$tdir/repo-home/.vimrc"
 assert_fail "a real ~/.ssh/config is not" test -e "$tdir/repo-home/.ssh/config"
 assert_ok "and is named instead" grep -q '\.ssh/config: .*not copied' <<<"$out"

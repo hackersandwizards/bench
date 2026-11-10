@@ -65,9 +65,9 @@ Keep the full output; the warn lines are this step's product. Shapes to read cor
 
 ### 3. Refresh the repo's picture of the machine
 
-`bench-export`. It rewrites the `docs/` snapshots, union-merges `docs/fonts.txt`, and copies real
-`STOW_FILES` back into `home/`, except a real `~/.ssh/config`, which it names in a warn and leaves to
-a human.
+`bench-export`. It rewrites the `docs/` snapshots, union-merges `docs/fonts.txt`, and copies each
+real file in `$HOME` that `home/` tracks back into `home/`, except a real `~/.ssh/config`, which it
+names in a warn and leaves to a human.
 
 It also lists installed `brew leaves` and casks the Brewfile does not declare, and refuses to write
 them. Add each by hand, in the section its neighbours sit in, with the `brew desc <name>` line as the

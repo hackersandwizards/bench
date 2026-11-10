@@ -97,7 +97,7 @@ if [[ -n ~/.zcompdump(#qNmh-24) ]]; then
 else
   compinit
   # An unchanged dump keeps its mtime, which would send every later shell here.
-  touch ~/.zcompdump
+  touch -c ~/.zcompdump
 fi
 
 # --- fzf-tab + history-substring-search (must load after compinit) ---

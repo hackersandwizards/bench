@@ -63,7 +63,7 @@ Optional, per person: Fathom (`FATHOM_API_KEY` in `secrets.zsh`), OpenAI (Codex 
 - [ ] **GitHub / GitLab**: `gh auth login` and `glab auth login` if the wizard step was skipped.
 - [ ] **skhd Accessibility**: the first hotkey press prompts for it. System Settings -> Privacy & Security -> Accessibility -> enable skhd.
 - [ ] **Commercial fonts**: the wizard lists fonts from `docs/fonts.txt` that `fonts/` doesn't ship (no redistribution rights, the repo is public). Restore them from a `~/Library/Fonts` backup. Never commit them.
-- [ ] **Mail signature**: in the Company OS clone, run `bun scripts/mail-signature/render.ts <slug>`, where `<slug>` is your file name in `src/content/people/` without `.md`. It fills the brand template from your people record. Open `tmp/mail-signature/<slug>.html` in a browser, select all, copy, paste into Mail -> Settings -> Signatures.
+- [ ] **Mail signature**: in the Company OS clone, run `bun scripts/mail-signature/render.ts <slug>`, where `<slug>` is your file name in `src/content/people/` without `.md`. It fills the brand template from your people record; `--phone` and `--linkedin` add the number and profile from it. Open `tmp/mail-signature/<slug>.html` in a browser, select all, copy, paste into Mail -> Settings -> Signatures.
 - [ ] **Widgets**: rebuild desktop + Notification Center widgets by hand (right-click desktop -> Edit Widgets). macOS has no supported export.
 - [ ] **Default-app cleanup**: Apple system apps live in `/System/Applications` and are SIP-protected, so they cannot be deleted. The Dock replay already hides the unwanted ones. Delete unwanted App Store installs from `/Applications`.
 - [ ] **App settings outside this repo**: GUI app preferences other than Moom's are not synced. Licensed apps restore their own settings after sign-in.
@@ -87,7 +87,7 @@ install.sh            Interactive wizard
 macos.sh              Opt-in macOS system defaults
 secrets.zsh           Untracked, gitignored. API keys go here
 bin/
-  _lib.sh               Shared helpers (step/ok/warn/skip/have, STOW_FILES, ANTIDOTE_SH, REPO_ROOT)
+  _lib.sh               Shared helpers (step/ok/warn/skip/have, stow_files, ANTIDOTE_SH, REPO_ROOT)
   bench-update          Update brew, antidote, language tools, globals
   bench-export          Check Brewfile + refresh docs/ snapshots + sync home/ from $HOME
   bench-doctor          Health check

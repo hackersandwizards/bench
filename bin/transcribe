@@ -33,30 +33,33 @@ if [[ ! -f $MODEL ]]; then
   exit 1
 fi
 
-# <dir>/<name>: the extension comes off the file name, never off a dotted folder.
-outbase() { local b; b=$(basename "$1"); printf '%s/%s' "${out:-$(dirname "$1")}" "${b%.*}"; }
-# Checked before the first run: two inputs writing one output keep only the last.
-seen=$'\n'
+# Each output is <dir>/<name>, the extension taken off the file name, never off
+# a dotted folder. Checked before the first run, resolved and case-folded as APFS
+# compares names: two inputs writing one output keep only the last.
+outs=() seen=$'\n'
 for f; do
   [[ -f $f ]] || { echo "transcribe: no such file: $f" >&2; exit 1; }
-  o=$(outbase "$f")
-  [[ $seen != *$'\n'"$o"$'\n'* ]] || { echo "transcribe: two inputs would write $o.txt" >&2; exit 1; }
-  seen+="$o"$'\n'
+  b=$(basename "$f"); o="${out:-$(dirname "$f")}/${b%.*}"
+  d=$(cd "${o%/*}" 2>/dev/null && pwd -P) || d=${o%/*}
+  k=$(printf '%s/%s' "$d" "${o##*/}" | tr '[:upper:]' '[:lower:]')
+  [[ $seen != *$'\n'"$k"$'\n'* ]] || { echo "transcribe: two inputs would write $o.txt" >&2; exit 1; }
+  seen+="$k"$'\n' outs+=("$o")
 done
 
 # set -e leaves the loop on a failed ffmpeg or whisper-cli; the trap still drops
 # the converted WAV, which runs to about 115 MB per hour of audio.
 tmp=""
 trap '[[ -z $tmp ]] || rm -rf "$tmp"' EXIT
+i=0
 for f; do
-  o=$(outbase "$f"); dir=${o%/*} base=${o##*/}
-  mkdir -p "$dir"
+  o=${outs[i]}; i=$((i + 1))
+  mkdir -p "${o%/*}"
   src=$f
   case $(printf '%s' "${f##*.}" | tr '[:upper:]' '[:lower:]') in
     flac | mp3 | ogg | wav) ;;
     *)
       tmp=$(mktemp -d)
-      src="$tmp/$base.wav"
+      src="$tmp/${o##*/}.wav"
       ffmpeg -nostdin -loglevel error -y -i "$f" -vn -ac 1 -ar 16000 -c:a pcm_s16le "$src"
       ;;
   esac
@@ -64,8 +67,8 @@ for f; do
   # each window the previous window's text, which invented repeated sentences
   # and carried one unpunctuated window through a whole file. bench-test fails
   # if the flag goes missing.
-  whisper-cli -m "$MODEL" -l "$lang" -mc 0 -f "$src" -otxt -osrt -of "$dir/$base" -np >/dev/null
+  whisper-cli -m "$MODEL" -l "$lang" -mc 0 -f "$src" -otxt -osrt -of "$o" -np >/dev/null
   [[ -z $tmp ]] || rm -rf "$tmp"
   tmp=""
-  printf '%s\n' "$dir/$base.txt" "$dir/$base.srt"
+  printf '%s\n' "$o.txt" "$o.srt"
 done
