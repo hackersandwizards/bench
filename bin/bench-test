@@ -277,6 +277,16 @@ assert_eq "moom_dump passes a real export through unchanged" "$(cat "$REPO_ROOT/
 unset -f moom
 rm -rf "$tdir"
 
+step "bench-export Brewfile drift"
+# A cask installed by hand reaches no record unless the drift check names it.
+tdir=$(mktemp -d)
+# shellcheck disable=SC2016  # literal $ in shim text
+printf '#!/bin/sh\ncase "$1 $2" in\n  "leaves ") echo stow ;;\n  "list --cask") printf "zed\\nhex\\nzzz-extra\\n" ;;\nesac\n' > "$tdir/brew"; chmod +x "$tdir/brew"
+out=$(PATH="$tdir:$PATH" bash -c ". '$REPO_ROOT/bin/_lib.sh'; $(sed -n '/^if have brew && ! brew_bottles_supported/,/^fi$/p' "$REPO_ROOT/bin/bench-export")" 2>&1)
+assert_eq "names an installed cask the Brewfile lacks, and only that one" "1 0 0" \
+  "$(grep -c 'zzz-extra' <<<"$out") $(grep -cE '^ +(zed|hex|stow)$' <<<"$out") $(grep -c 'in sync' <<<"$out")"
+rm -rf "$tdir"
+
 step "find_clone sees clones inside ignored directories"
 tdir=$(mktemp -d)
 git init -q "$tdir/dev/parent" && printf 'child/\n' > "$tdir/dev/parent/.gitignore"

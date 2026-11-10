@@ -31,19 +31,21 @@ dump_to() {
 
 # --- Brewfile drift check (never auto-overwrite: cask/mas entries are aspirational
 # fresh-install targets, not always present locally; `brew bundle dump --force`
-# would silently delete them). Report missing leaves so they can be added by hand.
+# would silently delete them). Report missing leaves and casks to add by hand.
 if have brew && ! brew_bottles_supported; then
   step "Brewfile drift"
   brew_unsupported_notice
 elif have brew; then
   step "Brewfile drift"
-  declared="$(awk -F'"' '/^brew /{print $2}' "$REPO_ROOT/Brewfile" | sort -u)"
-  missing="$(comm -23 <(brew leaves | sort -u) <(printf '%s\n' "$declared"))"
-  if [[ -z "$missing" ]]; then
-    ok "Brewfile in sync with brew leaves"
+  # Brewfile names a tap's formula or cask in full; brew lists it by its last part.
+  declared() { awk -F'"' -v k="$1" '$0 ~ "^" k " " { n = $2; sub(/.*\//, "", n); print n }' "$REPO_ROOT/Brewfile" | sort -u; }
+  missing="$(comm -23 <(brew leaves | sed 's|.*/||' | sort -u) <(declared brew))"
+  missing_casks="$(comm -23 <(brew list --cask | sort -u) <(declared cask))"
+  if [[ -z "$missing$missing_casks" ]]; then
+    ok "Brewfile in sync with brew leaves and casks"
   else
-    warn "Installed leaves missing from Brewfile — add by hand:"
-    printf '%s\n' "$missing" | indent
+    warn "Installed leaves and casks missing from Brewfile — add by hand:"
+    printf '%s\n' "$missing" "$missing_casks" | grep . | indent
   fi
 fi
 
