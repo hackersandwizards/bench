@@ -96,6 +96,8 @@ if [[ -n ~/.zcompdump(#qNmh-24) ]]; then
   compinit -C
 else
   compinit
+  # An unchanged dump keeps its mtime, which would send every later shell here.
+  touch ~/.zcompdump
 fi
 
 # --- fzf-tab + history-substring-search (must load after compinit) ---
@@ -127,12 +129,11 @@ export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
 # --- Deferred completions (lazy-loaded, ~10ms saved at startup) ---
-# Trade-off: tab-complete on gcloud/entire is silent until the command is run
-# once per session, direct invocations always work. (bun needs no stub, brew
-# ships _bun via site-functions/compinit.)
+# Trade-off: tab-complete on gcloud is silent until the command is run once per
+# session, direct invocations always work. (bun needs no stub, brew ships _bun
+# via site-functions/compinit.)
 # Stub only when the SDK exists: on a fresh machine the stub's `source` would
 # error where the shell's own "command not found" is the honest answer.
-# (entire needs no guard: _init_cache fails silently and cleans up.)
 if [[ -f /opt/homebrew/share/google-cloud-sdk/completion.zsh.inc ]]; then
   function gcloud() {
     unfunction gcloud
@@ -140,11 +141,6 @@ if [[ -f /opt/homebrew/share/google-cloud-sdk/completion.zsh.inc ]]; then
     gcloud "$@"
   }
 fi
-function entire() {
-  unfunction entire
-  _init_cache entire completion zsh
-  entire "$@"
-}
 
 # direnv adds a chpwd hook: it must be registered eagerly to fire on every cd.
 _init_cache direnv hook zsh
