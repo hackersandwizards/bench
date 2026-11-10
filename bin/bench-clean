@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Reclaim disk: purge regenerable caches, drop superseded JetBrains
-# versions, sweep .DS_Store, remove finished Claude Code sessions' temp entries.
+# versions (older than the installed one), sweep .DS_Store, remove finished Claude Code sessions' temp entries.
 # --dry-run reports the temp sweep and does nothing else.
 # Removes only auto-regenerating caches, superseded files and finished sessions' temp entries, never
 # installed tools.
@@ -130,13 +130,13 @@ run "Claude HTTP cache"  rm -rf "$HOME/Library/Application Support/Claude/Cache"
 sweep_jetbrains() {
   local roots=("$HOME/Library/Caches/JetBrains" "$HOME/Library/Logs/JetBrains" \
                "$HOME/Library/Application Support/JetBrains")
-  local app pi name root d live="|" products="|" nlive=0 removed=0
+  local app pi name root d p v top live="|" installed="" nlive=0 removed=0
   have jaq || { skip "JetBrains: jaq missing, version dirs not swept"; return 0; }
   for app in /Applications/*.app "$HOME/Applications"/*.app; do
     pi="$app/Contents/Resources/product-info.json"   # JetBrains-only file: its presence is the test
     [[ -f "$pi" ]] || continue                       # also absorbs an unmatched literal glob
     name=$(jaq -r '.dataDirectoryName // empty' "$pi" 2>/dev/null)
-    [[ -n "$name" ]] && { live+="$name|"; products+="${name%%[0-9]*}|"; nlive=$((nlive + 1)); }
+    [[ -n "$name" ]] && { live+="$name|"; installed+="${name%%[0-9]*} ${name#"${name%%[0-9]*}"}"$'\n'; nlive=$((nlive + 1)); }
   done
   # Fail closed. An empty set means Toolbox is mid-update with the bundle gone, not that
   # every version dir is stale — sweeping on it would delete the live config.
@@ -149,13 +149,16 @@ sweep_jetbrains() {
       # dirs never match, so whatever JetBrains adds next is safe by default.
       [[ "$name" =~ ^[A-Za-z]+[0-9]+(\.[0-9]+)+$ ]] || continue
       [[ "$live" == *"|$name|"* ]] && continue
-      # Superseded means an older version of an installed product. A product with
-      # no app found (uninstalled, or Toolbox in a custom folder) keeps its settings.
-      [[ "$products" == *"|${name%%[0-9]*}|"* ]] || continue
+      # Superseded means older than the newest installed version of the product: a
+      # newer dir is a rolled-back version's settings. A product with no app found
+      # (uninstalled, or Toolbox in a custom folder) keeps its settings.
+      p=${name%%[0-9]*}; v=${name#"$p"}
+      top=$(awk -v p="$p" '$1 == p { print $2 }' <<<"$installed" | sort -V | tail -1)
+      [[ -n "$top" && "$(printf '%s\n' "$v" "$top" | sort -V | head -1)" == "$v" ]] || continue
       rm -rf "$d" && { ok "JetBrains: removed ${d%/}"; removed=$((removed + 1)); }
     done
   done
-  # Named, not counted like the VS Code dedup: these carry settings, not just cache.
+  # Named, not counted: these carry settings, not just cache.
   (( removed )) || ok "JetBrains: no superseded version dirs"
 }
 step "JetBrains version dirs"; sweep_jetbrains

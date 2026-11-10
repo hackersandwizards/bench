@@ -294,11 +294,13 @@ step "JetBrains sweep removes only superseded versions"
 tdir=$(mktemp -d)
 mkdir -p "$tdir/Applications/Zzzide.app/Contents/Resources" \
   "$tdir/Library/Caches/JetBrains/Zzzide2026.1" "$tdir/Library/Caches/JetBrains/Zzzide2026.2" \
+  "$tdir/Library/Caches/JetBrains/Zzzide2026.10" "$tdir/Library/Caches/JetBrains/Zzzide2027.1" \
   "$tdir/Library/Caches/JetBrains/Yyyide2026.1"
 printf '{"dataDirectoryName":"Zzzide2026.2"}' > "$tdir/Applications/Zzzide.app/Contents/Resources/product-info.json"
 HOME="$tdir" bash -c ". '$REPO_ROOT/bin/_lib.sh'; $(sed -n '/^sweep_jetbrains()/,/^}/p' "$REPO_ROOT/bin/bench-clean"); sweep_jetbrains" >/dev/null 2>&1
-assert_eq "older version of an installed product removed, live one kept" "Zzzide2026.2" \
-  "$(command ls "$tdir/Library/Caches/JetBrains" | grep Zzz)"
+# A newer dir is a rollback's settings: 2026.10 sorts after 2026.2 as a version.
+assert_eq "older version of an installed product removed, live and newer ones kept" "Zzzide2026.10 Zzzide2026.2 Zzzide2027.1" \
+  "$(command ls "$tdir/Library/Caches/JetBrains" | grep Zzz | xargs)"
 assert_ok "product with no installed app keeps its dir" test -d "$tdir/Library/Caches/JetBrains/Yyyide2026.1"
 rm -rf "$tdir"
 
