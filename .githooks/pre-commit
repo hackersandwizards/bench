@@ -38,7 +38,8 @@ for f in "${staged[@]}"; do
 done
 
 if have betterleaks; then
-  betterleaks git --staged --redact --no-banner
+  # An inline allow marker is a human's call, not something a commit can add.
+  betterleaks git --staged --redact --no-banner --ignore-gitleaks-allow
 else
   echo "pre-commit: betterleaks not installed — refusing to commit unscanned" >&2
   echo "  install: brew install betterleaks" >&2

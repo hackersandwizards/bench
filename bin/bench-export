@@ -69,7 +69,9 @@ dock_dump()    { set -o pipefail; dockutil --list | sed "s|$HOME|\$HOME|g"; }
 sidebar_dump() { set -o pipefail; mysides list    | sed "s|$HOME|\$HOME|g"; }
 have dockutil && dump_to "$DOCS/dock.txt"           dock_dump    &
 have mysides  && dump_to "$DOCS/finder-sidebar.txt" sidebar_dump &
-have defaults && dump_to "$DOCS/moom.plist" defaults export com.manytricks.Moom - &
+# A domain with no prefs exports an empty dict with exit 0: keep the snapshot.
+moom_dump() { local p; p=$(defaults export com.manytricks.Moom -) && [[ $p == *'<key>'* ]] && printf '%s\n' "$p"; }
+have defaults && dump_to "$DOCS/moom.plist" moom_dump &
 wait
 # Never dump ~/.gradle/gradle.properties here: it holds signing/Sonatype
 # credentials and this repo is public (leaked once, 2026-07).

@@ -205,8 +205,16 @@ step "pre-commit secret gate"
 # the commit through, which is how the repo ran unscanned after gitleaks left.
 # PATH without /opt/homebrew hides betterleaks; _lib.sh only prepends, so it
 # cannot smuggle the binary back in.
-assert_fail "refuses to commit when betterleaks is missing" \
-  env PATH=/usr/bin:/bin "$REPO_ROOT/.githooks/pre-commit"
+assert_eq "refuses to commit when betterleaks is missing" "1" \
+  "$(cd "$REPO_ROOT" && env PATH=/usr/bin:/bin .githooks/pre-commit 2>&1 | grep -c 'betterleaks not installed')"
+# The token is built at run time so this file holds none.
+tdir=$(mktemp -d)
+git init -q "$tdir" && mkdir -p "$tdir/.githooks" "$tdir/bin"
+cp "$REPO_ROOT/.githooks/pre-commit" "$tdir/.githooks/" && cp "$REPO_ROOT/bin/_lib.sh" "$tdir/bin/"
+printf 'token = "ghp_%s" # gitleaks:allow\n' "$(openssl rand -hex 18)" > "$tdir/a.txt" && git -C "$tdir" add a.txt
+assert_fail "an inline gitleaks:allow marker does not pass the scan" \
+  bash -c "cd '$tdir' && .githooks/pre-commit"
+rm -rf "$tdir"
 
 step "install.sh istep self-count"
 # STEP_TOTAL greps for '^istep ': an indented call would increment STEP_N
@@ -260,6 +268,13 @@ tdir=$(mktemp -d)
 printf '#!/bin/sh\nexit 1\n' > "$tdir/dockutil"; chmod +x "$tdir/dockutil"
 assert_fail "dock_dump exits non-zero when dockutil fails" \
   env PATH="$tdir:$PATH" bash -c "$(grep -E '^dock_dump\(\)' "$REPO_ROOT/bin/bench-export"); dock_dump"
+# defaults exports a domain without prefs as an empty dict and exits 0.
+moom() { env PATH="$tdir:$PATH" bash -c "$(grep -E '^moom_dump\(\)' "$REPO_ROOT/bin/bench-export"); moom_dump"; }
+printf '#!/bin/sh\nprintf "<plist version=\\"1.0\\">\\n<dict/>\\n</plist>\\n"\n' > "$tdir/defaults"; chmod +x "$tdir/defaults"
+assert_fail "moom_dump refuses an empty Moom domain" moom
+printf '#!/bin/sh\ncat "%s"\n' "$REPO_ROOT/docs/moom.plist" > "$tdir/defaults"
+assert_eq "moom_dump passes a real export through unchanged" "$(cat "$REPO_ROOT/docs/moom.plist")" "$(moom)"
+unset -f moom
 rm -rf "$tdir"
 
 step "find_clone sees clones inside ignored directories"
