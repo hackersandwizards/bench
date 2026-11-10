@@ -291,21 +291,25 @@ home="$tdir/home" root="$home/Library/Caches/claude-code-tmp/claude-$(id -u)" st
 mkdir -p "$home/.claude/sessions" "$home/.claude-swap-backup/sessions/1-x/sessions" "$root/-p" "$stub"
 ids=(aaaaaaaa bbbbbbbb cccccccc dddddddd eeeeeeee)
 for i in "${ids[@]}"; do mkdir -p "$root/-p/$i-0000-0000-0000-000000000000/scratchpad"; touch "$root/-p/$i-0000-0000-0000-000000000000/scratchpad/n"; done
-mkdir -p "$root/-p/not-a-uuid" "$root/odd"
+mkdir -p "$root/-p/not-a-uuid" "$root/odd" "$root/bundled-skills/1.0.0" "$root/bundled-skills/2.0.0" \
+  "$root/bash-edit-diff/old" "$root/bash-edit-diff/new"
+for i in aaaaaaaa bbbbbbbb; do echo '{}' > "$root/cache-break-state-$i-0000-0000-0000-000000000000.json"; done
 ln -s "$tdir" "$root/-p/ffffffff-0000-0000-0000-000000000000"
 find "$root" -not -type l -exec touch -t 202601010000 {} +
 touch "$root/-p/cccccccc-0000-0000-0000-000000000000/scratchpad/n"  # paused: recent, no process
+touch "$root/bash-edit-diff/new"
 sleep 120 >/dev/null 2>&1 & active=$!
 sleep 120 >/dev/null 2>&1 & reused=$!
 exec 9<"$root/-p/eeeeeeee-0000-0000-0000-000000000000/scratchpad/n"
-record() { printf '{"pid":%s,"procStart":"%s","sessionId":"%s-0000-0000-0000-000000000000"}\n' "$1" "$2" "$3"; }
-record "$active" "$(TZ=UTC LC_ALL=C ps -o lstart= -p "$active")" aaaaaaaa > "$home/.claude-swap-backup/sessions/1-x/sessions/$active.json"
-record "$reused" "Thu Jan  1 00:00:00 2026" dddddddd > "$home/.claude/sessions/$reused.json"
+record() { printf '{"pid":%s,"procStart":"%s","sessionId":"%s-0000-0000-0000-000000000000"%s}\n' "$1" "$2" "$3" "${4:+,\"version\":\"$4\"}"; }
+record "$active" "$(TZ=UTC LC_ALL=C ps -o lstart= -p "$active")" aaaaaaaa > "$tdir/active-unversioned.json"
+record "$active" "$(TZ=UTC LC_ALL=C ps -o lstart= -p "$active")" aaaaaaaa 2.0.0 > "$home/.claude-swap-backup/sessions/1-x/sessions/$active.json"
+record "$reused" "Thu Jan  1 00:00:00 2026" dddddddd 1.0.0 > "$home/.claude/sessions/$reused.json"
 # shellcheck disable=SC2016  # single quotes keep $2 for the stub
 printf '#!/bin/sh\n[ "$2" = bash ] && exec /usr/bin/pgrep -ax bash\necho %s\n' "$active" > "$stub/pgrep"; chmod +x "$stub/pgrep"
 # The full-clean steps stay inert even if --dry-run ever stopped short of them.
 printf '#!/bin/sh\nexit 0\n' | tee "$stub/brew" > "$stub/fd"; chmod +x "$stub/brew" "$stub/fd"
-sweep() { HOME="$home" PATH="$stub:$PATH" bash -c ". '$REPO_ROOT/bin/_lib.sh'; $(sed -n '/^sweep_cc_tmp()/,/^}/p' "$REPO_ROOT/bin/bench-clean"); sweep_cc_tmp" 2>&1; }
+sweep() { HOME="$home" PATH="$stub:$PATH" bash -c ". '$REPO_ROOT/bin/_lib.sh'; $(sed -n '/^sweep_cc_tmp()/,/^}/p' "$REPO_ROOT/bin/bench-clean"); sweep_cc_tmp \"\$@\"" sweep "$@" 2>&1; }
 left() { command ls "$root/-p" | tr '\n' ' '; }
 all="aaaaaaaa-0000-0000-0000-000000000000 bbbbbbbb-0000-0000-0000-000000000000 cccccccc-0000-0000-0000-000000000000 dddddddd-0000-0000-0000-000000000000 eeeeeeee-0000-0000-0000-000000000000 ffffffff-0000-0000-0000-000000000000 not-a-uuid "
 HOME="$home" PATH="$stub:$PATH" BUN_INSTALL="$home/.bun" "$REPO_ROOT/bin/bench-clean" --dry-run >"$tdir/dry" 2>&1
@@ -349,17 +353,29 @@ chmod 000 "$root"
 sweep >"$tdir/out"
 chmod 755 "$root"
 assert_ok "a root it cannot enter is warned" grep -q 'cannot enter' "$tdir/out"
+cp "$home/.claude-swap-backup/sessions/1-x/sessions/$active.json" "$tdir/active.json"
+cp "$tdir/active-unversioned.json" "$home/.claude-swap-backup/sessions/1-x/sessions/$active.json"
+sweep --dry-run >"$tdir/out"
+assert_fail "a live record without a version keeps every bundled-skills version" grep -q 'would remove bundled-skills' "$tdir/out"
+cp "$tdir/active.json" "$home/.claude-swap-backup/sessions/1-x/sessions/$active.json"
 sweep >"$tdir/out"
 assert_eq "live, paused, open, symlinked and foreign entries stay; finished and reused-pid go" \
   "aaaaaaaa-0000-0000-0000-000000000000 cccccccc-0000-0000-0000-000000000000 eeeeeeee-0000-0000-0000-000000000000 ffffffff-0000-0000-0000-000000000000 not-a-uuid " "$(left)"
 assert_ok "a symlinked session entry leaves its target alone" test -f "$tdir/out"
 assert_ok "a foreign top-level entry stays" test -d "$root/odd"
+assert_eq "bundled skills of a version no live session runs go" "2.0.0" "$(command ls "$root/bundled-skills")"
+assert_eq "cache-break state of a finished session goes" "cache-break-state-aaaaaaaa-0000-0000-0000-000000000000.json" \
+  "$(command ls "$root" | grep cache-break-state)"
+assert_eq "an old bash-edit-diff entry goes, a recent one stays" "new" "$(command ls "$root/bash-edit-diff")"
 exec 9<&-
 kill "$active" "$reused" 2>/dev/null; wait "$active" "$reused" 2>/dev/null
 rm -rf "$tdir"
 
 step "bench-clean keeps the Chrome for Testing builds repos pin"
 assert_fail "never names ~/.cache/puppeteer" grep -q '\.cache/puppeteer' "$REPO_ROOT/bin/bench-clean"
+assert_fail "never removes the bun install cache, which every session's MCP launcher holds open" \
+  grep -q 'install/cache' "$REPO_ROOT/bin/bench-clean"
+assert_fail "names no Claude Desktop folder Desktop no longer creates" grep -q 'Claude/Code Cache' "$REPO_ROOT/bin/bench-clean"
 
 step "pre-commit lints the staged blob"
 # A broken hunk staged with its fix left unstaged must still fail the hook.

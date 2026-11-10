@@ -55,5 +55,11 @@ export PIP_BREAK_SYSTEM_PACKAGES=1
 # its global prefix from the Cellar path of node. bin/_lib.sh sets the same.
 export NPM_CONFIG_PREFIX=/opt/homebrew
 
+# --- Node / bun compile cache ---
+# astro and vite call module.enableCompileCache(). Bun keys each entry by file path and never
+# evicts, so every build's content-hashed chunks add entries to $TMPDIR/node-compile-cache without
+# bound (53 GB in two days). ~/.claude/settings.json sets the same for Claude sessions.
+export NODE_DISABLE_COMPILE_CACHE=1
+
 # --- Secrets (untracked, gitignored) ---
 [[ -f "$ZSH_SETTINGS_DIR/secrets.zsh" ]] && source "$ZSH_SETTINGS_DIR/secrets.zsh"
