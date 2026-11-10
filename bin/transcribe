@@ -33,14 +33,23 @@ if [[ ! -f $MODEL ]]; then
   exit 1
 fi
 
+# <dir>/<name>: the extension comes off the file name, never off a dotted folder.
+outbase() { local b; b=$(basename "$1"); printf '%s/%s' "${out:-$(dirname "$1")}" "${b%.*}"; }
+# Checked before the first run: two inputs writing one output keep only the last.
+seen=$'\n'
+for f; do
+  [[ -f $f ]] || { echo "transcribe: no such file: $f" >&2; exit 1; }
+  o=$(outbase "$f")
+  [[ $seen != *$'\n'"$o"$'\n'* ]] || { echo "transcribe: two inputs would write $o.txt" >&2; exit 1; }
+  seen+="$o"$'\n'
+done
+
 # set -e leaves the loop on a failed ffmpeg or whisper-cli; the trap still drops
 # the converted WAV, which runs to about 115 MB per hour of audio.
 tmp=""
 trap '[[ -z $tmp ]] || rm -rf "$tmp"' EXIT
 for f; do
-  [[ -f $f ]] || { echo "transcribe: no such file: $f" >&2; exit 1; }
-  base=$(basename "${f%.*}")
-  dir=${out:-$(dirname "$f")}
+  o=$(outbase "$f"); dir=${o%/*} base=${o##*/}
   mkdir -p "$dir"
   src=$f
   case $(printf '%s' "${f##*.}" | tr '[:upper:]' '[:lower:]') in

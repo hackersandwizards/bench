@@ -285,6 +285,14 @@ assert_ok "runs once the model file exists" \
 assert_eq "passes -mc 0, the fixed model, text and SRT output" \
   "-m $tdir/home/.cache/whisper/ggml-large-v3-turbo.bin -l en -mc 0 -f $tdir/talk.wav -otxt -osrt -of $tdir/out/talk -np" \
   "$(cat "$tdir/args" 2>/dev/null)"
+printf '#!/bin/sh\nexit 0\n' > "$tdir/bin/ffmpeg"; chmod +x "$tdir/bin/ffmpeg"
+mkdir -p "$tdir/rec.2026" "$tdir/a" "$tdir/b"; : > "$tdir/rec.2026/talk"; : > "$tdir/a/talk.wav"; : > "$tdir/b/talk.wav"
+env HOME="$tdir/home" PATH="$tdir/bin:$PATH" "$REPO_ROOT/bin/transcribe" "$tdir/rec.2026/talk" >/dev/null 2>&1
+assert_ok "names the output after the file, not a dotted folder" grep -q -- "-of $tdir/rec.2026/talk -np" "$tdir/args"
+rm -f "$tdir/args"
+assert_fail "refuses two inputs that would write one output" \
+  env HOME="$tdir/home" PATH="$tdir/bin:$PATH" "$REPO_ROOT/bin/transcribe" -o "$tdir/out" "$tdir/a/talk.wav" "$tdir/b/talk.wav"
+assert_fail "before transcribing either" test -e "$tdir/args"
 rm -rf "$tdir"
 
 step "bench-export dumpers fail with their producer"
