@@ -32,19 +32,23 @@ have rustup && run "Rust toolchains" rustup update
 
 # No uv cache prune: same lock, same reason as the clean dropped from bin/bench-clean.
 
+# pipefail in a subshell: a failed pip list must fail the step, not reach xargs
+# as an empty list. grep's exit 1 only means nothing outdated is managed.
 _pip_global_upgrade() {
   local managed; managed=$(pip_managed_names)
   [[ -z "$managed" ]] && return 0
-  pip list --outdated --format=json 2>/dev/null \
-    | jaq -r '.[].name' \
-    | grep -ixFf <(printf '%s\n' "$managed") \
-    | xargs -r pip install --upgrade
+  ( set -o pipefail
+    pip list --outdated --format=json 2>/dev/null \
+      | jaq -r '.[].name' \
+      | { grep -ixFf <(printf '%s\n' "$managed") || [[ $? == 1 ]]; } \
+      | xargs -r pip install --upgrade )
 }
 
 _pip_user_upgrade() {
-  pip list --user --outdated --format=json 2>/dev/null \
-    | jaq -r '.[].name' \
-    | xargs -r pip install --user --upgrade
+  ( set -o pipefail
+    pip list --user --outdated --format=json 2>/dev/null \
+      | jaq -r '.[].name' \
+      | xargs -r pip install --user --upgrade )
 }
 
 # jaq gated like every other tool: without it the pipelines would exit

@@ -313,6 +313,22 @@ assert_eq "names an installed cask the Brewfile lacks, and only that one" "1 0 0
   "$(grep -c 'zzz-extra' <<<"$out") $(grep -cE '^ +(zed|hex|stow)$' <<<"$out") $(grep -c 'in sync' <<<"$out")"
 rm -rf "$tdir"
 
+step "bench-update pip steps fail with pip"
+# Offline, pip list prints nothing and xargs -r exited 0: the step read as ok.
+tdir=$(mktemp -d)
+# shellcheck disable=SC2016  # literal $ in shim text
+printf '#!/bin/sh\ncase "$*" in *outdated*) [ -n "$PIPFAIL" ] && exit 1; echo "[]" ;; *) echo "$*" >> "%s/installs" ;; esac\n' "$tdir" > "$tdir/pip"; chmod +x "$tdir/pip"
+# shellcheck disable=SC2329  # called through assert_ok and assert_fail
+# _lib.sh puts Homebrew's Python first, so the shim goes on PATH after it.
+pipstep() { PIPFAIL="$1" bash -c ". '$REPO_ROOT/bin/_lib.sh'; PATH='$tdir':\$PATH; $(sed -n '/^_pip_global_upgrade()/,/^}/p;/^_pip_user_upgrade()/,/^}/p' "$REPO_ROOT/bin/bench-update")
+  pip_managed_names() { echo requests; }; $2"; }
+assert_fail "global step fails when pip fails" pipstep 1 _pip_global_upgrade
+assert_fail "user step fails when pip fails" pipstep 1 _pip_user_upgrade
+assert_ok "global step passes when nothing is outdated" pipstep "" _pip_global_upgrade
+assert_ok "user step passes when nothing is outdated" pipstep "" _pip_user_upgrade
+assert_fail "and installs nothing" test -e "$tdir/installs"
+unset -f pipstep; rm -rf "$tdir"
+
 step "find_clone sees clones inside ignored directories"
 tdir=$(mktemp -d)
 git init -q "$tdir/dev/parent" && printf 'child/\n' > "$tdir/dev/parent/.gitignore"
