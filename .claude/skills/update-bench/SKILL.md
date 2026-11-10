@@ -78,17 +78,17 @@ Commit every line the union adds, entries an earlier commit pruned by hand inclu
 
 ### 4. Triage
 
-`bench-doctor`. Sort every warn from steps 2 and 3 into three buckets, all three of which appear in
-the report.
+`bench-doctor`. Sort every warn the run sees into three buckets, all three of which appear in the
+report: those steps 2 and 3 print, and those from any command the run issues itself, such as a
+check of an export diff.
 
-A tool's own `Warning:` line is a warn too. Trace it to the bench step that causes it before
-calling it expected: the step that prints it is often not the step that causes it.
+A tool's own `Warning:` line is a warn too. Trace it to the bench step or repository file that
+causes it before calling it expected: the step that prints it is often not the step that causes it,
+and a variable `exports.zsh` sets reaches every brew command.
 
 Check that the next run of the same step does not undo a fix.
 
-
-
-**Fixed by the run.** Every warn from steps 2 and 3 whose remedy passes the test this skill opens
+**Fixed by the run.** Every warn whose remedy passes the test this skill opens
 with, whichever tool printed it and whether or not this file names it. Of doctor's warns, two
 qualify today: `core.hooksPath` not `.githooks` and `secrets.zsh` not mode 600. Apply the test
 rather than keeping a catalogue here.
