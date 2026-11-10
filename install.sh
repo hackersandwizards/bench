@@ -100,10 +100,12 @@ if have brew && ! brew_bottles_supported; then
 elif have brew && ask "Run 'brew bundle' now?"; then
   # Cask pkg installers call sudo over and over, and macOS forgets the
   # credential after 5 idle minutes, so a long bundle re-prompts constantly.
-  # Ask once, then refresh the timestamp in the background until this
-  # script exits (sudo -n never prompts, and the loop dies with the script).
+  # Ask once, then refresh the timestamp in the background until the bundle
+  # ends (sudo -n never prompts, and the loop dies with the script).
+  keepalive=""
   if sudo -v; then
     ( while kill -0 $$ 2>/dev/null; do sudo -n -v 2>/dev/null; sleep 50; done ) &
+    keepalive=$!
   fi
   # static.adguard.com drops TLS handshakes on some routes (RU CDN edge), so
   # the adguard cask download hangs. Pre-seed brew's cache from AdGuard's
@@ -131,6 +133,9 @@ elif have brew && ask "Run 'brew bundle' now?"; then
   else
     warn "brew bundle finished with failures — re-run this step after fixing them"
   fi
+  # The later package installs run their own scripts: none gets a warm sudo.
+  [[ -z $keepalive ]] || kill "$keepalive" 2>/dev/null
+  sudo -k
 else
   skip "Skipped Brewfile install"
 fi
@@ -261,7 +266,8 @@ fi
 istep "Ghostty config symlink"
 mkdir -p "$HOME/.config/ghostty"
 ghostty_target="$HOME/.config/ghostty/config.ghostty"
-if [[ -L "$ghostty_target" ]]; then
+# readlink-compare as for skhd below: a link left by a repo move dangles.
+if [[ "$(readlink "$ghostty_target" 2>/dev/null)" == "$REPO_ROOT/ghostty/config.ghostty" ]]; then
   ok "Ghostty config already symlinked"
 elif [[ ! -d "/Applications/Ghostty.app" ]]; then
   warn "Ghostty.app not found in /Applications — install it first (https://ghostty.org), then re-run"
@@ -401,14 +407,24 @@ fi
 
 # ---------- Touch ID for sudo ----------
 istep "Enable Touch ID for sudo"
-if [[ -f /etc/pam.d/sudo_local ]] && grep -qE '^auth\s+sufficient\s+pam_tid\.so' /etc/pam.d/sudo_local; then
+pam=/etc/pam.d/sudo_local
+tid='^auth[[:space:]]+sufficient[[:space:]]+pam_tid\.so'
+if [[ -f $pam ]] && grep -qE "$tid" "$pam"; then
   ok "Touch ID for sudo already enabled"
-elif [[ ! -f /etc/pam.d/sudo_local.template ]]; then
-  warn "/etc/pam.d/sudo_local.template missing — needs Sonoma+ (you're on macOS Tahoe so this should exist)"
-elif ask "Enable Touch ID for sudo? (uses /etc/pam.d/sudo_local — survives system updates)"; then
-  sudo cp /etc/pam.d/sudo_local.template /etc/pam.d/sudo_local
-  sudo sed -i '' 's/^#auth/auth/' /etc/pam.d/sudo_local
-  ok "Touch ID enabled — your next 'sudo' will prompt for fingerprint"
+elif [[ ! -f $pam && ! -f $pam.template ]]; then
+  warn "$pam.template missing — needs macOS Sonoma or later"
+elif ask "Enable Touch ID for sudo? (uses $pam — survives system updates)"; then
+  # An existing file can hold pam_reattach or pam_watchid: add the line after them.
+  if [[ -f $pam ]]; then
+    printf 'auth       sufficient     pam_tid.so\n' | sudo tee -a "$pam" >/dev/null
+  else
+    sudo cp "$pam.template" "$pam" && sudo sed -i '' 's/^#auth/auth/' "$pam"
+  fi
+  if grep -qE "$tid" "$pam" 2>/dev/null; then
+    ok "Touch ID enabled — your next 'sudo' will prompt for fingerprint"
+  else
+    warn "Touch ID for sudo not enabled — sudo was declined or $pam unchanged"
+  fi
 else
   skip "Skipped Touch ID for sudo"
 fi

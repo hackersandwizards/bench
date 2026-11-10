@@ -239,6 +239,24 @@ assert_ok "backup leaves the repo's own file under a folded folder in place" tes
 assert_ok "backup still moves a foreign file aside" compgen -G "$tdir/home/.y.backup-*"
 rm -rf "$tdir"
 
+step "install.sh Touch ID step"
+# The block runs against a scratch file: sudo is a shim, ask always says yes.
+tdir=$(mktemp -d)
+touchid() {  # touchid <sudo exit status>
+  bash -c "istep() { :; }; ask() { return 0; }; ok() { echo \"ok \$1\"; }; warn() { echo \"warn \$1\"; }
+    sudo() { [[ $1 == 0 ]] && \"\$@\"; }
+    $(sed -n '/^istep "Enable Touch ID/,/^fi$/p' "$REPO_ROOT/install.sh" | sed "s|/etc/pam.d/sudo_local|$tdir/sudo_local|g")" 2>&1
+}
+printf 'auth       optional       /opt/homebrew/lib/pam/pam_reattach.so ignore_ssh\n' > "$tdir/sudo_local"
+printf '#auth       sufficient     pam_tid.so\n' > "$tdir/sudo_local.template"
+assert_eq "a cancelled sudo is a warning, not success" "warn" "$(touchid 1 | cut -d' ' -f1)"
+touchid 0 >/dev/null
+assert_eq "an existing sudo_local keeps its lines, pam_tid goes after them" \
+  "pam_reattach.so pam_tid.so" "$(awk '{print $3}' "$tdir/sudo_local" | sed 's|.*/||' | xargs)"
+rm "$tdir/sudo_local"
+assert_eq "without sudo_local the template is copied and enabled" "ok" "$(touchid 0 | cut -d' ' -f1)"
+unset -f touchid; rm -rf "$tdir"
+
 step "transcribe"
 # whisper-cli at its default context invents repeated sentences and can lose
 # punctuation for a whole file (README "Transcription"), so the wrapper's fixed
