@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Pre-commit checks: betterleaks (secrets), shellcheck (*.sh and bash shebangs),
-# zsh -n (*.zsh and zsh shebangs, a zsh script named .sh included).
+# zsh -n (*.zsh and zsh shebangs).
 # NUL-delimited read so filenames with spaces or shell metacharacters can't
 # trip the linter calls. while-read, not mapfile: the hook must survive
 # /bin/bash 3.2 when it fires before the Brewfile installed bash 5.
@@ -24,13 +24,15 @@ for f in "${staged[@]}"; do
   if [[ $f == *.zsh ]]; then zsh_files+=("$f"); continue; fi
   # Classify the rest by shebang: a zsh script named .sh goes to zsh -n, since
   # it cannot be parsed by shellcheck (SC1071), and extensionless scripts (e.g.
-  # bin/bench-*) would otherwise skip the linters. Any other .sh is linted as
-  # before. `|| true` keeps `set -e` from aborting where read hits EOF.
+  # bin/bench-*) would otherwise skip the linters. Bash is matched first, so a
+  # bash shebang naming zsh in an argument is not taken from shellcheck, and
+  # any other .sh goes there too. `|| true` keeps `set -e` from aborting where
+  # read hits EOF.
   shebang=
   [[ -f $idx/$f ]] && IFS= read -r shebang < "$idx/$f" || true
   case $shebang in
-    '#!'*zsh*)  zsh_files+=("$f") ;;
     '#!'*bash*) sh_files+=("$f") ;;
+    '#!'*zsh*)  zsh_files+=("$f") ;;
     *) if [[ $f == *.sh ]]; then sh_files+=("$f"); fi ;;
   esac
 done
@@ -53,4 +55,6 @@ fi
 
 if have zsh; then
   for f in "${zsh_files[@]}"; do zsh -n "$idx/$f"; done
+else
+  echo "pre-commit: zsh not installed — skipping zsh -n" >&2
 fi
