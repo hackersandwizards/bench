@@ -9,7 +9,7 @@ MODEL_URL="https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-
 
 usage() {
   echo "usage: transcribe [-l lang] [-o outdir] file..."
-  echo "  -l lang    spoken language, default en. Only en is tested."
+  echo "  -l lang    spoken language, default en. en and de are measured (README \"Transcription\")."
   echo "  -o outdir  write there instead of next to each input"
   echo "  flac, mp3, ogg and wav go to whisper-cli as they are; anything else"
   echo "  (mp4, m4a, mov, ...) is converted with ffmpeg first."

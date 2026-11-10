@@ -24,7 +24,7 @@ Any folder works: `init.zsh` finds its own location. The wizard asks before ever
 - **Packages**: `brew bundle`, runtimes and CLI tools via `mise install` (`home/.config/mise/config.toml`), npm/bun/pip globals
 - **Config**: Stow symlinks, `~/.gitconfig.local`, repo-local git hooks, `~/.zshrc` source line, Ghostty config, skhd, fonts, atuin history import, brew zsh as login shell, Touch ID for sudo, Claude Code CLI
 - **Logins + keys**: `gh`/`glab` auth, missing API keys into `secrets.zsh` (key list: `docs/secret-keys.txt`)
-- **Default repos**: `~/dev` + `~/opt` created, missing clones from `docs/repos.txt` (Company OS, talks, website, trainer-hub, the Next.js training, local-mlx-stack, the Fathom and Qonto MCP servers)
+- **Default repos**: `~/dev` + `~/opt` created, missing clones from `docs/repos.txt`, each under `~/dev/hackersandwizards/` in `engines/`, `internal/`, `public/` or `trainings/`
 - **Machine state from `docs/` snapshots**: Safari favorites (merge), Dock layout (replace), Finder sidebar (mirror; installs mysides via sudo from a GitHub pkg), Moom settings (import)
 
 `macos.sh` also sets default apps: Zed opens txt/md/json/yaml/toml, Ghostty runs .sh/.command/.tool.
@@ -63,7 +63,7 @@ Optional, per person: Fathom (`FATHOM_API_KEY` in `secrets.zsh`), OpenAI (Codex 
 - [ ] **GitHub / GitLab**: `gh auth login` and `glab auth login` if the wizard step was skipped.
 - [ ] **skhd Accessibility**: the first hotkey press prompts for it. System Settings -> Privacy & Security -> Accessibility -> enable skhd.
 - [ ] **Commercial fonts**: the wizard lists fonts from `docs/fonts.txt` that `fonts/` doesn't ship (no redistribution rights, the repo is public). Restore them from a `~/Library/Fonts` backup. Never commit them.
-- [ ] **Mail signature**: fill the `{{...}}` placeholders in `docs/mail-signature.html` (name, role, phone, photo, links), open it in a browser, select all, copy, paste into Mail -> Settings -> Signatures.
+- [ ] **Mail signature**: in the Company OS clone, run `bun scripts/mail-signature/render.ts <slug>`, where `<slug>` is your file name in `src/content/people/` without `.md`. It fills the brand template from your people record. Open `tmp/mail-signature/<slug>.html` in a browser, select all, copy, paste into Mail -> Settings -> Signatures.
 - [ ] **Widgets**: rebuild desktop + Notification Center widgets by hand (right-click desktop -> Edit Widgets). macOS has no supported export.
 - [ ] **Default-app cleanup**: Apple system apps live in `/System/Applications` and are SIP-protected, so they cannot be deleted. The Dock replay already hides the unwanted ones. Delete unwanted App Store installs from `/Applications`.
 - [ ] **App settings outside this repo**: GUI app preferences other than Moom's are not synced. Licensed apps restore their own settings after sign-in.
