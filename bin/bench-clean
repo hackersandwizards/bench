@@ -93,19 +93,10 @@ case "${1:-}" in
   *) fail "usage: bench-clean [--dry-run]"; exit 2 ;;
 esac
 
-# Independent jobs (disjoint cache dirs + a .DS_Store sweep that only unlinks its
-# own vanishing files): fan out to per-slot logs, then `wait`. Idiom: bench-export.
-WORK=$(mktemp -d)
-bg() {  # bg slot "label" cmd...
-  local slot="$1" label="$2"; shift 2
-  { if "$@" >/dev/null 2>&1; then ok "$label"; else warn "$label (skipped/failed)"; fi; } >"$WORK/$slot" 2>&1 &
-}
-
-step "Caches + .DS_Store (parallel)"
 if have brew && brew_bottles_supported; then
-  bg 1 "Homebrew cleanup"  brew cleanup -s
+  run "Homebrew cleanup" brew cleanup -s
 elif have brew; then
-  brew_unsupported_notice >"$WORK/1" 2>&1   # printed in slot order by the cat below
+  brew_unsupported_notice
 fi
 # No bun install cache either: every Claude session's chrome-devtools MCP launcher (`bun -i -e`,
 # .mcp.json) holds files in it open, so removing it under them can break a running launcher or a
@@ -113,14 +104,12 @@ fi
 # No uv cache clean. It needs the cache lock, and this machine's Claude sessions hold it through
 # their uv-launched MCP children, so from inside one the step cannot succeed by construction: every
 # scheduled run reported the timeout. Clean it by hand from a plain shell if it ever needs it.
-have fd   && bg 4 "Sweep .DS_Store" bash -c "fd -H -I -t f -g '.DS_Store' / \
+# /Volumes and ~/OrbStack are shares other machines use. fd hides permission errors, so a non-zero
+# exit is a failed rm. Excludes are anchored at the search root.
+have fd && run "Sweep .DS_Store" fd -H -I -t f -g '.DS_Store' / \
   --exclude '*BACKUP*' --exclude '*timemachine*' --exclude '*TimeMachine*' \
-  --exclude '/System/Volumes/Data' -X rm 2>/dev/null; true"
-wait
-cat "$WORK"/* 2>/dev/null
-rm -rf "$WORK"
+  --exclude '/System/Volumes/Data' --exclude '/Volumes' --exclude "$HOME/OrbStack" -X rm
 
-# Instant steps: sequential, parallelizing buys nothing.
 run "Claude HTTP cache"  rm -rf "$HOME/Library/Application Support/Claude/Cache"
 
 # JetBrains names every config/cache dir after product-info.json's dataDirectoryName,
