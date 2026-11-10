@@ -1,6 +1,6 @@
 $HOME/.bun/install/global node_modules (587 installed)
-├── @earendil-works/pi-coding-agent@1.5.0
-├── @github/copilot@1.0.107
+├── @earendil-works/pi-coding-agent@1.5.1
+├── @github/copilot@1.0.108
 ├── @google/gemini-cli@0.67.0
 ├── @googleworkspace/cli@0.22.5
 ├── @openai/codex@0.167.0
