@@ -57,7 +57,7 @@ The app gate checks the process name with `pgrep -x`. The Claude Code gate count
 | t3code: `t3code-v2/IndexedDB` | LevelDB, binary | open the folder in t3code after the move |
 | `~/.local/state/mise/trusted-configs/` | each link's name is a hash of the config path; re-pointing a link does not carry the trust over | `mise trust <moved config>` |
 | Git worktrees inside the folder, or a repo there with worktrees | `.git` files and `.git/worktrees/*/gitdir` hold absolute paths | `git -C <repo> worktree repair` |
-| Running containers with a bind mount inside the folder | the mount keeps the old source | recreate the container |
+| Containers, stopped ones included, with a bind mount inside the folder | the mount keeps the old source | recreate the container |
 | Files in other repositories under `~/dev` and `~/opt` that name the folder (`.gitignore` respected) | another repository owns them | a change in that repository |
 
 ## History, not rewritten

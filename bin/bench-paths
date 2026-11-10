@@ -22,11 +22,12 @@ old=$(abspath "$1"); new=${2:+$(abspath "$2")}
 (( apply )) && [[ -z $new ]] && { echo "--apply needs <new>" >&2; exit 2; }
 (( apply )) && { [[ -e $new && ! -e $old ]] || { echo "--apply runs after the move: $new must exist and $old must not" >&2; exit 2; }; }
 
-# Every spelling a store uses for the same folder, as O0..O5/N0..N5 for perl.
-# O5 is the transcript folder that Codex's import ledger names.
+# Every spelling a store uses for the same folder, as O0..O$NK/N0..N$NK for perl.
+# O5 is the transcript folder that Codex's import ledger names; the projects
+# step below adds one pair per subfolder project from O6 on.
 enc() { printf '%s' "$1" | sed 's/[^A-Za-z0-9]/-/g'; }
-O5="/.claude/projects/$(enc "$old")/" N5="/.claude/projects/$(enc "$new")/"
-export O0="$old" N0="$new" O5 N5
+O5="/.claude/projects/$(enc "$old")/" N5="/.claude/projects/$(enc "$new")/" NK=5
+export O0="$old" N0="$new" O5 N5 NK
 if [[ $old == "$HOME"/* ]]; then
   rel=${old#"$HOME"/} nrel=${new#"$HOME"/}
   [[ $new == "$HOME"/* ]] || nrel=""
@@ -42,10 +43,10 @@ fi
 # A match ends where the path does: /opt/x must not hit /opt/x-old or
 # /opt/x.bak, while a sentence's closing dot still ends it.
 # shellcheck disable=SC2016  # perl code
-PL='BEGIN { @f = map { my $o = $ENV{"O$_"}; [$o =~ m{/$} ? qr/\Q$o\E/ : qr/\Q$o\E(?![\w-]|\.\w)/, $ENV{"N$_"}] } grep { defined $ENV{"O$_"} } 0..5 }'
+PL='BEGIN { @f = map { my $o = $ENV{"O$_"}; [$o =~ m{/$} ? qr/\Q$o\E/ : qr/\Q$o\E(?![\w-]|\.\w)/, $ENV{"N$_"}] } grep { defined $ENV{"O$_"} } 0..$ENV{NK} }'
 count_refs() { perl -ne "$PL"' my $l = $_; $c += () = $l =~ /$_->[0]/g for @f; END { print $c + 0 }' "$1"; }
 rewrite_file() { perl -i.bench-paths-bak -pe "$PL"' for my $x (@f) { my $n = $x->[1]; s/$x->[0]/$n/g }' "$1"; }
-pats() { local i v; for i in 0 1 2 3 4 5; do v="O$i"; [[ -n ${!v:-} ]] && printf '%s\n' "${!v}"; done; }
+pats() { local i v; for ((i = 0; i <= NK; i++)); do v="O$i"; [[ -n ${!v:-} ]] && printf '%s\n' "${!v}"; done; }
 
 running() {  # running "a,b": the first of these process names that runs
   local n; IFS=, read -ra names <<< "$1"
@@ -91,6 +92,11 @@ for d in "$projects/$e" "$projects/$e"-*; do
     cwd=$old
   fi
   inside "$cwd" || continue
+  # enc cannot tell old/sub from old-sub, so a subfolder's spelling comes from its transcript.
+  if [[ $d != "$projects/$e" ]]; then
+    NK=$((NK + 1)); export "O$NK=/.claude/projects/${d#"$projects"/}/"
+    [[ -z $new ]] || export "N$NK=/.claude/projects/$(enc "$(moved "$cwd")")/"
+  fi
   if [[ -z $new ]]; then say "found" "${d#"$projects"/}"; continue; fi
   target="$projects/$(enc "$(moved "$cwd")")"
   if [[ -e $target ]]; then manual+=("merge $d into existing $target by hand")
@@ -299,7 +305,7 @@ while IFS= read -r g; do
 done < <([[ -d $tree ]] && find "$tree" -maxdepth 6 -name node_modules -prune -o -name .git -print 2>/dev/null)
 
 step "Containers with a mount inside $old"
-if have docker && ids=$(docker ps -q 2>/dev/null) && [[ -n $ids ]]; then
+if have docker && ids=$(docker ps -aq 2>/dev/null) && [[ -n $ids ]]; then
   # shellcheck disable=SC2086
   while read -r name srcs; do
     for s in $srcs; do inside "$s" || continue; say "mount" "$name $s"; manual+=("recreate container $name: its mount $s keeps the old source"); done

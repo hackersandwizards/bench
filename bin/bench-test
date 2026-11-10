@@ -514,8 +514,9 @@ printf '<option value="$USER_HOME$/opt/repo" />\n' > "$H/Library/Application Sup
 printf 'source ~/opt/repo/init.zsh\n' > "$H/opt/repo/home/.zshrc"
 ln -s opt/repo/home/.zshrc "$H/.zshrc"
 e=$(printf '%s' "$H/opt/repo" | sed 's/[^A-Za-z0-9]/-/g')
-mkdir -p "$H/.claude/projects/$e" "$H/.claude/projects/$e-old"
+mkdir -p "$H/.claude/projects/$e" "$H/.claude/projects/$e-old" "$H/.claude/projects/$e-sub"
 printf '{"cwd":"%s/opt/repo"}\n' "$H" > "$H/.claude/projects/$e/s.jsonl"
+printf '{"cwd":"%s/opt/repo/sub"}\n' "$H" > "$H/.claude/projects/$e-sub/s.jsonl"
 printf '{"cwd":"%s/opt/repo-old"}\n' "$H" > "$H/.claude/projects/$e-old/s.jsonl"
 ln -s "$H/opt/repo/.git" "$H/.claude/projects/$e/memory"
 sqlite3 "$H/.codex/state_5.sqlite" "create table threads(cwd text); insert into threads values('$H/opt/repo'),('$H/opt/repo/sub'),('$H/opt/repo-old');
@@ -530,7 +531,8 @@ mkdir -p "$H/.config/tool" "$H/opt/elsewhere"
 printf 'dir = "%s/opt/repo"\n' "$H" > "$H/opt/repo/home/tool.toml"
 ln -s ../../opt/repo/home/tool.toml "$H/.config/tool/tool.toml"
 printf 'ref %s/opt/repo\n' "$H" > "$H/opt/repo/self.md"
-printf '{"source_path":"%s/.claude/projects/%s/e1c4.jsonl"}\n' "$H" "$(printf '%s' "$H/opt/repo" | sed 's/[^A-Za-z0-9]/-/g')" > "$H/.codex/external_agent_session_imports.json"
+printf '{"source_path":"%s/.claude/projects/%s/e1c4.jsonl"}\n{"source_path":"%s/.claude/projects/%s-sub/e2.jsonl"}\n{"source_path":"%s/.claude/projects/%s-old/e3.jsonl"}\n' \
+  "$H" "$e" "$H" "$e" "$H" "$e" > "$H/.codex/external_agent_session_imports.json"
 bpx() { env HOME="$H" PATH="$tdir/bin:$PATH" RUNNING="${RUNNING:-}" LSOF_OUT="${LSOF_OUT:-}" CLAUDE_PIDS="${CLAUDE_PIDS:-}" "$bp" "$@" 2>&1; }
 
 out=$(bpx "$H/opt/repo")
@@ -538,7 +540,8 @@ assert_ok "list: absolute spelling, sibling and sub-path counted apart" grep -qF
 assert_ok "list: a .bak suffix is another path" grep -qF "scheduled-tasks [*.md]: 1 file(s), 1 ref(s)" <<< "$out"
 assert_ok "list: JetBrains \$USER_HOME\$ spelling" grep -qE "JetBrains .*: 1 file\(s\), 1 ref\(s\)" <<< "$out"
 assert_eq "list: sqlite counts prefix and exact rows, not the sibling" "1" "$(grep -c 'state_\*.sqlite.*2 ref' <<< "$out")"
-assert_eq "list: the Claude project of the repo, not of repo-old" "found     $e" "$(grep 'found     -' <<< "$out" | sed 's/^  //')"
+assert_eq "list: the Claude projects of the repo and its subfolder, not of repo-old" "found     $e
+found     $e-sub" "$(grep 'found     -' <<< "$out" | sed 's/^  //')"
 assert_ok "list: a config Stow links into ~/.config is followed" grep -qF "$H/.config [!**/gcloud/**]: 1 file(s), 1 ref(s)" <<< "$out"
 assert_ok "list: atuin's directory column" grep -qF "atuin [history.db history.cwd]: 1 file(s), 2 ref(s)" <<< "$out"
 assert_ok "list: zoxide entries, the sibling left out" grep -qF "zoxide/db.zo: 1 file(s), 3 ref(s)" <<< "$out"
@@ -563,6 +566,9 @@ assert_eq "relative symlink re-pointed, still relative" "opt/new/home/.zshrc" "$
 assert_eq "symlinked config edited at its target" "source ~/opt/new/init.zsh" "$(cat "$H/opt/new/home/.zshrc")"
 assert_ok "the encoded transcript folder in Codex's import ledger follows" \
   grep -qF "/.claude/projects/$(printf '%s' "$H/opt/new" | sed 's/[^A-Za-z0-9]/-/g')/e1c4.jsonl" "$H/.codex/external_agent_session_imports.json"
+assert_eq "and so does a subfolder's, while repo-old's stays" \
+  "/.claude/projects/$(printf '%s' "$H/opt/new" | sed 's/[^A-Za-z0-9]/-/g')-sub/e2.jsonl /.claude/projects/$e-old/e3.jsonl" \
+  "$(sed -n '2,3s|.*\(/\.claude/projects/[^"]*\)".*|\1|p' "$H/.codex/external_agent_session_imports.json" | xargs)"
 assert_eq "the stowed config is edited at its target" "dir = \"$H/opt/new\"" "$(cat "$H/opt/new/home/tool.toml")"
 assert_fail "the moved tree's own files are not listed as other repositories" grep -q "repo .*opt/new/self.md" <<< "$out"
 assert_eq "sqlite: prefix and exact rewritten, sibling kept" "$H/opt/new
