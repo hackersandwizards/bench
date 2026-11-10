@@ -203,8 +203,7 @@ parse_repos() { awk 'NF == 2 && $1 !~ /^#/ { print $1, $2 }' "$1"; }
 # A remote URL reduced to host/path, so the ssh and https forms of one repo
 # compare equal. The URL is a repo's identity when its checkout has moved.
 repo_slug() {
-  printf '%s' "$1" | sed -e 's|^git@|https://|' -e 's|^\(https://[^/]*\):|\1/|' \
-                         -e 's|\.git$||' -e 's|^https://||'
+  printf '%s' "$1" | sed -e 's|^[a-z+]*://||' -e 's|^[^@/]*@||' -e 's|^\([^/:]*\):|\1/|' -e 's|\.git$||'
 }
 # The current URL of a repo renamed on its host. Both GitHub and GitLab keep
 # serving the old name, so nothing local notices: git ls-remote answers the old
@@ -217,7 +216,8 @@ canonical_url() {
   local slug host path now=
   slug=$(repo_slug "$1"); host=${slug%%/*}; path=${slug#*/}
   case "$host" in
-    github.com) have gh && now=$(gh api "repos/$path" --jq .full_name 2>/dev/null) ;;
+    # gh prints an error body on stdout, so only its exit status says it answered.
+    github.com) have gh && now=$(gh api "repos/$path" --jq .full_name 2>/dev/null) || now= ;;
     gitlab.com) have glab && have jq &&
       now=$(glab api "projects/${path//\//%2F}" 2>/dev/null | jq -r '.path_with_namespace // empty') ;;
   esac

@@ -70,6 +70,8 @@ assert_eq "ssh and https forms agree" \
   "$(repo_slug https://gitlab.com/org/z.git)" "$(repo_slug git@gitlab.com:org/z.git)"
 assert_eq "host/path, no scheme or .git" "github.com/org/y" "$(repo_slug https://github.com/org/y.git)"
 assert_eq "missing .git suffix is fine"  "github.com/org/y" "$(repo_slug https://github.com/org/y)"
+assert_eq "ssh:// scheme and https user are dropped" "github.com/org/y github.com/org/y" \
+  "$(repo_slug ssh://git@github.com/org/y.git) $(repo_slug https://user@github.com/org/y.git)"
 assert_fail "different repos stay different" \
   test "$(repo_slug https://github.com/org/y.git)" = "$(repo_slug https://github.com/org/other.git)"
 
@@ -82,6 +84,12 @@ assert_eq "unknown host falls through verbatim" \
   "https://example.com/org/y.git" "$(canonical_url https://example.com/org/y.git)"
 assert_eq "ssh form on an unknown host is not rewritten" \
   "git@example.com:org/y.git" "$(canonical_url git@example.com:org/y.git)"
+# gh prints the 404 body on stdout and exits 1.
+# shellcheck disable=SC2329  # called through canonical_url
+gh() { echo '{"message":"Not Found","status":"404"}'; return 1; }
+assert_eq "a failed host call hands the URL back" \
+  "https://github.com/org/y.git" "$(canonical_url https://github.com/org/y.git)"
+unset -f gh
 
 # bench-export repoints a moved or renamed entry instead of asking a human to.
 # The write is what makes a wrong match expensive, so the pair match and the

@@ -163,7 +163,7 @@ echo "=== Default repos (docs/repos.txt) ==="
 # auth checks above are what make that unlikely here.
 remote_gone() {
   local out
-  out=$(GIT_TERMINAL_PROMPT=0 git ls-remote "$1" 2>&1 >/dev/null) && return 1
+  out=$(GIT_TERMINAL_PROMPT=0 git ls-remote -- "$1" 2>&1 >/dev/null) && return 1
   printf '%s' "$out" | grep -qiE 'not found|does not exist|access denied|403|404'
 }
 if [[ -s "$REPO_ROOT/docs/repos.txt" ]]; then
@@ -256,9 +256,10 @@ if [[ -n "${EPOCHREALTIME:-}" ]]; then
   # is the least-contended figure, so the reported number stays reproducible.
   best=""
   for _ in 1 2 3; do
-    start=${EPOCHREALTIME/./}
+    # A comma-decimal locale writes a comma, which arithmetic reads as an operator.
+    start=${EPOCHREALTIME//[.,]/}
     zsh -i -c exit >/dev/null 2>&1
-    end=${EPOCHREALTIME/./}
+    end=${EPOCHREALTIME//[.,]/}
     ms=$(( (end - start) / 1000 ))
     { [[ -z $best ]] || (( ms < best )); } && best=$ms
   done
