@@ -80,8 +80,8 @@ if ! have brew; then
     skip "Skipped — Homebrew required for remaining steps"
   fi
 fi
-# HOMEBREW_REQUIRE_TAP_TRUST=1 (exports.zsh; default in Homebrew 6.0/5.2) makes
-# brew warn on untrusted taps, so trust them even when bundle is skipped or
+# Homebrew loads only official or trusted taps by default and warns on the rest
+# (trust state in ~/.homebrew/trust.json), so trust them even when bundle is skipped or
 # declined. Parsed from the Brewfile's own `tap` lines, the single source of truth.
 # brew trust is idempotent and works before the tap is tapped.
 if have brew; then

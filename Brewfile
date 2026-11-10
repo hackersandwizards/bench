@@ -234,8 +234,5 @@ cask "whatsapp"
 cask "yubico-authenticator"
 cask "zed"
 cask "zoom"
-mas "Keynote", id: 361285480
 mas "Moom Classic", id: 419330170
-mas "Numbers", id: 361304891
-mas "Pages", id: 361309726
 mas "Xcode", id: 497799835

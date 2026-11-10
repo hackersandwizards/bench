@@ -17,10 +17,6 @@ $HOME/Library/Application Support/JetBrains/Toolbox/scripts:\
 $PATH"
 
 # --- Homebrew ---
-# Load formulae/casks/commands only from official or explicitly-trusted taps
-# (default in Homebrew 6.0 / 5.2). Trust state lives in ~/.homebrew/trust.json;
-# add taps with `brew trust --tap <user>/<tap>`.
-export HOMEBREW_REQUIRE_TAP_TRUST=1
 # Ask mode (plan-then-confirm prompt before install/upgrade/reinstall) became the
 # default in recent Homebrew; HOMEBREW_NO_ASK is the documented opt-out so update
 # runs (`ua`) and manual upgrades proceed unattended. A bare `--ask` still overrides.

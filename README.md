@@ -41,7 +41,7 @@ New team member, fresh machine. Provision these before running `install.sh`. The
 
 | Account          | Setup                                                                                          |
 |------------------|------------------------------------------------------------------------------------------------|
-| Apple Account    | Sign into the App Store first, else `brew bundle` skips the `mas` apps (Keynote, Numbers, Pages, Xcode, Moom) |
+| Apple Account    | Sign into the App Store first, else `brew bundle` skips the `mas` apps (Xcode, Moom) |
 | Google Workspace | Gmail, Calendar, Meet, Gemini, plus the `@googleworkspace/cli` and `@google/gemini-cli` globals |
 | GitHub           | Org membership. The wizard runs `gh auth login` (`.gitconfig` routes credentials through `gh`)  |
 | GitLab           | Account. The wizard runs `glab auth login` (`.gitconfig` routes credentials through `glab`)     |
