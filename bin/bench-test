@@ -507,6 +507,14 @@ printf 'if true; then\n' > "$tdir/a.zsh" && git -C "$tdir" add a.zsh
 printf 'true\n' > "$tdir/a.zsh"
 assert_fail "fails on a staged syntax error the working copy fixed" \
   bash -c "cd '$tdir' && .githooks/pre-commit >/dev/null 2>&1"
+# A zsh script named .sh goes to zsh -n by its shebang; shellcheck stops on zsh.
+git -C "$tdir" rm -q --cached -f a.zsh
+printf '#!/bin/zsh\nsetopt extended_glob\n' > "$tdir/b.sh" && git -C "$tdir" add b.sh
+assert_ok "passes a clean zsh script named .sh" \
+  bash -c "cd '$tdir' && .githooks/pre-commit >/dev/null 2>&1"
+printf '#!/bin/zsh\nif true; then\n' > "$tdir/b.sh" && git -C "$tdir" add b.sh
+assert_fail "fails a zsh script named .sh on a syntax error" \
+  bash -c "cd '$tdir' && .githooks/pre-commit >/dev/null 2>&1"
 rm -rf "$tdir"
 
 step "transcribe cleans up after a failure"

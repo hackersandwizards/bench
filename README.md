@@ -180,4 +180,4 @@ changes most days.
 
 ## Pre-commit hook
 
-`.githooks/pre-commit` runs betterleaks (secrets), shellcheck (`*.sh`), and `zsh -n` (`*.zsh`) on staged files. Repo-local: it does not affect other projects. The install wizard activates it.
+`.githooks/pre-commit` runs betterleaks (secrets), shellcheck (`*.sh` and bash shebangs), and `zsh -n` (`*.zsh` and zsh shebangs) on staged files. A `.sh` file with a zsh shebang goes to `zsh -n`, since shellcheck cannot parse zsh. Repo-local: it does not affect other projects. The install wizard activates it.
