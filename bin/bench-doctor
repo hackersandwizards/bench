@@ -39,9 +39,9 @@ echo "=== Stow symlinks ==="
 for rel in "${STOW_FILES[@]}"; do
   if [[ -L "$HOME/$rel" ]]; then
     ok "$rel -> $(readlink "$HOME/$rel")"
-  # Stow folds a directory holding only package files into one symlink.
+  # A folded directory links a whole folder into the repo, so tools write there.
   elif [[ "$HOME/$rel" -ef "$REPO_ROOT/home/$rel" ]]; then
-    ok "$rel (via folded directory)"
+    warn "$rel: its folder is a link into the repo — re-run install.sh's Stow step to unfold it"
   elif [[ -e "$HOME/$rel" ]]; then
     warn "$rel: real file (not Stow-managed)"
   else

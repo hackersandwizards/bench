@@ -214,6 +214,23 @@ step "install.sh istep self-count"
 assert_fail "no indented istep calls (self-count stays exact)" \
   grep -qE '^[[:space:]]+istep ' "$REPO_ROOT/install.sh"
 
+step "install.sh Stow step"
+# Stow folds a target folder that does not exist yet into one link to home/,
+# and every tool then writes its config, tokens included, into this public repo.
+tdir=$(mktemp -d)
+stow_cmd=$(grep -oE '^ *if stow --dir=.* home;' "$REPO_ROOT/install.sh" | sed 's/^ *if stow /stow -n -v /; s/;$//')
+assert_eq "an empty home gets one link per tracked file, never a folder link" \
+  "$(printf '%s\n' "${STOW_FILES[@]}" | sort)" \
+  "$(HOME="$tdir/home" REPO_ROOT="$REPO_ROOT" bash -c "mkdir -p \"\$HOME\"; $stow_cmd" 2>&1 | sed -n 's/^LINK: \([^ ]*\) =>.*/\1/p' | sort)"
+mkdir -p "$tdir/repo/home/.config/x" "$tdir/home/.config"
+echo keep > "$tdir/repo/home/.config/x/f"; echo foreign > "$tdir/home/.y"
+ln -s "$tdir/repo/home/.config/x" "$tdir/home/.config/x"
+HOME="$tdir/home" bash -c ". '$REPO_ROOT/bin/_lib.sh'; REPO_ROOT='$tdir/repo'
+  $(sed -n '/^backup() {/,/^}/p' "$REPO_ROOT/install.sh"); backup \"\$HOME/.config/x/f\"; backup \"\$HOME/.y\"" >/dev/null 2>&1
+assert_ok "backup leaves the repo's own file under a folded folder in place" test -f "$tdir/repo/home/.config/x/f"
+assert_ok "backup still moves a foreign file aside" compgen -G "$tdir/home/.y.backup-*"
+rm -rf "$tdir"
+
 step "transcribe"
 # whisper-cli at its default context invents repeated sentences and can lose
 # punctuation for a whole file (README "Transcription"), so the wrapper's fixed

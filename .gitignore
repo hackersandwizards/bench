@@ -10,10 +10,9 @@ secrets.*.zsh
 *.pem
 *.key
 *.kubeconfig
-home/.gitconfig.local
-home/.ssh/id_*
-home/.ssh/known_hosts*
-home/.ssh/control/
+# home/ holds only the dotfiles tracked there. A folded Stow directory would let
+# tools write their config and tokens into it; a new dotfile needs `git add -f`.
+/home/*
 
 # Claude Code: settings.json is committed; per-machine and runtime files are not.
 # Owned by the repo (not just ~/.gitignore_global) so a fresh clone ignores them

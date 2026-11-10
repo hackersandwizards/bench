@@ -23,7 +23,8 @@ istep() { step "Step $((++STEP_N))/$STEP_TOTAL: $1"; }
 backup() {
   local target="$1" bak
   [[ -e "$target" ]] || return 0
-  [[ -L "$target" ]] && return 0
+  # A file under a folded Stow directory is the repository's own file.
+  [[ -L "$target" || "$target" -ef "$REPO_ROOT/home/${target#"$HOME"/}" ]] && return 0
   bak="${target}.backup-$(date +%s)"
   mv "$target" "$bak"
   warn "backed up $target → $bak"
@@ -144,7 +145,9 @@ elif ask "Symlink dotfiles in home/ to \$HOME via stow?"; then
   done
   mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
   mkdir -p "$HOME/.ssh/control" && chmod 700 "$HOME/.ssh/control"
-  if stow --dir="$REPO_ROOT" --target="$HOME" --restow home; then
+  # --no-folding: a folded ~/.config would make every tool write its config,
+  # tokens included, into this public checkout.
+  if stow --dir="$REPO_ROOT" --target="$HOME" --no-folding --restow home; then
     ok "Stow symlinks applied"
   else
     warn "stow failed — resolve the conflict it names, then re-run this step"
