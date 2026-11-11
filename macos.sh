@@ -131,15 +131,17 @@ defaults write com.apple.ActivityMonitor SortDirection -int 0
 # extension form does not stick.
 # ============================================================================
 if have duti; then
-  duti -s dev.zed.Zed public.plain-text all
-  duti -s dev.zed.Zed net.daringfireball.markdown all
-  duti -s dev.zed.Zed public.json all
-  duti -s dev.zed.Zed public.yaml all
-  duti -s dev.zed.Zed .toml all
-  ok "Zed set as default for txt/md/json/yaml/toml"
-  duti -s com.mitchellh.ghostty public.shell-script all
-  duti -s com.mitchellh.ghostty com.apple.terminal.shell-script all
-  ok "Ghostty set as default for .sh/.command/.tool"
+  if duti -s dev.zed.Zed public.plain-text all && duti -s dev.zed.Zed net.daringfireball.markdown all \
+    && duti -s dev.zed.Zed public.json all && duti -s dev.zed.Zed public.yaml all && duti -s dev.zed.Zed .toml all; then
+    ok "Zed set as default for txt/md/json/yaml/toml"
+  else
+    warn "duti could not make Zed the default editor — install Zed, then re-run"
+  fi
+  if duti -s com.mitchellh.ghostty public.shell-script all && duti -s com.mitchellh.ghostty com.apple.terminal.shell-script all; then
+    ok "Ghostty set as default for .sh/.command/.tool"
+  else
+    warn "duti could not make Ghostty run scripts — install Ghostty, then re-run"
+  fi
 else
   warn "duti not installed — default apps unchanged (brew install duti, re-run)"
 fi

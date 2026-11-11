@@ -135,8 +135,14 @@ assert_fail "rejects empty key name" secret_line '' v
 step "apply_dock / apply_sidebar empty guard"
 # The guard must fire before any dockutil/mysides call: an empty here-string
 # still iterates once, so without it the wipe would run and nothing re-adds.
+# Recording stand-ins: a missing guard must go red here, not wipe the real Dock.
+calls=$(mktemp)
+# shellcheck disable=SC2329  # called from apply_dock and apply_sidebar
+{ dockutil() { echo "dockutil $*" >> "$calls"; }; mysides() { echo "mysides $*" >> "$calls"; }; killall() { echo "killall $*" >> "$calls"; }; }
 assert_fail "apply_dock refuses an empty snapshot"    apply_dock ""
 assert_fail "apply_sidebar refuses an empty snapshot" apply_sidebar ""
+assert_eq "and calls neither dockutil, mysides nor killall" "" "$(cat "$calls")"
+unset -f dockutil mysides killall; rm -f "$calls"
 
 step "clone_repos target validation"
 fix=$(mktemp)
@@ -218,6 +224,7 @@ step "pre-commit secret gate"
 # betterleaks; _lib.sh only prepends, so it cannot smuggle the binary back in.
 assert_eq "refuses to commit when betterleaks is missing" "1" \
   "$(cd "$REPO_ROOT" && env PATH=/usr/bin:/bin .githooks/pre-commit 2>&1 | grep -c 'betterleaks not installed')"
+assert_fail "and exits non-zero" bash -c "cd '$REPO_ROOT' && env PATH=/usr/bin:/bin .githooks/pre-commit"
 # The token is built at run time so this file holds none.
 tdir=$(mktemp -d)
 git init -q "$tdir" && mkdir -p "$tdir/.githooks" "$tdir/bin"
@@ -245,14 +252,16 @@ mkdir -p "$tdir/repo/home/.config/x" "$tdir/home/.config"
 echo keep > "$tdir/repo/home/.config/x/f"; echo foreign > "$tdir/home/.y"; echo keep > "$tdir/repo/home/.z"
 ln -s "$tdir/repo/home/.config/x" "$tdir/home/.config/x"
 ln -s "$tdir/repo/home/.z" "$tdir/home/.z"; ln -s "$tdir/home/.y" "$tdir/home/.w"; ln -s "$tdir/gone" "$tdir/home/.d"
+ln -s "$tdir/gone" "$tdir/home/.p"
 HOME="$tdir/home" bash -c ". '$REPO_ROOT/bin/_lib.sh'; REPO_ROOT='$tdir/repo'
   $(sed -n '/^backup() {/,/^}/p' "$REPO_ROOT/install.sh")
-  for t in .config/x/f .z .w .d .y; do backup \"\$HOME/\$t\"; done" >/dev/null 2>&1
+  for t in .config/x/f .z .w .d .y .p/f; do backup \"\$HOME/\$t\"; done" >/dev/null 2>&1
 assert_ok "backup leaves the repo's own file under a folded folder in place" test -f "$tdir/repo/home/.config/x/f"
 assert_ok "and the repo's own Stow link" test -L "$tdir/home/.z"
 assert_ok "backup still moves a foreign file aside" compgen -G "$tdir/home/.y.backup-*"
 assert_ok "and a foreign link and a dangling one, which would stop Stow" \
   test -L "$(compgen -G "$tdir/home/.w.backup-*")" -a -L "$(compgen -G "$tdir/home/.d.backup-*")"
+assert_ok "and a dangling link on a parent folder" test -L "$(compgen -G "$tdir/home/.p.backup-*")"
 rm -rf "$tdir"
 
 step "install.sh Touch ID step"
@@ -312,6 +321,9 @@ step "bench-export dumpers fail with their producer"
 tdir=$(mktemp -d)
 printf '#!/bin/sh\nexit 1\n' > "$tdir/dockutil"; chmod +x "$tdir/dockutil"
 assert_fail "dock_dump exits non-zero when dockutil fails" \
+  env PATH="$tdir:$PATH" bash -c "$(grep -E '^dock_dump\(\)' "$REPO_ROOT/bin/bench-export"); dock_dump"
+printf '#!/bin/sh\necho Finder\n' > "$tdir/dockutil"
+assert_ok "and succeeds when dockutil answers" \
   env PATH="$tdir:$PATH" bash -c "$(grep -E '^dock_dump\(\)' "$REPO_ROOT/bin/bench-export"); dock_dump"
 # defaults exports a domain without prefs as an empty dict and exits 0.
 moom() { env PATH="$tdir:$PATH" bash -c "$(grep -E '^moom_dump\(\)' "$REPO_ROOT/bin/bench-export"); moom_dump"; }
@@ -565,6 +577,11 @@ printf 'antidote() { return 1; }\n' > "$tdir/antidote.zsh"; : > "$tdir/plugins.t
 ZSH_SETTINGS_DIR="$tdir" zsh -fc "$(sed -n '/^_antidote_bundle()/,/^}/p' "$REPO_ROOT/init.zsh" \
   | sed "s|source /opt/homebrew/opt/antidote/share/antidote/antidote.zsh|source $tdir/antidote.zsh|"); _antidote_bundle plugins" 2>/dev/null
 assert_fail "failed bundle writes no plugins.zsh" test -e "$tdir/plugins.zsh"
+printf 'antidote() { echo bundled; }\n' > "$tdir/antidote.zsh"
+ZSH_SETTINGS_DIR="$tdir" zsh -fc "$(sed -n '/^_antidote_bundle()/,/^}/p' "$REPO_ROOT/init.zsh" \
+  | sed "s|source /opt/homebrew/opt/antidote/share/antidote/antidote.zsh|source $tdir/antidote.zsh|"); _antidote_bundle plugins" 2>/dev/null
+assert_ok "a bundle that succeeds writes it" test -s "$tdir/plugins.zsh"
+rm -f "$tdir/plugins.zsh"
 # Homebrew keeps the bottle's build mtime on the binary; the link carries the
 # pour time. A cache between the two must regenerate.
 printf '#!/bin/sh\necho "echo new"\n' > "$tdir/foo-real"; chmod +x "$tdir/foo-real"
@@ -616,6 +633,7 @@ mkdir -p "$H/opt/repo/gone"
 zoxide add -s 3 "$H/opt/repo"; zoxide add "$H/opt/repo/home" "$H/opt/repo/gone" "$H/opt/repo-old"
 rmdir "$H/opt/repo/gone"
 mkdir -p "$H/.config/tool" "$H/opt/elsewhere"
+printf 'see %s/opt/repo\n' "$H" > "$H/opt/elsewhere/ref.md"
 printf 'dir = "%s/opt/repo"\n' "$H" > "$H/opt/repo/home/tool.toml"
 ln -s ../../opt/repo/home/tool.toml "$H/.config/tool/tool.toml"
 printf 'ref %s/opt/repo\n' "$H" > "$H/opt/repo/self.md"
@@ -670,6 +688,7 @@ assert_eq "and so does a subfolder's, while repo-old's stays" \
   "$(sed -n '2,3s|.*\(/\.claude/projects/[^"]*\)".*|\1|p' "$H/.codex/external_agent_session_imports.json" | xargs)"
 assert_eq "the stowed config is edited at its target" "dir = \"$H/opt/new\"" "$(cat "$H/opt/new/home/tool.toml")"
 assert_fail "the moved tree's own files are not listed as other repositories" grep -q "repo .*opt/new/self.md" <<< "$out"
+assert_ok "while another repository's file is" grep -q "repo .*opt/elsewhere/ref.md" <<< "$out"
 assert_eq "sqlite: prefix and exact rewritten, sibling kept" "$H/opt/new
 $H/opt/new/sub
 $H/opt/repo-old" "$(sqlite3 "$H/.codex/state_5.sqlite" 'select cwd from threads')"

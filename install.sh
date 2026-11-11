@@ -21,7 +21,9 @@ STEP_N=0
 istep() { step "Step $((++STEP_N))/$STEP_TOTAL: $1"; }
 
 backup() {
-  local target="$1" bak
+  local target="$1" bak up="$1"
+  # A dangling link on a parent folder, such as a folded Stow folder after a repo move, stops Stow too.
+  while up=${up%/*}; [[ $up == "$HOME"/* ]]; do [[ -L $up && ! -e $up ]] && backup "$up"; done
   [[ -e "$target" || -L "$target" ]] || return 0
   # Already the repository's own file: a Stow link, or a file under a folded Stow directory.
   # Any other link, a dangling one included, is moved aside: Stow aborts the whole run on it.
