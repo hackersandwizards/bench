@@ -44,7 +44,8 @@ fi
 # /opt/x.bak, while a sentence's closing dot still ends it.
 # shellcheck disable=SC2016  # perl code
 PL='BEGIN { @f = map { my $o = $ENV{"O$_"}; [$o =~ m{/$} ? qr/\Q$o\E/ : qr/\Q$o\E(?![\w-]|\.\w)/, $ENV{"N$_"}] } grep { defined $ENV{"O$_"} } 0..$ENV{NK} }'
-count_refs() { perl -ne "$PL"' my $l = $_; $c += () = $l =~ /$_->[0]/g for @f; END { print $c + 0 }' "$1"; }
+# On stdin: perl -n would run a file name ending in | as a command.
+count_refs() { perl -ne "$PL"' my $l = $_; $c += () = $l =~ /$_->[0]/g for @f; END { print $c + 0 }' < "$1"; }
 rewrite_file() { perl -i.bench-paths-bak -pe "$PL"' for my $x (@f) { my $n = $x->[1]; s/$x->[0]/$n/g }' "$1"; }
 pats() { local i v; for ((i = 0; i <= NK; i++)); do v="O$i"; [[ -n ${!v:-} ]] && printf '%s\n' "${!v}"; done; }
 

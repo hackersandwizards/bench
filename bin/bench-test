@@ -619,6 +619,10 @@ assert_ok "list: zoxide entries, the sibling left out" grep -qF "zoxide/db.zo: 1
 assert_ok "plan: a zoxide entry with no folder left is named" grep -qF "drop      $H/opt/repo/gone" <<< "$(bpx "$H/opt/repo" "$H/opt/new")"
 assert_ok "list: a database it cannot read is named, not dropped" grep -qF "cannot read $H/.codex/state_9.sqlite" <<< "$out"
 assert_ok "list: a docker that does not answer is named, not read as no containers" grep -q "containers not checked" <<< "$out"
+printf 'dir = "%s/opt/repo"\n' "$H" > "$H/.config/tool/x;touch MARK|"
+assert_ok "list: a file name ending in | is counted" grep -qF "$H/.config [!**/gcloud/**]: 2 file(s), 2 ref(s)" <<< "$(cd "$tdir" && bpx "$H/opt/repo")"
+assert_fail "and never run as a command" test -e "$tdir/MARK"
+rm "$H/.config/tool/x;touch MARK|"
 assert_eq "list: a relative argument names the same folder" "$out" "$(cd "$H/opt/repo/home" && bpx ..)"
 assert_fail "apply before the move is refused" bpx --apply "$H/opt/repo" "$H/opt/new"
 
