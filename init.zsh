@@ -1,7 +1,5 @@
-# --- Profiling toggle ---
 [[ -n "$ZSH_PROFILE" ]] && zmodload zsh/zprof
 
-# --- zsh options ---
 # EXTENDED_GLOB: required for (#q...) glob qualifiers used below.
 # HIST_*: keep raw ~/.zsh_history clean even though atuin handles search.
 setopt EXTENDED_GLOB AUTO_CD AUTO_PUSHD PUSHD_IGNORE_DUPS \
@@ -10,16 +8,16 @@ HISTSIZE=100000
 SAVEHIST=100000
 HISTFILE="$HOME/.zsh_history"
 
-# --- Self-discovery: resolve repo dir from this file's location ---
+# Self-discovery: resolve repo dir from this file's location.
 export ZSH_SETTINGS_DIR="${${(%):-%N}:A:h}"
 
-# --- Exports (PATH must be set before tools that depend on it) ---
+# Exports first: PATH must be set before tools that depend on it.
 # -U dedups path/fpath: nested shells (tmux, `zsh` in zsh) re-prepend everything.
 typeset -gU path fpath
 source "$ZSH_SETTINGS_DIR/exports.zsh"
 
-# --- Init-output cache: source cached `init zsh` output, regenerating when the
-#     binary is newer. Cache hit forks nothing ($commands is a zsh builtin). ---
+# Init-output cache: source cached `init zsh` output, regenerating when the
+# binary is newer. Cache hit forks nothing ($commands is a zsh builtin).
 # -nt follows the Homebrew symlink to a binary that keeps the bottle's build
 # time, which can be older than a cache written before the upgrade. zstat -L
 # adds the link's own mtime, the pour time.
@@ -47,11 +45,9 @@ _init_cache() {
   source "$out" 2>/dev/null
 }
 
-# --- Starship prompt ---
 export STARSHIP_CONFIG="$ZSH_SETTINGS_DIR/starship.toml"
 _init_cache starship init zsh
 
-# --- Antidote (static bundle loading) ---
 _antidote_bundle() {
   local txt="$ZSH_SETTINGS_DIR/$1.txt" out="$ZSH_SETTINGS_DIR/$1.zsh"
   if [[ ! -f "$out" || "$txt" -nt "$out" ]]; then
@@ -64,19 +60,17 @@ _antidote_bundle() {
 }
 _antidote_bundle plugins
 
-# --- zoxide / atuin (cached) ---
 _init_cache zoxide init zsh
 _init_cache atuin init zsh
 
-# --- Completions fpath (must be before compinit) ---
+# Completions fpath must be set before compinit.
 fpath=(/opt/homebrew/share/zsh/site-functions ${fpath:#/usr/local/share/zsh/site-functions})
 
-# --- Source modules ---
 source "$ZSH_SETTINGS_DIR/fzf.zsh"
 source "$ZSH_SETTINGS_DIR/functions.zsh"
 source "$ZSH_SETTINGS_DIR/aliases.zsh"
 
-# --- Bracketed paste magic (quote URLs / shell metachars when pasting) ---
+# Bracketed paste magic quotes URLs / shell metachars when pasting.
 # zsh ships the widget but does not wire it up by default.
 autoload -Uz bracketed-paste-magic url-quote-magic
 zle -N bracketed-paste bracketed-paste-magic
@@ -90,7 +84,7 @@ pastefinish() {
 zstyle :bracketed-paste-magic paste-init pasteinit
 zstyle :bracketed-paste-magic paste-finish pastefinish
 
-# --- compinit (full check max once per 24h, else use cached dump) ---
+# compinit: full check max once per 24h, else use cached dump.
 autoload -Uz compinit
 if [[ -n ~/.zcompdump(#qNmh-24) ]]; then
   compinit -C
@@ -100,7 +94,7 @@ else
   touch -c ~/.zcompdump
 fi
 
-# --- fzf-tab + history-substring-search (must load after compinit) ---
+# fzf-tab + history-substring-search must load after compinit.
 _antidote_bundle plugins-post
 # Re-assert history keybindings last: fzf's key-bindings.zsh (sourced above)
 # grabs Ctrl-R and would shadow atuin-search without this. fzf keeps Ctrl-T +
@@ -108,7 +102,6 @@ _antidote_bundle plugins-post
 bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
 bindkey '^R' atuin-search
-# fzf-tab inherits FZF_DEFAULT_OPTS, so layout/border/colors are already covered.
 # Reuse the FZF_*_PREVIEW commands from fzf.zsh, swapping the `{}` placeholder
 # for fzf-tab's `$realpath` (single source of truth for preview formatting).
 _eza_pv="${FZF_EZA_PREVIEW//\{\}/\$realpath}"
@@ -124,14 +117,13 @@ zstyle ':fzf-tab:complete:git-checkout:*' fzf-preview 'git log --color=always --
 zstyle ':fzf-tab:complete:git-log:*' fzf-preview 'git log --color=always --oneline -20 $word'
 zstyle ':fzf-tab:complete:kill:*' fzf-preview 'ps -p $word -o pid,user,%cpu,%mem,command'
 
-# --- Bun (binary from mise; `bun add -g` still targets $BUN_INSTALL/bin) ---
+# Bun: binary from mise; `bun add -g` still targets $BUN_INSTALL/bin.
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
-# --- Deferred completions (lazy-loaded, ~10ms saved at startup) ---
+# Deferred completions: lazy-loaded, ~10ms saved at startup.
 # Trade-off: tab-complete on gcloud is silent until the command is run once per
-# session, direct invocations always work. (bun needs no stub, brew ships _bun
-# via site-functions/compinit.)
+# session, direct invocations always work.
 # Stub only when the SDK exists: on a fresh machine the stub's `source` would
 # error where the shell's own "command not found" is the honest answer.
 if [[ -f /opt/homebrew/share/google-cloud-sdk/completion.zsh.inc ]]; then
@@ -148,5 +140,4 @@ _init_cache direnv hook zsh
 # _init_cache it: the output embeds the PATH of the shell that generated it.
 eval "$(mise activate zsh)"
 
-# --- Profiling report ---
 [[ -n "$ZSH_PROFILE" ]] && zprof

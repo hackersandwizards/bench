@@ -63,10 +63,8 @@ for f; do
       ffmpeg -nostdin -loglevel error -y -i "$f" -vn -ac 1 -ar 16000 -c:a pcm_s16le "$src"
       ;;
   esac
-  # -mc 0 is the reason this wrapper exists: at its default, whisper-cli feeds
-  # each window the previous window's text, which invented repeated sentences
-  # and carried one unpunctuated window through a whole file. bench-test fails
-  # if the flag goes missing.
+  # -mc 0 is the reason this wrapper exists (README "Transcription"), and
+  # bench-test fails if the flag goes missing.
   whisper-cli -m "$MODEL" -l "$lang" -mc 0 -f "$src" -otxt -osrt -of "$o" -np >/dev/null
   [[ -z $tmp ]] || rm -rf "$tmp"
   tmp=""

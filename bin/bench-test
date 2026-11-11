@@ -210,10 +210,9 @@ assert_eq "empty when everything is present" "" "$(missing_fonts "$fdir/checklis
 rm -rf "$fdir"
 
 step "pre-commit secret gate"
-# The gate must fail closed: a missing scanner used to print to stderr and let
-# the commit through, which is how the repo ran unscanned after gitleaks left.
-# PATH without /opt/homebrew hides betterleaks; _lib.sh only prepends, so it
-# cannot smuggle the binary back in.
+# The gate must fail closed: a hook that only warns about a missing scanner
+# lets the commit through unscanned. PATH without /opt/homebrew hides
+# betterleaks; _lib.sh only prepends, so it cannot smuggle the binary back in.
 assert_eq "refuses to commit when betterleaks is missing" "1" \
   "$(cd "$REPO_ROOT" && env PATH=/usr/bin:/bin .githooks/pre-commit 2>&1 | grep -c 'betterleaks not installed')"
 # The token is built at run time so this file holds none.
@@ -330,7 +329,7 @@ unset -f drift
 rm -rf "$tdir"
 
 step "bench-update pip steps fail with pip or its index"
-# Offline, pip list prints nothing and xargs -r exited 0: the step read as ok.
+# A failed pip list prints nothing and xargs -r exits 0 on an empty list: without pipefail the step reads as ok.
 tdir=$(mktemp -d)
 # shellcheck disable=SC2016  # literal $ in shim text
 printf '#!/bin/sh\ncase "$*" in *outdated*) [ -n "$PIPFAIL" ] && exit 1; echo "[]" ;; index*) exit 1 ;; *) echo "$*" >> "%s/installs" ;; esac\n' "$tdir" > "$tdir/pip"; chmod +x "$tdir/pip"
@@ -422,7 +421,7 @@ record "$active" "$(TZ=UTC LC_ALL=C ps -o lstart= -p "$active")" aaaaaaaa 2.0.0 
 record "$reused" "Thu Jan  1 00:00:00 2026" dddddddd 1.0.0 > "$home/.claude/sessions/$reused.json"
 # shellcheck disable=SC2016  # single quotes keep $2 for the stub
 printf '#!/bin/sh\n[ "$2" = bash ] && exec /usr/bin/pgrep -ax bash\necho %s\n' "$active" > "$stub/pgrep"; chmod +x "$stub/pgrep"
-# The full-clean steps stay inert even if --dry-run ever stopped short of them.
+# The full-clean steps stay inert even if --dry-run ever ran on into them.
 printf '#!/bin/sh\nexit 0\n' | tee "$stub/brew" > "$stub/fd"; chmod +x "$stub/brew" "$stub/fd"
 sweep() { HOME="$home" PATH="$stub:$PATH" bash -c ". '$REPO_ROOT/bin/_lib.sh'; $(sed -n '/^sweep_cc_tmp()/,/^}/p' "$REPO_ROOT/bin/bench-clean"); sweep_cc_tmp \"\$@\"" sweep "$@" 2>&1; }
 left() { command ls "$root/-p" | tr '\n' ' '; }
@@ -544,7 +543,7 @@ echo 'echo old' > "$tdir/home/.cache/zsh/foo.zsh"; touch -t 202101010000 "$tdir/
 ln -s "$tdir/foo-real" "$tdir/bin/foo"
 assert_eq "an upgrade poured after the cache regenerates it" "new" \
   "$(HOME="$tdir/home" PATH="$tdir/bin:$PATH" zsh -fc "$(sed -n '/^zmodload -F zsh\/stat/,/^}/p' "$REPO_ROOT/init.zsh"); _init_cache foo")"
-# compinit leaves an unchanged dump's mtime alone, so past 24 h every shell ran the full check.
+# compinit leaves an unchanged dump's mtime alone, so past 24 h every shell would run the full check.
 HOME="$tdir/home" zsh -fc 'autoload -Uz compinit; compinit'
 touch -t 202001010000 "$tdir/home/.zcompdump"
 HOME="$tdir/home" zsh -fc "setopt EXTENDED_GLOB; $(sed -n '/^autoload -Uz compinit$/,/^fi$/p' "$REPO_ROOT/init.zsh")"
@@ -552,8 +551,8 @@ assert_ok "a full compinit check renews the dump's age" test -n "$(find "$tdir/h
 rm -rf "$tdir"
 
 step "bench-paths"
-# A temp HOME holding one store of each kind, with a sibling repo-old whose
-# path starts like the moved one: every rewrite must leave it alone. Shims
+# A temp HOME holding text, sqlite and zoxide stores, with a sibling repo-old
+# whose path starts like the moved one: every rewrite must leave it alone. Shims
 # pin which apps run (RUNNING) and which processes sit where (LSOF_OUT).
 tdir=$(mktemp -d); H="$tdir/home"; bp="$REPO_ROOT/bin/bench-paths"
 export _ZO_DATA_DIR="$H/zoxide"

@@ -1,4 +1,3 @@
-# --- Color-aware diff ---
 # delta takes two paths and no diff flags: any other call goes to diff itself.
 diff() {
   if [[ -t 1 && $# -eq 2 && $1 != -* && $2 != -* ]] && (( $+commands[delta] )); then delta "$@"
@@ -6,7 +5,6 @@ diff() {
   fi
 }
 
-# --- fzf-driven helpers ---
 fkill() {
   local pid
   pid=$(ps -ef | sed 1d | fzf -m | awk '{print $2}')

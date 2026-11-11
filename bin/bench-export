@@ -54,7 +54,6 @@ if brew_ready; then
   fi
 fi
 
-# --- docs/ snapshots (replayed by install.sh, offline-readable) ---
 # Each tool is its own subprocess and stat-bound: fan out, then `wait`.
 step "docs/ snapshots"
 if [[ -n $leaves ]]; then   # set only when brew answered above

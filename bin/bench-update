@@ -27,7 +27,7 @@ have mise && run "mise tools" _mise_upgrade
 # default toolchain. `rustup update` updates the stable channel in place.
 have rustup && run "Rust toolchains" rustup update
 
-# No uv cache prune: same lock, same reason as the clean dropped from bin/bench-clean.
+# No uv cache prune: same lock, same reason as bin/bench-clean gives for no uv cache clean.
 
 # pipefail in a subshell: a failed pip list must fail the step, not reach xargs
 # as an empty list. grep's exit 1 only means nothing outdated is managed.

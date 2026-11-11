@@ -47,7 +47,6 @@ else
 fi
 
 if have shellcheck; then
-  # -x lets shellcheck follow `# shellcheck source=...` annotations.
   ((${#sh_files[@]})) && (cd "$idx" && shellcheck -x "${sh_files[@]}")
 else
   echo "pre-commit: shellcheck not installed — skipping shell lint" >&2

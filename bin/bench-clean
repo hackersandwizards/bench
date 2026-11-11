@@ -11,8 +11,8 @@ set -u
 . "$(dirname "$0")/_lib.sh"
 
 # Removes a session's folder or cache-break state, or a bundled-skills version, only when every
-# signal says finished; any signal it cannot read stops the whole run, so a broken check keeps
-# files and shows up as a warn. Other top-level entries are left alone.
+# signal says finished; a process, record or open-file signal it cannot read stops the whole run
+# with a warn, and an entry whose age it cannot read is kept. Other top-level entries are left alone.
 sweep_cc_tmp() {  # sweep_cc_tmp [--dry-run]
   local dry="${1:-}" days=14 root base="$HOME/Library/Caches/claude-code-tmp"
   local rec line pid start sid ver now running live="|" pids="|" versions="|" open
@@ -94,7 +94,7 @@ case "${1:-}" in
 esac
 
 brew_ready && run "Homebrew cleanup" brew cleanup -s
-# No bun install cache either: every Claude session's chrome-devtools MCP launcher (`bun -i -e`,
+# No bun install cache removal: every Claude session's chrome-devtools MCP launcher (`bun -i -e`,
 # .mcp.json) holds files in it open, so removing it under them can break a running launcher or a
 # concurrent `bun install`. The weekly cleanup-bench runs `bun pm cache rm`.
 # No uv cache clean. It needs the cache lock, and this machine's Claude sessions hold it through

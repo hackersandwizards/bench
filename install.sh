@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Interactive bootstrap for zsh-settings. Re-runnable, idempotent.
+# Interactive bootstrap for the bench. Re-runnable, idempotent.
 set -u
 
 # shellcheck source-path=SCRIPTDIR/bin
@@ -64,7 +64,6 @@ replay_ecosystem() {
   fi
 }
 
-# ---------- Brewfile ----------
 istep "Install Homebrew packages from Brewfile"
 if ! have brew; then
   if ask "Homebrew not installed. Install it now?"; then
@@ -139,7 +138,6 @@ else
   skip "Skipped Brewfile install"
 fi
 
-# ---------- Stow symlinks ----------
 istep "Symlink home/ via Stow"
 if ! have stow; then
   warn "stow not installed — run the Brewfile step first or 'brew install stow'"
@@ -162,7 +160,6 @@ else
   skip "Skipped stow"
 fi
 
-# ---------- mise tools ----------
 # Runtimes and CLIs declared in home/.config/mise/config.toml (linked by Stow above).
 istep "Install mise tools"
 if ! have mise; then
@@ -173,7 +170,6 @@ else
   skip "Skipped mise tools"
 fi
 
-# ---------- Personal git identity ----------
 # ~/.gitconfig.local is untracked (per-machine), so there is no snapshot to
 # diff against: show the live identity and let the user decide if it drifted.
 # Writes go through `git config --file` so extra local sections survive.
@@ -208,7 +204,6 @@ else
   skip "Skipped — git needs the [user] block in ~/.gitconfig.local"
 fi
 
-# ---------- GitHub / GitLab CLI logins ----------
 # home/.gitconfig routes git credentials through gh and glab: an
 # unauthenticated CLI breaks every HTTPS clone/push.
 istep "GitHub and GitLab CLI logins (gh / glab)"
@@ -228,7 +223,6 @@ for cli in gh glab; do
   fi
 done
 
-# ---------- Default repos (~/dev + ~/opt) ----------
 # Right after the CLI logins: the https clones ride on gh/glab credentials.
 istep "Clone default repos from docs/repos.txt into ~/dev + ~/opt"
 repos_doc="$REPO_ROOT/docs/repos.txt"
@@ -241,7 +235,6 @@ else
   skip "Skipped default repos"
 fi
 
-# ---------- Repo-local git hooks ----------
 istep "Activate repo-local git hooks (betterleaks + shellcheck)"
 if [[ "$(hooks_path)" == ".githooks" ]]; then
   ok "core.hooksPath already set to .githooks"
@@ -252,7 +245,6 @@ else
   skip "Skipped hook activation"
 fi
 
-# ---------- Source init.zsh from ~/.zshrc ----------
 istep "Source init.zsh from ~/.zshrc"
 if grep -qF "$REPO_ROOT/init.zsh" "$HOME/.zshrc" 2>/dev/null; then
   ok "init.zsh already sourced in ~/.zshrc"
@@ -263,7 +255,6 @@ else
   skip "Skipped ~/.zshrc append"
 fi
 
-# ---------- Ghostty config ----------
 istep "Ghostty config symlink"
 mkdir -p "$HOME/.config/ghostty"
 ghostty_target="$HOME/.config/ghostty/config.ghostty"
@@ -280,8 +271,6 @@ else
   skip "Skipped Ghostty"
 fi
 
-# ---------- skhd hotkey daemon ----------
-# Wires up the macos/ hotkey scripts (Ghostty grid, IDEA layout reset).
 istep "skhd hotkeys (symlink + service)"
 skhd_target="$HOME/.config/skhd/skhdrc"
 skhd_plist="$HOME/Library/LaunchAgents/com.koekeishiya.skhd.plist"
@@ -306,17 +295,12 @@ else
   skip "Skipped skhd"
 fi
 
-# ---------- Fonts ----------
-# fonts/ holds only fonts with verified redistribution rights (repo is public);
-# the caskable free families come from the Brewfile. docs/fonts.txt inventories
-# the old machine's full ~/Library/Fonts; commercial/brand fonts listed there
-# must be restored manually from a backup, never committed here.
 istep "Install fonts (fonts/ + checklist from docs/fonts.txt)"
 fonts_doc="$REPO_ROOT/docs/fonts.txt"
 if ask "Copy fonts/ into ~/Library/Fonts?"; then
   mkdir -p "$HOME/Library/Fonts"
   # Per-file skip, not `cp -n` for the batch: BSD cp -n exits 1 whenever any
-  # destination exists, which made every re-run warn "copy failed" falsely.
+  # destination exists, which would make every re-run warn "copy failed" falsely.
   fonts_failed=0
   for f in "$REPO_ROOT"/fonts/*; do
     [[ -e "$HOME/Library/Fonts/${f##*/}" ]] \
@@ -341,7 +325,6 @@ else
   skip "docs/fonts.txt missing/empty — run bench-export on the old machine"
 fi
 
-# ---------- atuin history migration ----------
 istep "atuin history import"
 if ! have atuin; then
   warn "atuin not installed — run the Brewfile step first"
@@ -357,10 +340,9 @@ else
   skip "Skipped — run 'atuin import auto' manually later"
 fi
 
-# ---------- Antidote pre-warm ----------
 # Generate plugins.zsh + plugins-post.zsh ahead of first interactive shell so
 # the user doesn't pay the cold-cache cost (~5-10s of git clones + bundle
-# compile) on first login. Mirrors init.zsh:_antidote_bundle exactly.
+# compile) on first login. Mirrors init.zsh:_antidote_bundle.
 # bench-update invalidates these caches by deleting them; this is the inverse.
 istep "Pre-warm antidote plugin bundles"
 if [[ ! -f "$ANTIDOTE_SH" ]]; then
@@ -383,7 +365,6 @@ else
   skip "Skipped antidote pre-warm"
 fi
 
-# ---------- chsh to brew zsh ----------
 # Apple ships zsh in /bin/zsh; brew ships its own at /opt/homebrew/bin/zsh.
 # Both usually match major version, but switching ensures future zsh updates
 # land via brew on the user's cadence rather than tied to macOS releases.
@@ -406,7 +387,6 @@ else
   skip "Skipped chsh"
 fi
 
-# ---------- Touch ID for sudo ----------
 istep "Enable Touch ID for sudo"
 pam=/etc/pam.d/sudo_local
 tid='^auth[[:space:]]+sufficient[[:space:]]+pam_tid\.so'
@@ -430,7 +410,6 @@ else
   skip "Skipped Touch ID for sudo"
 fi
 
-# ---------- Language-ecosystem global CLIs ----------
 # Replay the package snapshots bench-export writes to docs/ (per-package
 # failure handling lives in replay_globals above).
 istep "Install language-ecosystem global CLIs (npm, bun, pip)"
@@ -445,7 +424,6 @@ else
   skip "Skipped language-ecosystem globals"
 fi
 
-# ---------- Claude Code CLI ----------
 # Native installer, not npm/brew: it self-updates in place. Installs to
 # ~/.local/bin, which exports.zsh already puts on PATH.
 istep "Install Claude Code CLI"
@@ -464,7 +442,6 @@ else
   skip "Skipped Claude Code install"
 fi
 
-# ---------- Safari favorites bar ----------
 # Merge-only: prepends snapshot entries missing from the favorites bar, never
 # deletes or reorders existing ones. bin/safari-favorites owns the guarantees
 # (Safari-quit re-check, Full Disk Access message, backup, atomic write).
@@ -490,7 +467,6 @@ else
   skip "Skipped Safari favorites"
 fi
 
-# ---------- Dock layout ----------
 # Replace, don't merge: a fresh machine's Dock is all Apple defaults, and an
 # append-only replay would keep them. The wipe is why this has its own ask.
 istep "Apply Dock layout from docs/dock.txt"
@@ -509,7 +485,6 @@ else
   skip "Skipped Dock layout"
 fi
 
-# ---------- Finder sidebar ----------
 # Built-ins (AirDrop, Recents, iCloud) have non-file URLs and are never touched.
 istep "Mirror Finder sidebar from docs/finder-sidebar.txt"
 sidebar_doc="$REPO_ROOT/docs/finder-sidebar.txt"
@@ -543,7 +518,6 @@ else
   skip "Skipped Finder sidebar"
 fi
 
-# ---------- Moom window layouts ----------
 istep "Import Moom settings from docs/moom.plist"
 moom_doc="$REPO_ROOT/docs/moom.plist"
 if [[ ! -s "$moom_doc" ]]; then
@@ -554,7 +528,6 @@ else
   skip "Skipped Moom"
 fi
 
-# ---------- macOS system defaults ----------
 # Wallpaper and the trackpad/keyboard/Finder/Dock defaults all live in
 # macos.sh. Offering it as a real step (not a closing hint) is what gets it
 # run on a fresh machine: "optional next steps" were skipped in practice.
@@ -569,9 +542,6 @@ else
   skip "Skipped — run './macos.sh' anytime later"
 fi
 
-# ---------- API keys in secrets.zsh ----------
-# docs/secret-keys.txt is the one list of expected key names; values live only
-# in the gitignored secrets.zsh, sourced by exports.zsh on shell start.
 istep "API keys in secrets.zsh (docs/secret-keys.txt)"
 secrets_file="$REPO_ROOT/secrets.zsh"
 keys_doc="$REPO_ROOT/docs/secret-keys.txt"
@@ -607,7 +577,6 @@ else
   done 3< "$keys_doc"
 fi
 
-# ---------- Final hints ----------
 step "Optional next steps"
 echo "  • Run 'bench-doctor' to verify the install"
 echo "  • Run 'bench-export' to refresh Brewfile/docs/ snapshots"

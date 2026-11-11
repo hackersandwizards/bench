@@ -56,7 +56,6 @@ secret_line() {
 export PIP_BREAK_SYSTEM_PACKAGES=1
 export NPM_CONFIG_PREFIX=/opt/homebrew
 
-# --- Homebrew bottle-support guard ------------------------------------------
 # Homebrew maps the running macOS major to a codename (its macos_version.rb
 # SYMBOLS table). A macOS newer than the newest entry has no codename, so the
 # bottle tag becomes "arm64_dunno" and every formulae.brew.sh JSON-API fetch

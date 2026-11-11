@@ -163,8 +163,8 @@ echo "=== Default repos (docs/repos.txt) ==="
 # same call with "could not resolve host", and calling that dead would retire a
 # good entry, so anything but an explicit denial falls through to install.sh.
 # GIT_TERMINAL_PROMPT=0 because an unattended run must fail, never wait for input.
-# A private repo whose credentials are missing also reads as gone; the gh/glab
-# auth checks above are what make that unlikely here.
+# A private repo whose credentials are missing also reads as gone; the Git auth
+# section below reports missing credentials.
 remote_gone() {
   local out
   out=$(GIT_TERMINAL_PROMPT=0 git ls-remote -- "$1" 2>&1 >/dev/null) && return 1

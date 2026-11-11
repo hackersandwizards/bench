@@ -62,10 +62,9 @@ moved() { printf '%s' "$new${1#"$old"}"; }
 say() { printf '  %-9s %s\n' "$1" "$2"; }
 manual=()
 
-# A process that sat in old when it moved now reports the new path. Only a
-# Claude Code session holds the project rename: it keeps writing transcripts
-# to the project folder it started in. lsof runs from / so neither it nor
-# this script's subshells count as processes inside the folder.
+# A process that sat in old when it moved now reports the new path. lsof runs
+# from / so neither it nor this script's subshells count as processes inside
+# the folder.
 step "Processes with a working directory inside $old${new:+ or $new}"
 live=0 nproc=0
 # ps, not pgrep: pgrep leaves out its own ancestors, so a run from inside a
@@ -122,7 +121,6 @@ for l in sys.stdin.read().splitlines():
     print(l, t, os.path.normpath(os.path.join(os.path.dirname(l), t)), sep="\t")'
 )
 for f in "$HOME"/.local/state/mise/trusted-configs/*; do
-  # Each link's name hashes the config path: re-pointing it carries no trust.
   [[ -L $f ]] || continue
   c=$(readlink "$f"); inside "$c" || continue
   if [[ -z $new ]]; then say "mise" "trusted: $c"; else manual+=("mise trust '$(moved "$c")'"); fi
@@ -218,8 +216,7 @@ zo_inside() {
   done <<< "$zo_rows"
 }
 # The CLI exposes frecency, not rank, and add stamps now: a quarter of the
-# score matches the old score at this moment only. An older entry then decays
-# as a freshly used one. An entry with no folder left is dropped.
+# score matches the old score at this moment only.
 rewrite_zoxide() {
   local rows r p t
   rows=$(zo_inside)
