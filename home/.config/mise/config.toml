@@ -1,6 +1,6 @@
 [tools]
 ruby = "4"
-java = ["temurin-27", "temurin-26", "temurin-25", "temurin-21", "temurin-17", "temurin-11"]
+java = ["temurin-27", "temurin-25", "temurin-21", "temurin-17", "temurin-11"]
 gradle = "latest"
 maven = "latest"
 quarkus = "latest"
