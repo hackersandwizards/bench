@@ -1,4 +1,5 @@
 ^/\.gitconfig\.local$
+^/\.ssh/config\.local$
 ^/\.ssh/control(/.*)?$
 ^/\.ssh/id_.*$
 ^/\.ssh/known_hosts.*$

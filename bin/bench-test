@@ -112,6 +112,8 @@ opt/z https://gitlab.com/org/z.git" "$(cat "$fix")"
 # paths while a reorg is half-done, and rewriting the wrong one is silent.
 assert_fail "target without its URL does not match" \
   repos_repoint "$fix" opt/z https://github.com/org/y.git opt/q https://github.com/org/y.git
+assert_fail "a new target with a space is refused, parse_repos would drop it" \
+  repos_repoint "$fix" opt/z https://gitlab.com/org/z.git "opt/z z" https://gitlab.com/org/z.git
 # shellcheck disable=SC2016  # single quotes keep $HOME a literal token, as in real snapshots
 printf 'Applications -> file:///Applications/\nDownloads -> file://$HOME/Library/Mobile%%20Documents/com~apple~CloudDocs/Downloads/\niCloud -> x-apple-finder:icloud\n' > "$fix"
 assert_eq "parse_sidebar: name+url TSV, \$HOME expanded, built-ins dropped" "Applications	file:///Applications/
@@ -138,9 +140,9 @@ assert_fail "apply_sidebar refuses an empty snapshot" apply_sidebar ""
 
 step "clone_repos target validation"
 fix=$(mktemp)
-printf '/abs https://example.invalid/a.git\ndev/../up https://example.invalid/b.git\n' > "$fix"
-assert_eq "rejects absolute and dot-dot targets (no clone attempted)" \
-  "2" "$(clone_repos "$fix" 2>&1 | grep -c refusing)"
+printf '/abs https://example.invalid/a.git\ndev/../up https://example.invalid/b.git\n.config/c https://example.invalid/c.git\n' > "$fix"
+assert_eq "rejects absolute, dot-dot and non-~/dev, non-~/opt targets (no clone attempted)" \
+  "3" "$(clone_repos "$fix" 2>&1 | grep -c refusing)"
 rm -f "$fix"
 
 step "brew bottle-support guard"
@@ -393,7 +395,8 @@ tdir=$(mktemp -d)
 mkdir -p "$tdir/Applications/Zzzide.app/Contents/Resources" \
   "$tdir/Library/Caches/JetBrains/Zzzide2026.1" "$tdir/Library/Caches/JetBrains/Zzzide2026.2" \
   "$tdir/Library/Caches/JetBrains/Zzzide2026.10" "$tdir/Library/Caches/JetBrains/Zzzide2027.1" \
-  "$tdir/Library/Caches/JetBrains/Yyyide2026.1" "$tdir/Library/Logs/JetBrains/Zzzide2026.1"
+  "$tdir/Library/Caches/JetBrains/Yyyide2026.1" "$tdir/Library/Logs/JetBrains/Zzzide2026.1" \
+  "$tdir/Library/Logs/JetBrains/Zzzide2026.2" "$tdir/Library/Application Support/JetBrains/Zzzide2026.1"
 printf '{"dataDirectoryName":"Zzzide2026.2"}' > "$tdir/Applications/Zzzide.app/Contents/Resources/product-info.json"
 chmod 555 "$tdir/Library/Logs/JetBrains"
 out=$(HOME="$tdir" bash -c ". '$REPO_ROOT/bin/_lib.sh'; $(sed -n '/^sweep_jetbrains()/,/^}/p' "$REPO_ROOT/bin/bench-clean"); sweep_jetbrains" 2>&1)
@@ -403,6 +406,8 @@ assert_ok "a version dir it cannot remove is warned" grep -q 'removing .*Logs/Je
 assert_eq "older version of an installed product removed, live and newer ones kept" "Zzzide2026.10 Zzzide2026.2 Zzzide2027.1" \
   "$(command ls "$tdir/Library/Caches/JetBrains" | grep Zzz | xargs)"
 assert_ok "product with no installed app keeps its dir" test -d "$tdir/Library/Caches/JetBrains/Yyyide2026.1"
+assert_ok "an older dir stays while the installed version has no dir of its own" \
+  test -d "$tdir/Library/Application Support/JetBrains/Zzzide2026.1"
 rm -rf "$tdir"
 
 step "t3-import-session imports only a session it can prove ended"

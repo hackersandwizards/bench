@@ -38,11 +38,13 @@ echo
 echo "=== Stow symlinks ==="
 [[ -n $(stow_files) ]] || warn "no files tracked under home/ — is $REPO_ROOT a git clone?"
 while IFS= read -r rel; do
-  if [[ -L "$HOME/$rel" ]]; then
+  if [[ -L "$HOME/$rel" && "$HOME/$rel" -ef "$REPO_ROOT/home/$rel" ]]; then
     ok "$rel -> $(readlink "$HOME/$rel")"
   # A folded directory links a whole folder into the repo, so tools write there.
   elif [[ "$HOME/$rel" -ef "$REPO_ROOT/home/$rel" ]]; then
     warn "$rel: its folder is a link into the repo — re-run install.sh's Stow step to unfold it"
+  elif [[ -L "$HOME/$rel" ]]; then
+    warn "$rel: a link to $(readlink "$HOME/$rel"), not to this repo's file — re-run install.sh's Stow step"
   elif [[ -e "$HOME/$rel" ]]; then
     warn "$rel: real file (not Stow-managed)"
   else
@@ -84,7 +86,7 @@ hp=$(hooks_path)
 if [[ "$hp" == ".githooks" ]]; then
   ok "core.hooksPath = .githooks"
 else
-  warn "core.hooksPath = $hp (run install.sh to fix)"
+  warn "core.hooksPath = $hp — git -C $REPO_ROOT config core.hooksPath .githooks"
 fi
 if [[ ! -f "$REPO_ROOT/secrets.zsh" ]]; then
   warn "secrets.zsh missing (optional)"

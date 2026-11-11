@@ -33,7 +33,7 @@ Measured on 08.11.2026 with three sample paths (`~/dev/hackersandwizards/interna
 | `~/.codex/config.toml` (`[projects."<path>"]` trust), `.codex-global-state.json` (workspace roots, tab routes), `external_agent_session_imports.json` (imported Claude transcript paths, encoded) | TOML/JSON, absolute and encoded | codex, Codex | text |
 | `~/.codex/state_*.sqlite` (`threads.cwd`, `project_roots.path`) | SQLite, absolute | codex, Codex | SQL update, backup via SQLite's backup API |
 | `~/.codex/sqlite/codex-dev.db` (`local_thread_catalog.cwd`) | SQLite, absolute | codex, Codex | SQL update |
-| JetBrains: `*/options/recentProjects.xml`, `trusted-paths.xml`, `other.xml`, `runner.layout.xml`, `*/workspace/*.xml`, `jba_config/*.xml`, `air/session-identities/*.json`, Toolbox and Daemon `rhizome/db.json` | XML/JSON, `$USER_HOME$` and absolute | idea, jetbrains-toolbox | text |
+| JetBrains: `*/options/recentProjects.xml`, `trusted-paths.xml`, `other.xml`, `runner.layout.xml`, `*/workspace/*.xml`, `jba_config/*.xml`, `air/session-identities/*/session-identities.json`, Toolbox and Daemon `rhizome/db.json` | XML/JSON, `$USER_HOME$` and absolute | idea, jetbrains-toolbox | text |
 | Zed: `db/*/db.sqlite` (`workspaces`, `trusted_worktrees`, `sidebar_threads`, `editors.buffer_path`, `kv_store.value`) | SQLite, absolute | zed | SQL update |
 | opencode: `storage/project/*.json`, `storage/session/*.json`, `opencode.db` (`project`, `session.directory`, `project_directory`) | JSON/SQLite, absolute | opencode | text, SQL update |
 | Gemini and Antigravity: `~/.gemini/projects.json`, `trustedFolders.json`, `antigravity-cli/settings.json`, `antigravity-cli/cache/projects.json`, `config/projects/*.json` | JSON, absolute | Antigravity | text |

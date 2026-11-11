@@ -107,7 +107,7 @@ home/                 Stow package, symlinked into $HOME
   .gitignore_global     .DS_Store, IDE noise, etc.
   .commitTemplate.txt   Conventional commit message template
   .vimrc, .tmux.conf
-  .ssh/config           Hardened (Keychain, ControlMaster, no ForwardAgent)
+  .ssh/config           Hardened (Keychain, ControlMaster, no ForwardAgent), includes ~/.ssh/config.local
   .config/zed/settings.json   Zed editor defaults
   .config/mise/config.toml    Runtimes (JDKs, Ruby, Go, ...) and Python CLIs
   .config/mole/whitelist      Paths mo clean and mo purge never touch (cleanup-bench guard)

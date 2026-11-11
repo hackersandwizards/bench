@@ -46,7 +46,8 @@ fi
 PL='BEGIN { @f = map { my $o = $ENV{"O$_"}; [$o =~ m{/$} ? qr/\Q$o\E/ : qr/\Q$o\E(?![\w-]|\.\w)/, $ENV{"N$_"}] } grep { defined $ENV{"O$_"} } 0..$ENV{NK} }'
 # On stdin: perl -n would run a file name ending in | as a command.
 count_refs() { perl -ne "$PL"' my $l = $_; $c += () = $l =~ /$_->[0]/g for @f; END { print $c + 0 }' < "$1"; }
-rewrite_file() { perl -i.bench-paths-bak -pe "$PL"' for my $x (@f) { my $n = $x->[1]; s/$x->[0]/$n/g }' "$1"; }
+# perl -i only warns and exits 0 where it cannot replace the file: the warning has to die.
+rewrite_file() { perl -i.bench-paths-bak -pe 'BEGIN { $SIG{__WARN__} = sub { die @_ } } '"$PL"' for my $x (@f) { my $n = $x->[1]; s/$x->[0]/$n/g }' "$1"; }
 pats() { local i v; for ((i = 0; i <= NK; i++)); do v="O$i"; [[ -n ${!v:-} ]] && printf '%s\n' "${!v}"; done; }
 
 # ps, not pgrep: pgrep leaves out its own ancestors, so a run from inside a
@@ -258,7 +259,7 @@ while IFS='|' read -r kind apps path glob; do
   elif [[ $kind == binary ]]; then act=manual; why="app-internal state, not rewritten: open the folder in $apps after the move and check it"
   elif [[ -n $apps ]] && busy=$(running "$apps"); then act=manual; why="quit every $busy process, then rerun with --apply"
   fi
-  nf=0 nr=0
+  nf=0 nr=0 bad=0
   while IFS= read -r f; do
     if [[ $kind == sqlite ]]; then
       # shellcheck disable=SC2086  # cols is a word list by design
@@ -277,7 +278,7 @@ while IFS='|' read -r kind apps path glob; do
       # shellcheck disable=SC2086
       if [[ $kind == sqlite ]]; then python3 -I -c "$SQLPY" apply "$real" "$old" "$new" $cols >/dev/null
       elif [[ $kind == zoxide ]]; then rewrite_zoxide "$real"
-      else rewrite_file "$real"; fi || warn "rewrite failed: $f"
+      else rewrite_file "$real"; fi || { warn "rewrite failed: $f"; bad=$((bad + 1)); }
     fi
   done <<< "$files"
   (( nf )) || continue
@@ -286,7 +287,8 @@ while IFS='|' read -r kind apps path glob; do
   case $act in
     list)    say "$kind" "$label${apps:+  (app: $apps)}" ;;
     manual)  manual+=("$label — $why") ;;
-    rewrite) if (( apply )); then say "rewrote" "$label"; else say "rewrite" "$label"; fi ;;
+    rewrite) if (( bad )); then manual+=("$label — $bad file(s) not rewritten: clear what the warn above names, then rerun with --apply")
+             elif (( apply )); then say "rewrote" "$label"; else say "rewrite" "$label"; fi ;;
   esac
   [[ $act == rewrite && $kind == launchd ]] && manual+=("reload each rewritten agent under $path: launchctl bootout gui/$UID <plist>; launchctl bootstrap gui/$UID <plist>")
 done < <(stores)

@@ -145,6 +145,12 @@ elif ! rels=$(stow_files) || [[ -z $rels ]]; then
   warn "no files tracked under home/ — run install.sh from a git clone of this repository"
 elif ask "Symlink dotfiles in home/ to \$HOME via stow?"; then
   while IFS= read -r rel; do
+    # Stow aborts the whole run on one link it does not own, a dangling one included,
+    # after backup has already moved the real files aside.
+    if [[ -L "$HOME/$rel" && ! "$HOME/$rel" -ef "$REPO_ROOT/home/$rel" ]]; then
+      warn "replacing link $HOME/$rel → $(readlink "$HOME/$rel")"
+      rm "$HOME/$rel"
+    fi
     backup "$HOME/$rel"
   done <<<"$rels"
   mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
@@ -256,7 +262,6 @@ else
 fi
 
 istep "Ghostty config symlink"
-mkdir -p "$HOME/.config/ghostty"
 ghostty_target="$HOME/.config/ghostty/config.ghostty"
 # readlink-compare as for skhd below: a link left by a repo move dangles.
 if [[ "$(readlink "$ghostty_target" 2>/dev/null)" == "$REPO_ROOT/ghostty/config.ghostty" ]]; then
@@ -264,6 +269,7 @@ if [[ "$(readlink "$ghostty_target" 2>/dev/null)" == "$REPO_ROOT/ghostty/config.
 elif [[ ! -d "/Applications/Ghostty.app" ]]; then
   warn "Ghostty.app not found in /Applications — install it first (https://ghostty.org), then re-run"
 elif ask "Symlink Ghostty config?"; then
+  mkdir -p "$HOME/.config/ghostty"
   backup "$ghostty_target"
   ln -sf "$REPO_ROOT/ghostty/config.ghostty" "$ghostty_target"
   ok "Ghostty config symlinked"
@@ -302,7 +308,7 @@ if ask "Copy fonts/ into ~/Library/Fonts?"; then
   # Per-file skip, not `cp -n` for the batch: BSD cp -n exits 1 whenever any
   # destination exists, which would make every re-run warn "copy failed" falsely.
   fonts_failed=0
-  for f in "$REPO_ROOT"/fonts/*; do
+  for f in "$REPO_ROOT"/fonts/*.[ot]tf; do   # not the licence text beside them
     [[ -e "$HOME/Library/Fonts/${f##*/}" ]] \
       || cp "$f" "$HOME/Library/Fonts/" \
       || { warn "fonts: ${f##*/} copy failed"; fonts_failed=1; }

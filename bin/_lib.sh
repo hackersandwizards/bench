@@ -245,6 +245,7 @@ find_clone() {  # find_clone <url> [retried] -> paths, or non-zero when none
 # made is worse than one that reports it could not make it.
 repos_repoint() {  # repos_repoint <file> <target> <url> <new-target> <new-url>
   local out
+  [[ "$4$5" != *[[:space:]]* ]] || return 1   # parse_repos would drop a line of three fields
   out=$(awk -v t="$2" -v u="$3" -v nt="$4" -v nu="$5" \
     '$1 == t && $2 == u { $1 = nt; $2 = nu; n++ } { print } END { exit n == 1 ? 0 : 1 }' "$1") || return 1
   printf '%s\n' "$out" > "$1"
@@ -254,10 +255,11 @@ repos_repoint() {  # repos_repoint <file> <target> <url> <new-target> <new-url>
 clone_repos() {
   local target url output
   while read -r target url; do
-    # repos.txt is a trust boundary (PR-able): keep targets under $HOME and
-    # `--` stops a crafted URL from becoming a git option (--upload-pack runs).
-    if [[ "$target" == /* || "$target" == *..* ]]; then
-      warn "repo: refusing target outside \$HOME: $target"
+    # repos.txt is a trust boundary (PR-able): keep targets under ~/dev and ~/opt,
+    # the folders the install prompt names, and `--` stops a crafted URL from
+    # becoming a git option (--upload-pack runs).
+    if [[ "$target" != dev/* && "$target" != opt/* || "$target" == *..* ]]; then
+      warn "repo: refusing target outside ~/dev and ~/opt: $target"
     elif [[ -d "$HOME/$target/.git" ]]; then
       ok "repo: $target already cloned"
     # GIT_TERMINAL_PROMPT=0: without gh/glab credentials git would stop and ask

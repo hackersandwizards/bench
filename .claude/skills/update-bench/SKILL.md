@@ -24,7 +24,7 @@ Never retry a `bench-*` script and never re-run one with a password: a failed st
 | `bench-update` | mutates the machine | 2 |
 | `bench-clean` | deletes caches, the cache of the Claude app hosting this run included | 2 |
 | `bench-export` | writes `docs/` and `home/`, reports Brewfile drift without writing it | 3 |
-| `bench-doctor` | read-only, and every warn names its own remedy | 4 |
+| `bench-doctor` | read-only | 4 |
 
 `bench-clean` purges the hosting app's cache, so it runs before anything is written to the repo.
 
@@ -104,7 +104,7 @@ passes the test and sits under "needs a human" is a mistake.
 
 **Needs a human.** Anything wanting a password, a browser login, a UI action, a font backup or a
 logout; anything whose remedy is `install.sh`, `macos.sh` or `brew bundle`, which replay a whole
-machine; a stopped `skhd`, which may have been stopped on purpose. One line each, with the command doctor gave.
+machine; a stopped `skhd`, which may have been stopped on purpose. One line each, with the command doctor gave, where it gave one.
 
 **Resolved by the export.** `bench-export` settles Dock, Finder sidebar and Safari favorites drift
 machine-is-truth, which `README.md` pre-authorizes, and repoints a `docs/repos.txt` entry whose
@@ -138,7 +138,7 @@ gets reported; an allowlist is a human's call.
 ### 6. Commit, push, report
 
 Re-run `git status` and drop any path that became dirty since step 1 without a write of yours. Name
-the remaining paths as the `git commit` pathspec, per `git.md`. One commit: one line, then a short
+the remaining paths as the `git commit` pathspec. One commit: one line, then a short
 body naming what changed. Nothing to commit is the normal quiet-day outcome.
 
 Push. `origin` carries two push URLs, so a partial failure exits non-zero and the next run pushes
