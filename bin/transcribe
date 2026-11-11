@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Speech to text with whisper.cpp: writes <name>.txt and <name>.srt (segment
 # timestamps) per input. The one supported transcription path on this bench.
-# README "Transcription" has the measurements behind the fixed flags.
+# docs/transcription.md has the measurements behind the fixed flags.
 set -euo pipefail
 
 MODEL="$HOME/.cache/whisper/ggml-large-v3-turbo.bin"
@@ -9,7 +9,7 @@ MODEL_URL="https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-
 
 usage() {
   echo "usage: transcribe [-l lang] [-o outdir] file..."
-  echo "  -l lang    spoken language, default en. en and de are measured (README \"Transcription\")."
+  echo "  -l lang    spoken language, default en. en and de are measured (docs/transcription.md)."
   echo "  -o outdir  write there instead of next to each input"
   echo "  flac, mp3, ogg and wav go to whisper-cli as they are; anything else"
   echo "  (mp4, m4a, mov, ...) is converted with ffmpeg first."
@@ -63,7 +63,7 @@ for f; do
       ffmpeg -nostdin -loglevel error -y -i "$f" -vn -ac 1 -ar 16000 -c:a pcm_s16le "$src"
       ;;
   esac
-  # -mc 0 is the reason this wrapper exists (README "Transcription"), and
+  # -mc 0 is the reason this wrapper exists (docs/transcription.md), and
   # bench-test fails if the flag goes missing.
   whisper-cli -m "$MODEL" -l "$lang" -mc 0 -f "$src" -otxt -osrt -of "$o" -np >/dev/null
   [[ -z $tmp ]] || rm -rf "$tmp"

@@ -32,7 +32,7 @@ fonts/                # Only fonts with verified redistribution rights (repo is 
 .codex/               # Codex CLI config
 ghostty/              # Ghostty terminal config
 home/                 # Dotfile templates symlinked via Stow; .config/mise/ holds the mise config
-docs/                 # Package + machine-state snapshots, replayed by install.sh (offline-readable); secret-keys.txt (expected key names) is hand-maintained, never dumped by bench-export; fonts.txt (restore checklist) is a union bench-export only adds to, pruned by hand; path-stores.md (every store keeping a ~/dev or ~/opt path, the list behind bench-paths) is hand-maintained; repos.txt (default clones) is hand-maintained in its selection, with bench-export repointing an entry whose clone moved or was renamed
+docs/                 # Package + machine-state snapshots, replayed by install.sh (offline-readable); setup.md, theming.md and transcription.md are hand-written guides the README links; secret-keys.txt (expected key names) is hand-maintained, never dumped by bench-export; fonts.txt (restore checklist) is a union bench-export only adds to, pruned by hand; path-stores.md (every store keeping a ~/dev or ~/opt path, the list behind bench-paths) is hand-maintained; repos.txt (default clones) is hand-maintained in its selection, with bench-export repointing an entry whose clone moved or was renamed
 ```
 
 ## Conventions
@@ -42,6 +42,10 @@ docs/                 # Package + machine-state snapshots, replayed by install.s
 - Global npm/bun packages preferred over system installs
 - Runtimes and CLI tools via mise (`home/.config/mise/config.toml`), except where a kept brew formula depends on the brew runtime (node, python@3.14, php, openjdk), and Rust, which rustup from the Brewfile owns
 - `/opt/homebrew` hardcoded, Apple Silicon only (Intel Macs not supported)
+
+## Defaults ownership
+
+Benedikt maintains the defaults: he runs `bench-export` on his machine and commits the refreshed `docs/` snapshots. He curates the `macos.sh` keys and the Stow configs by hand. Everyone else consumes them: `install.sh` replays Dock, sidebar, Moom, and `macos.sh` on a fresh machine. Local deviations on other machines are unsupported: they never reach the snapshots, and accepting the Dock, sidebar or Moom step of `install.sh` resets them. To capture a new System Settings deviation as `defaults` keys for `macos.sh`: `bench-prefs-diff snap`, flip the setting in the UI, `bench-prefs-diff diff`.
 
 ## Behavioral rules
 

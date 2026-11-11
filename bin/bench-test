@@ -284,7 +284,7 @@ unset -f touchid; rm -rf "$tdir"
 
 step "transcribe"
 # whisper-cli at its default context invents repeated sentences and can lose
-# punctuation for a whole file (README "Transcription"), so the wrapper's fixed
+# punctuation for a whole file (docs/transcription.md), so the wrapper's fixed
 # flags are the product. A shim records what the wrapper passes: no model, no
 # audio, no GPU. HOME moves so the fixed model path resolves inside the fixture.
 tdir=$(mktemp -d)

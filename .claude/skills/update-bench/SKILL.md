@@ -107,7 +107,7 @@ logout; anything whose remedy is `install.sh`, `macos.sh` or `brew bundle`, whic
 machine; a stopped `skhd`, which may have been stopped on purpose. One line each, with the command doctor gave, where it gave one.
 
 **Resolved by the export.** `bench-export` settles Dock, Finder sidebar and Safari favorites drift
-machine-is-truth, which `README.md` pre-authorizes, and repoints a `docs/repos.txt` entry whose
+machine-is-truth, which `CLAUDE.md` ("Defaults ownership") pre-authorizes, and repoints a `docs/repos.txt` entry whose
 clone it locates at another path or under a new name. Report which way each snapshot went, from
 `git diff --stat -- docs/`. Step 5 owns the case where that direction is wrong.
 
