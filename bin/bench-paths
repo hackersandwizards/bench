@@ -54,6 +54,8 @@ pats() { local i v; for ((i = 0; i <= NK; i++)); do v="O$i"; [[ -n ${!v:-} ]] &&
 # Claude Code session or an app's terminal would miss that session or app.
 # comm is the executable's path, spaces included: the name follows the last slash.
 procs=$(ps -axo pid=,comm= | sed -E 's|^ *([0-9]+) +(.*/)?|\1 |')
+# The listing must hold this script itself, or an empty one would read as every app quit.
+grep -q "^$$ " <<< "$procs" || { echo "bench-paths: ps listed no process, not even this one; cannot tell which apps run" >&2; exit 1; }
 running() {  # running "a,b": the first of these process names that runs
   local n names; IFS=, read -ra names <<< "$1"
   for n in "${names[@]}"; do
@@ -263,7 +265,7 @@ while IFS='|' read -r kind apps path glob; do
   while IFS= read -r f; do
     if [[ $kind == sqlite ]]; then
       # shellcheck disable=SC2086  # cols is a word list by design
-      n=$(python3 -I -c "$SQLPY" count "$f" "$old" "" $cols) || { warn "cannot read $f: not counted, not rewritten"; continue; }
+      n=$(python3 -I -c "$SQLPY" count "$f" "$old" "" $cols) || { warn "cannot read $f: not counted, not rewritten"; bad=$((bad + 1)); continue; }
     elif [[ $kind == zoxide ]]; then
       n=$(zo_inside | grep -c '')
       # Before the move a folder sits at old, after it at new; at neither it is dropped.
@@ -281,7 +283,7 @@ while IFS='|' read -r kind apps path glob; do
       else rewrite_file "$real"; fi || { warn "rewrite failed: $f"; bad=$((bad + 1)); }
     fi
   done <<< "$files"
-  (( nf )) || continue
+  (( nf + bad )) || continue
   where=$path; [[ -n $glob ]] && where="$path [$glob]"
   label="$where: $nf file(s), $nr ref(s)"; [[ $kind == binary ]] && label="$where: $nf file(s)"
   case $act in

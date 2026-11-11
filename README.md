@@ -113,7 +113,7 @@ home/                 Stow package, symlinked into $HOME
   .config/mole/whitelist      Paths mo clean and mo purge never touch (cleanup-bench guard)
 ghostty/              Ghostty terminal config (single source of truth for theme)
 docs/                 Package + machine-state snapshots (committed; replayed by install.sh)
-.claude/              Claude Code statusline + rules + settings
+.claude/              Claude Code statusline + rules + skills + settings
 .codex/               Codex CLI config
 .githooks/pre-commit  betterleaks + shellcheck + zsh -n (repo-local)
 ```

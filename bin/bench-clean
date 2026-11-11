@@ -142,9 +142,9 @@ sweep_jetbrains() {
       p=${name%%[0-9]*}; v=${name#"$p"}
       top=$(awk -v p="$p" '$1 == p { print $2 }' <<<"$installed" | sort -V | tail -1)
       [[ -n "$top" && "$(printf '%s\n' "$v" "$top" | sort -V | head -1)" == "$v" ]] || continue
-      # Until the newest installed version has its own dir here it has not run, and
-      # the older dir is the only copy of the settings it imports on first launch.
-      [[ -d "$root/$p$top" ]] || continue
+      # Until the newest installed version has its own settings dir it has not run, and
+      # the older one is the only copy of the settings it imports on first launch.
+      [[ -d "$HOME/Library/Application Support/JetBrains/$p$top" ]] || continue
       if rm -rf "$d"; then ok "JetBrains: removed ${d%/}"; else warn "JetBrains: removing ${d%/} failed"; fi
       stale=$((stale + 1))
     done

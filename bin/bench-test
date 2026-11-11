@@ -242,12 +242,17 @@ assert_eq "an empty home gets one link per tracked file, never a folder link" \
   "$(stow_files | sort)" \
   "$(HOME="$tdir/home" REPO_ROOT="$REPO_ROOT" bash -c "mkdir -p \"\$HOME\"; $stow_cmd" 2>&1 | sed -n 's/^LINK: \([^ ]*\) =>.*/\1/p' | sort)"
 mkdir -p "$tdir/repo/home/.config/x" "$tdir/home/.config"
-echo keep > "$tdir/repo/home/.config/x/f"; echo foreign > "$tdir/home/.y"
+echo keep > "$tdir/repo/home/.config/x/f"; echo foreign > "$tdir/home/.y"; echo keep > "$tdir/repo/home/.z"
 ln -s "$tdir/repo/home/.config/x" "$tdir/home/.config/x"
+ln -s "$tdir/repo/home/.z" "$tdir/home/.z"; ln -s "$tdir/home/.y" "$tdir/home/.w"; ln -s "$tdir/gone" "$tdir/home/.d"
 HOME="$tdir/home" bash -c ". '$REPO_ROOT/bin/_lib.sh'; REPO_ROOT='$tdir/repo'
-  $(sed -n '/^backup() {/,/^}/p' "$REPO_ROOT/install.sh"); backup \"\$HOME/.config/x/f\"; backup \"\$HOME/.y\"" >/dev/null 2>&1
+  $(sed -n '/^backup() {/,/^}/p' "$REPO_ROOT/install.sh")
+  for t in .config/x/f .z .w .d .y; do backup \"\$HOME/\$t\"; done" >/dev/null 2>&1
 assert_ok "backup leaves the repo's own file under a folded folder in place" test -f "$tdir/repo/home/.config/x/f"
+assert_ok "and the repo's own Stow link" test -L "$tdir/home/.z"
 assert_ok "backup still moves a foreign file aside" compgen -G "$tdir/home/.y.backup-*"
+assert_ok "and a foreign link and a dangling one, which would stop Stow" \
+  test -L "$(compgen -G "$tdir/home/.w.backup-*")" -a -L "$(compgen -G "$tdir/home/.d.backup-*")"
 rm -rf "$tdir"
 
 step "install.sh Touch ID step"
@@ -396,18 +401,22 @@ mkdir -p "$tdir/Applications/Zzzide.app/Contents/Resources" \
   "$tdir/Library/Caches/JetBrains/Zzzide2026.1" "$tdir/Library/Caches/JetBrains/Zzzide2026.2" \
   "$tdir/Library/Caches/JetBrains/Zzzide2026.10" "$tdir/Library/Caches/JetBrains/Zzzide2027.1" \
   "$tdir/Library/Caches/JetBrains/Yyyide2026.1" "$tdir/Library/Logs/JetBrains/Zzzide2026.1" \
-  "$tdir/Library/Logs/JetBrains/Zzzide2026.2" "$tdir/Library/Application Support/JetBrains/Zzzide2026.1"
+  "$tdir/Library/Application Support/JetBrains/Zzzide2026.1"
 printf '{"dataDirectoryName":"Zzzide2026.2"}' > "$tdir/Applications/Zzzide.app/Contents/Resources/product-info.json"
+jb() { HOME="$tdir" bash -c ". '$REPO_ROOT/bin/_lib.sh'; $(sed -n '/^sweep_jetbrains()/,/^}/p' "$REPO_ROOT/bin/bench-clean"); sweep_jetbrains" 2>&1; }
+jb >/dev/null
+assert_ok "an older dir stays while the installed version has no settings dir of its own" \
+  test -d "$tdir/Library/Application Support/JetBrains/Zzzide2026.1" -a -d "$tdir/Library/Caches/JetBrains/Zzzide2026.1"
+mkdir "$tdir/Library/Application Support/JetBrains/Zzzide2026.2"
 chmod 555 "$tdir/Library/Logs/JetBrains"
-out=$(HOME="$tdir" bash -c ". '$REPO_ROOT/bin/_lib.sh'; $(sed -n '/^sweep_jetbrains()/,/^}/p' "$REPO_ROOT/bin/bench-clean"); sweep_jetbrains" 2>&1)
+out=$(jb)
 chmod 755 "$tdir/Library/Logs/JetBrains"
 assert_ok "a version dir it cannot remove is warned" grep -q 'removing .*Logs/JetBrains/Zzzide2026.1 failed' <<<"$out"
 # A newer dir is a rollback's settings: 2026.10 sorts after 2026.2 as a version.
 assert_eq "older version of an installed product removed, live and newer ones kept" "Zzzide2026.10 Zzzide2026.2 Zzzide2027.1" \
   "$(command ls "$tdir/Library/Caches/JetBrains" | grep Zzz | xargs)"
 assert_ok "product with no installed app keeps its dir" test -d "$tdir/Library/Caches/JetBrains/Yyyide2026.1"
-assert_ok "an older dir stays while the installed version has no dir of its own" \
-  test -d "$tdir/Library/Application Support/JetBrains/Zzzide2026.1"
+assert_fail "once it has run, its older settings dir goes too" test -d "$tdir/Library/Application Support/JetBrains/Zzzide2026.1"
 rm -rf "$tdir"
 
 step "t3-import-session imports only a session it can prove ended"
@@ -417,6 +426,9 @@ mkdir -p "$tdir/.claude/projects/p" "$tdir/.claude/sessions"
 printf '{"pid":%s,"sessionId":"s1"}\n' "$$" > "$tdir/.claude/sessions/$$.json"
 assert_eq "a live record without a start time counts as open" "1" \
   "$(HOME="$tdir" "$REPO_ROOT/bin/t3-import-session" s1 2>&1 | grep -c 'still open')"
+printf '{"pid":%s,"sessionId":"s' "$$" > "$tdir/.claude/sessions/$$.json"
+assert_eq "a record it cannot read stops the import" "1" \
+  "$(HOME="$tdir" "$REPO_ROOT/bin/t3-import-session" s1 2>&1 | grep -c 'Cannot read')"
 rm -rf "$tdir"
 
 step "Claude temp sweep removes only finished sessions"
@@ -577,7 +589,7 @@ export _ZO_DATA_DIR="$H/zoxide"
 mkdir -p "$tdir/bin" "$H/opt/repo/home" "$H/opt/repo-old" "$H/opt/repo/.git" "$H/.codex" "$H/.claude/scheduled-tasks/t" \
   "$H/Library/Application Support/JetBrains/IntelliJIdea2026.3/options" "$H/Library/Application Support/Zed/db/0-stable"
 # shellcheck disable=SC2016  # literal $ in shim and fixture text
-printf '#!/bin/sh\nfor p in $CLAUDE_PIDS; do echo "$p /x/Application Support/bin/claude"; done\nfor n in $RUNNING; do echo "7 /x/$n.app/Contents/MacOS/$n"; done\n' > "$tdir/bin/ps"
+printf '#!/bin/sh\n/bin/ps -axo pid=,comm= | grep "bash$"\nfor p in $CLAUDE_PIDS; do echo "$p /x/Application Support/bin/claude"; done\nfor n in $RUNNING; do echo "7 /x/$n.app/Contents/MacOS/$n"; done\n' > "$tdir/bin/ps"
 # shellcheck disable=SC2016  # literal $ in shim and fixture text
 printf '#!/bin/sh\nprintf "%%s" "$LSOF_OUT"\n' > "$tdir/bin/lsof"
 printf '#!/bin/sh\nexit 1\n' > "$tdir/bin/docker"
@@ -630,6 +642,9 @@ assert_fail "and never run as a command" test -e "$tdir/MARK"
 rm "$H/.config/tool/x;touch MARK|"
 assert_eq "list: a relative argument names the same folder" "$out" "$(cd "$H/opt/repo/home" && bpx ..)"
 assert_fail "apply before the move is refused" bpx --apply "$H/opt/repo" "$H/opt/new"
+mkdir "$tdir/noproc"; printf '#!/bin/sh\nexit 0\n' > "$tdir/noproc/ps"; chmod +x "$tdir/noproc/ps"
+assert_fail "an empty ps listing stops the run, no app reads as quit" \
+  env HOME="$H" PATH="$tdir/noproc:$tdir/bin:$PATH" "$bp" "$H/opt/repo"
 
 mv "$H/opt/repo" "$H/opt/new"
 out=$(RUNNING=zed CLAUDE_PIDS=42 LSOF_OUT=$'p42\nc2.1.0\nn'"$H/opt/new" bpx --apply "$H/opt/repo" "$H/opt/new")
@@ -638,6 +653,7 @@ assert_ok "and leaves the project folder in place" test -d "$H/.claude/projects/
 assert_eq "a running app's store is left for its quit" "$H/opt/repo" \
   "$(sqlite3 "$H/Library/Application Support/Zed/db/0-stable/db.sqlite" 'select absolute_path from trusted_worktrees')"
 assert_eq "and named as a manual step" "1" "$(grep -c 'Zed/db.*quit every zed process' <<< "$out")"
+assert_eq "a database it cannot read is a manual step after --apply" "1" "$(grep -c 'state_\*.sqlite.*not rewritten' <<< "$out")"
 assert_ok "a live session also holds ~/.claude.json" grep -q "\.claude\.json.*quit every claude process" <<< "$out"
 assert_ok "containers left unchecked are a manual step" grep -q "start Docker and rerun" <<< "$out"
 assert_eq "a sentence's dot ends the path, a .bak suffix does not" "Work in $H/opt/new.

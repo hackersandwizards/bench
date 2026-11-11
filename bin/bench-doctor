@@ -86,7 +86,7 @@ hp=$(hooks_path)
 if [[ "$hp" == ".githooks" ]]; then
   ok "core.hooksPath = .githooks"
 else
-  warn "core.hooksPath = $hp — git -C $REPO_ROOT config core.hooksPath .githooks"
+  warn "core.hooksPath = $hp — git -C '$REPO_ROOT' config core.hooksPath .githooks"
 fi
 if [[ ! -f "$REPO_ROOT/secrets.zsh" ]]; then
   warn "secrets.zsh missing (optional)"

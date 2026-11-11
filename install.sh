@@ -22,9 +22,10 @@ istep() { step "Step $((++STEP_N))/$STEP_TOTAL: $1"; }
 
 backup() {
   local target="$1" bak
-  [[ -e "$target" ]] || return 0
-  # A file under a folded Stow directory is the repository's own file.
-  [[ -L "$target" || "$target" -ef "$REPO_ROOT/home/${target#"$HOME"/}" ]] && return 0
+  [[ -e "$target" || -L "$target" ]] || return 0
+  # Already the repository's own file: a Stow link, or a file under a folded Stow directory.
+  # Any other link, a dangling one included, is moved aside: Stow aborts the whole run on it.
+  [[ "$target" -ef "$REPO_ROOT/home/${target#"$HOME"/}" ]] && return 0
   bak="${target}.backup-$(date +%s)"
   mv "$target" "$bak"
   warn "backed up $target → $bak"
@@ -145,12 +146,6 @@ elif ! rels=$(stow_files) || [[ -z $rels ]]; then
   warn "no files tracked under home/ — run install.sh from a git clone of this repository"
 elif ask "Symlink dotfiles in home/ to \$HOME via stow?"; then
   while IFS= read -r rel; do
-    # Stow aborts the whole run on one link it does not own, a dangling one included,
-    # after backup has already moved the real files aside.
-    if [[ -L "$HOME/$rel" && ! "$HOME/$rel" -ef "$REPO_ROOT/home/$rel" ]]; then
-      warn "replacing link $HOME/$rel → $(readlink "$HOME/$rel")"
-      rm "$HOME/$rel"
-    fi
     backup "$HOME/$rel"
   done <<<"$rels"
   mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
@@ -308,7 +303,8 @@ if ask "Copy fonts/ into ~/Library/Fonts?"; then
   # Per-file skip, not `cp -n` for the batch: BSD cp -n exits 1 whenever any
   # destination exists, which would make every re-run warn "copy failed" falsely.
   fonts_failed=0
-  for f in "$REPO_ROOT"/fonts/*.[ot]tf; do   # not the licence text beside them
+  for f in "$REPO_ROOT"/fonts/*; do
+    case $f in *.[oOtT][tT][fFcC]) ;; *) continue ;; esac   # not the licence text beside them
     [[ -e "$HOME/Library/Fonts/${f##*/}" ]] \
       || cp "$f" "$HOME/Library/Fonts/" \
       || { warn "fonts: ${f##*/} copy failed"; fonts_failed=1; }

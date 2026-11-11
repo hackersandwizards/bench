@@ -28,7 +28,7 @@ skhd/                 # skhd hotkey config, symlinked to ~/.config/skhd/skhdrc b
 assets/               # Desktop wallpapers copied from the brand repository; origin and version in assets/SOURCE.txt
 fonts/                # Only fonts with verified redistribution rights (repo is public); free families come as Brewfile font casks
 .githooks/pre-commit  # betterleaks + shellcheck + zsh -n on staged files
-.claude/              # Statusline command + Claude Code rules/settings
+.claude/              # Statusline command + Claude Code rules, skills and settings
 .codex/               # Codex CLI config
 ghostty/              # Ghostty terminal config
 home/                 # Dotfile templates symlinked via Stow; .config/mise/ holds the mise config
