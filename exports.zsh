@@ -8,6 +8,7 @@ $HOME/.local/share/mise/shims:\
 $HOME/.cargo/bin:\
 $HOME/go/bin:\
 $HOME/Library/Application Support/JetBrains/Toolbox/scripts:\
+$HOME/.t3/bin:\
 /opt/homebrew/opt/python@3.14/libexec/bin:\
 /opt/homebrew/opt/unzip/bin:\
 /opt/homebrew/share/google-cloud-sdk/bin:\
