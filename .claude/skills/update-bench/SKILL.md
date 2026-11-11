@@ -111,7 +111,7 @@ machine-is-truth, which `README.md` pre-authorizes, and repoints a `docs/repos.t
 clone it locates at another path or under a new name. Report which way each snapshot went, from
 `git diff --stat -- docs/`. Step 5 owns the case where that direction is wrong.
 
-Do not start `sync-agent-config.sh`: it pushes into fifteen repos, and this run owns one.
+Do not start `sync-agent-config.sh`: it pushes into every repository the hub lists, and this run owns one.
 
 ### 5. Gate
 

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Purpose
 
-Personal zsh configuration and dotfiles for Apple Silicon macOS. Contains shell initialization, aliases, exports, plugins, fzf integration, and terminal configuration (Ghostty, Starship prompt).
+Terminal and machine setup for hackers&wizards on Apple Silicon macOS: zsh configuration and dotfiles (Ghostty, Starship, fzf), the install wizard with its Brewfile and `docs/` snapshots, and the `bench-*` maintenance commands.
 
 ## Structure
 
