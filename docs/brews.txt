@@ -239,7 +239,6 @@ zoxide
 zsh
 zstd
 azure-cli
-domzilla-caffeine
 font-fira-sans
 font-input
 font-jetbrains-mono

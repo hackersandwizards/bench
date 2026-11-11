@@ -204,7 +204,6 @@ cask "anomalyco/tap/hex", trusted: true
 cask "azure-cli"
 cask "claude"
 cask "crossover"
-cask "domzilla-caffeine"
 cask "fathom"
 cask "font-fira-sans"
 cask "font-input"
@@ -234,5 +233,6 @@ cask "whatsapp"
 cask "yubico-authenticator"
 cask "zed"
 cask "zoom"
+mas "Amphetamine", id: 937984704
 mas "Moom Classic", id: 419330170
 mas "Xcode", id: 497799835
