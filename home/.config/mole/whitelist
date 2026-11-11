@@ -1,8 +1,10 @@
-# mole defaults (1.57.0) plus local additions
+# mole defaults (1.71.0) plus local additions
 $HOME/.Trash
 $HOME/Library/Caches/antidote/*
 $HOME/Library/Caches/claude-code-tmp/*
 $HOME/Library/Caches/ms-playwright*
+$HOME/Library/Caches/camoufox*
+$HOME/Library/Caches/Cypress*
 $HOME/.gradle/caches/*
 $HOME/.gradle/daemon/*
 $HOME/.ollama/models/*
