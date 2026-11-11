@@ -116,7 +116,7 @@ run "Claude HTTP cache"  rm -rf "$HOME/Library/Application Support/Claude/Cache"
 sweep_jetbrains() {
   local roots=("$HOME/Library/Caches/JetBrains" "$HOME/Library/Logs/JetBrains" \
                "$HOME/Library/Application Support/JetBrains")
-  local app pi name root d p v top live="|" installed="" nlive=0 removed=0
+  local app pi name root d p v top live="|" installed="" nlive=0 stale=0
   have jaq || { skip "JetBrains: jaq missing, version dirs not swept"; return 0; }
   for app in /Applications/*.app "$HOME/Applications"/*.app; do
     pi="$app/Contents/Resources/product-info.json"   # JetBrains-only file: its presence is the test
@@ -142,11 +142,12 @@ sweep_jetbrains() {
       p=${name%%[0-9]*}; v=${name#"$p"}
       top=$(awk -v p="$p" '$1 == p { print $2 }' <<<"$installed" | sort -V | tail -1)
       [[ -n "$top" && "$(printf '%s\n' "$v" "$top" | sort -V | head -1)" == "$v" ]] || continue
-      rm -rf "$d" && { ok "JetBrains: removed ${d%/}"; removed=$((removed + 1)); }
+      if rm -rf "$d"; then ok "JetBrains: removed ${d%/}"; else warn "JetBrains: removing ${d%/} failed"; fi
+      stale=$((stale + 1))
     done
   done
   # Named, not counted: these carry settings, not just cache.
-  (( removed )) || ok "JetBrains: no superseded version dirs"
+  (( stale )) || ok "JetBrains: no superseded version dirs"
 }
 step "JetBrains version dirs"; sweep_jetbrains
 

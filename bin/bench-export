@@ -128,6 +128,8 @@ if [[ -s "$DOCS/repos.txt" ]] && have fd; then
     fi
   done <<<"$entries"
   (( stale )) || ok "repos.txt: every entry points at its clone"
+else
+  skip "repos.txt: empty or fd missing, entries not checked"
 fi
 
 step "home/ sync (Symlinks → skip, real files → copy back)"

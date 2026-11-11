@@ -73,6 +73,7 @@ assert_eq "missing .git suffix is fine"  "github.com/org/y" "$(repo_slug https:/
 assert_eq "ssh:// scheme and https user are dropped" "github.com/org/y github.com/org/y" \
   "$(repo_slug ssh://git@github.com/org/y.git) $(repo_slug https://user@github.com/org/y.git)"
 assert_eq "an ssh port is not part of the path" "github.com/org/y" "$(repo_slug ssh://git@github.com:22/org/y.git)"
+assert_eq "an all-digit owner is not a port" "github.com/123/y" "$(repo_slug git@github.com:123/y.git)"
 assert_fail "different repos stay different" \
   test "$(repo_slug https://github.com/org/y.git)" = "$(repo_slug https://github.com/org/other.git)"
 
@@ -255,11 +256,11 @@ touchid() {  # touchid <sudo exit status>
     sudo() { [[ $1 == 0 ]] && \"\$@\"; }
     $(sed -n '/^istep "Enable Touch ID/,/^fi$/p' "$REPO_ROOT/install.sh" | sed "s|/etc/pam.d/sudo_local|$tdir/sudo_local|g")" 2>&1
 }
-printf 'auth       optional       /opt/homebrew/lib/pam/pam_reattach.so ignore_ssh\n' > "$tdir/sudo_local"
+printf 'auth       optional       /opt/homebrew/lib/pam/pam_reattach.so ignore_ssh' > "$tdir/sudo_local"
 printf '#auth       sufficient     pam_tid.so\n' > "$tdir/sudo_local.template"
 assert_eq "a cancelled sudo is a warning, not success" "warn" "$(touchid 1 | cut -d' ' -f1)"
 touchid 0 >/dev/null
-assert_eq "an existing sudo_local keeps its lines, pam_tid goes after them" \
+assert_eq "an existing sudo_local keeps its lines, the last one without a newline too, pam_tid goes after them" \
   "pam_reattach.so pam_tid.so" "$(awk '{print $3}' "$tdir/sudo_local" | sed 's|.*/||' | xargs)"
 rm "$tdir/sudo_local"
 assert_eq "without sudo_local the template is copied and enabled" "ok" "$(touchid 0 | cut -d' ' -f1)"
@@ -392,13 +393,25 @@ tdir=$(mktemp -d)
 mkdir -p "$tdir/Applications/Zzzide.app/Contents/Resources" \
   "$tdir/Library/Caches/JetBrains/Zzzide2026.1" "$tdir/Library/Caches/JetBrains/Zzzide2026.2" \
   "$tdir/Library/Caches/JetBrains/Zzzide2026.10" "$tdir/Library/Caches/JetBrains/Zzzide2027.1" \
-  "$tdir/Library/Caches/JetBrains/Yyyide2026.1"
+  "$tdir/Library/Caches/JetBrains/Yyyide2026.1" "$tdir/Library/Logs/JetBrains/Zzzide2026.1"
 printf '{"dataDirectoryName":"Zzzide2026.2"}' > "$tdir/Applications/Zzzide.app/Contents/Resources/product-info.json"
-HOME="$tdir" bash -c ". '$REPO_ROOT/bin/_lib.sh'; $(sed -n '/^sweep_jetbrains()/,/^}/p' "$REPO_ROOT/bin/bench-clean"); sweep_jetbrains" >/dev/null 2>&1
+chmod 555 "$tdir/Library/Logs/JetBrains"
+out=$(HOME="$tdir" bash -c ". '$REPO_ROOT/bin/_lib.sh'; $(sed -n '/^sweep_jetbrains()/,/^}/p' "$REPO_ROOT/bin/bench-clean"); sweep_jetbrains" 2>&1)
+chmod 755 "$tdir/Library/Logs/JetBrains"
+assert_ok "a version dir it cannot remove is warned" grep -q 'removing .*Logs/JetBrains/Zzzide2026.1 failed' <<<"$out"
 # A newer dir is a rollback's settings: 2026.10 sorts after 2026.2 as a version.
 assert_eq "older version of an installed product removed, live and newer ones kept" "Zzzide2026.10 Zzzide2026.2 Zzzide2027.1" \
   "$(command ls "$tdir/Library/Caches/JetBrains" | grep Zzz | xargs)"
 assert_ok "product with no installed app keeps its dir" test -d "$tdir/Library/Caches/JetBrains/Yyyide2026.1"
+rm -rf "$tdir"
+
+step "t3-import-session imports only a session it can prove ended"
+tdir=$(mktemp -d)
+mkdir -p "$tdir/.claude/projects/p" "$tdir/.claude/sessions"
+: > "$tdir/.claude/projects/p/s1.jsonl"
+printf '{"pid":%s,"sessionId":"s1"}\n' "$$" > "$tdir/.claude/sessions/$$.json"
+assert_eq "a live record without a start time counts as open" "1" \
+  "$(HOME="$tdir" "$REPO_ROOT/bin/t3-import-session" s1 2>&1 | grep -c 'still open')"
 rm -rf "$tdir"
 
 step "Claude temp sweep removes only finished sessions"
@@ -559,9 +572,7 @@ export _ZO_DATA_DIR="$H/zoxide"
 mkdir -p "$tdir/bin" "$H/opt/repo/home" "$H/opt/repo-old" "$H/opt/repo/.git" "$H/.codex" "$H/.claude/scheduled-tasks/t" \
   "$H/Library/Application Support/JetBrains/IntelliJIdea2026.3/options" "$H/Library/Application Support/Zed/db/0-stable"
 # shellcheck disable=SC2016  # literal $ in shim and fixture text
-printf '#!/bin/sh\nfor p in $CLAUDE_PIDS; do echo "$p /x/bin/claude"; done\n' > "$tdir/bin/ps"
-# shellcheck disable=SC2016  # literal $ in shim text
-printf '#!/bin/sh\n[ "$1" = -x ] && case " $RUNNING " in *" $2 "*) exit 0;; esac\nexit 1\n' > "$tdir/bin/pgrep"
+printf '#!/bin/sh\nfor p in $CLAUDE_PIDS; do echo "$p /x/Application Support/bin/claude"; done\nfor n in $RUNNING; do echo "7 /x/$n.app/Contents/MacOS/$n"; done\n' > "$tdir/bin/ps"
 # shellcheck disable=SC2016  # literal $ in shim and fixture text
 printf '#!/bin/sh\nprintf "%%s" "$LSOF_OUT"\n' > "$tdir/bin/lsof"
 printf '#!/bin/sh\nexit 1\n' > "$tdir/bin/docker"
@@ -580,6 +591,7 @@ printf '{"cwd":"%s/opt/repo-old"}\n' "$H" > "$H/.claude/projects/$e-old/s.jsonl"
 ln -s "$H/opt/repo/.git" "$H/.claude/projects/$e/memory"
 sqlite3 "$H/.codex/state_5.sqlite" "create table threads(cwd text); insert into threads values('$H/opt/repo'),('$H/opt/repo/sub'),('$H/opt/repo-old');
   create table project_roots(path text);"
+printf 'not a database, names %s/opt/repo\n' "$H" > "$H/.codex/state_9.sqlite"
 sqlite3 "$H/Library/Application Support/Zed/db/0-stable/db.sqlite" "create table trusted_worktrees(absolute_path text); insert into trusted_worktrees values('$H/opt/repo');"
 mkdir -p "$H/.local/share/atuin"
 sqlite3 "$H/.local/share/atuin/history.db" "create table history(cwd text); insert into history values('$H/opt/repo'),('$H/opt/repo/sub'),('$H/opt/repo-old');"
@@ -605,6 +617,8 @@ assert_ok "list: a config Stow links into ~/.config is followed" grep -qF "$H/.c
 assert_ok "list: atuin's directory column" grep -qF "atuin [history.db history.cwd]: 1 file(s), 2 ref(s)" <<< "$out"
 assert_ok "list: zoxide entries, the sibling left out" grep -qF "zoxide/db.zo: 1 file(s), 3 ref(s)" <<< "$out"
 assert_ok "plan: a zoxide entry with no folder left is named" grep -qF "drop      $H/opt/repo/gone" <<< "$(bpx "$H/opt/repo" "$H/opt/new")"
+assert_ok "list: a database it cannot read is named, not dropped" grep -qF "cannot read $H/.codex/state_9.sqlite" <<< "$out"
+assert_ok "list: a docker that does not answer is named, not read as no containers" grep -q "containers not checked" <<< "$out"
 assert_eq "list: a relative argument names the same folder" "$out" "$(cd "$H/opt/repo/home" && bpx ..)"
 assert_fail "apply before the move is refused" bpx --apply "$H/opt/repo" "$H/opt/new"
 
@@ -616,6 +630,7 @@ assert_eq "a running app's store is left for its quit" "$H/opt/repo" \
   "$(sqlite3 "$H/Library/Application Support/Zed/db/0-stable/db.sqlite" 'select absolute_path from trusted_worktrees')"
 assert_eq "and named as a manual step" "1" "$(grep -c 'Zed/db.*quit every zed process' <<< "$out")"
 assert_ok "a live session also holds ~/.claude.json" grep -q "\.claude\.json.*quit every claude process" <<< "$out"
+assert_ok "containers left unchecked are a manual step" grep -q "start Docker and rerun" <<< "$out"
 assert_eq "a sentence's dot ends the path, a .bak suffix does not" "Work in $H/opt/new.
 Keep $H/opt/repo.bak" "$(cat "$H/.claude/scheduled-tasks/t/SKILL.md")"
 # shellcheck disable=SC2016  # literal $ in shim and fixture text

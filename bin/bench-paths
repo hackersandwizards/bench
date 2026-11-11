@@ -48,11 +48,14 @@ count_refs() { perl -ne "$PL"' my $l = $_; $c += () = $l =~ /$_->[0]/g for @f; E
 rewrite_file() { perl -i.bench-paths-bak -pe "$PL"' for my $x (@f) { my $n = $x->[1]; s/$x->[0]/$n/g }' "$1"; }
 pats() { local i v; for ((i = 0; i <= NK; i++)); do v="O$i"; [[ -n ${!v:-} ]] && printf '%s\n' "${!v}"; done; }
 
+# ps, not pgrep: pgrep leaves out its own ancestors, so a run from inside a
+# Claude Code session or an app's terminal would miss that session or app.
+# comm is the executable's path, spaces included: the name follows the last slash.
+procs=$(ps -axo pid=,comm= | sed -E 's|^ *([0-9]+) +(.*/)?|\1 |')
 running() {  # running "a,b": the first of these process names that runs
-  local n; IFS=, read -ra names <<< "$1"
+  local n names; IFS=, read -ra names <<< "$1"
   for n in "${names[@]}"; do
-    if [[ $n == claude ]]; then [[ $claudes == *[0-9]* ]] || continue
-    else pgrep -x "$n" >/dev/null 2>&1 || continue; fi
+    cut -d' ' -f2- <<< "$procs" | grep -qxF -- "$n" || continue
     printf '%s' "$n"; return 0
   done
   return 1
@@ -67,9 +70,7 @@ manual=()
 # the folder.
 step "Processes with a working directory inside $old${new:+ or $new}"
 live=0 nproc=0
-# ps, not pgrep: pgrep leaves out its own ancestors, so a run from inside a
-# Claude Code session would miss that session.
-claudes=" $(ps -axo pid=,comm= | awk '$2 ~ /(^|\/)claude$/ {printf "%s ", $1}') "
+claudes=" $(awk '$2 == "claude" && NF == 2 {printf "%s ", $1}' <<< "$procs") "
 cwds=$(cd / && lsof -d cwd -Fpcn 2>/dev/null | awk '/^p/{p=substr($0,2)} /^c/{c=substr($0,2)} /^n/{print p "\t" c "\t" substr($0,2)}')
 while IFS=$'\t' read -r pid cmd dir; do
   [[ $pid == "$$" ]] && continue
@@ -260,7 +261,7 @@ while IFS='|' read -r kind apps path glob; do
   while IFS= read -r f; do
     if [[ $kind == sqlite ]]; then
       # shellcheck disable=SC2086  # cols is a word list by design
-      n=$(python3 -I -c "$SQLPY" count "$f" "$old" "" $cols)
+      n=$(python3 -I -c "$SQLPY" count "$f" "$old" "" $cols) || { warn "cannot read $f: not counted, not rewritten"; continue; }
     elif [[ $kind == zoxide ]]; then
       n=$(zo_inside | grep -c '')
       # Before the move a folder sits at old, after it at new; at neither it is dropped.
@@ -302,7 +303,11 @@ while IFS= read -r g; do
 done < <([[ -d $tree ]] && find "$tree" -maxdepth 6 -name node_modules -prune -o -name .git -print 2>/dev/null)
 
 step "Containers with a mount inside $old"
-if have docker && ids=$(docker ps -aq 2>/dev/null) && [[ -n $ids ]]; then
+if ! have docker; then :
+elif ! ids=$(docker ps -aq 2>/dev/null); then
+  say "skipped" "docker does not answer: containers not checked"
+  [[ -z $new ]] || manual+=("start Docker and rerun: containers were not checked for a mount inside $old")
+elif [[ -n $ids ]]; then
   # shellcheck disable=SC2086
   while read -r name srcs; do
     for s in $srcs; do inside "$s" || continue; say "mount" "$name $s"; manual+=("recreate container $name: its mount $s keeps the old source"); done

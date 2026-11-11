@@ -45,7 +45,7 @@ Measured on 08.11.2026 with three sample paths (`~/dev/hackersandwizards/interna
 | atuin: `~/.local/share/atuin/history.db` (`history.cwd`, read by directory-scoped search) | SQLite, absolute | none | SQL update, backup via SQLite's backup API. `atuin store rebuild history` refills this table from `records.db`, which keeps the old paths |
 | zoxide: `db.zo` in `$_ZO_DATA_DIR`, else `~/Library/Application Support/zoxide` | binary, absolute | none | `zoxide add -s` and `zoxide remove`. The CLI exposes frecency rather than rank and stamps the access time on add, so an entry scores as before at the rewrite and an older one decays faster afterwards. An entry whose folder is gone from the moved tree is dropped, and the plan names it |
 
-The app gate checks the process name with `pgrep -x`. The Claude Code gate counts every `claude` process from `ps`, since `pgrep` leaves out its own caller, so a run from inside a Claude Code session always leaves `~/.claude.json` for later. That is a choice made without testing whether Claude Code re-reads the file before writing it: a session holding the old content could write it back.
+Every gate reads the process names from one `ps` listing, since `pgrep` leaves out its own ancestors: a run from inside a Claude Code session always leaves `~/.claude.json` for later, and a run from an app's own terminal leaves that app's stores. That is a choice made without testing whether Claude Code re-reads the file before writing it: a session holding the old content could write it back.
 
 ## Stores bench-paths lists for a manual step
 

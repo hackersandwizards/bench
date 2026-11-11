@@ -195,8 +195,9 @@ parse_repos() { awk 'NF == 2 && $1 !~ /^#/ { print $1, $2 }' "$1"; }
 # A remote URL reduced to host/path, so the ssh and https forms of one repo
 # compare equal. The URL is a repo's identity when its checkout has moved.
 repo_slug() {
-  printf '%s' "$1" | sed -e 's|^[a-z+]*://||' -e 's|^[^@/]*@||' -e 's|^\([^/:]*\):[0-9]*/|\1/|' \
-                         -e 's|^\([^/:]*\):|\1/|' -e 's|\.git$||'
+  # A port exists only behind a scheme: in git@host:123/repo the digits are the owner.
+  printf '%s' "$1" | sed -e 's|^[a-z+]*://\([^@/]*@\)\{0,1\}\([^/:]*\)\(:[0-9]*\)\{0,1\}/|\2/|' \
+                         -e 's|^[^@/]*@||' -e 's|^\([^/:]*\):|\1/|' -e 's|\.git$||'
 }
 # The current URL of a repo renamed on its host. Both GitHub and GitLab keep
 # serving the old name, so nothing local notices: git ls-remote answers the old

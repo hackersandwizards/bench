@@ -397,7 +397,9 @@ elif [[ ! -f $pam && ! -f $pam.template ]]; then
 elif ask "Enable Touch ID for sudo? (uses $pam — survives system updates)"; then
   # An existing file can hold pam_reattach or pam_watchid: add the line after them.
   if [[ -f $pam ]]; then
-    printf 'auth       sufficient     pam_tid.so\n' | sudo tee -a "$pam" >/dev/null
+    # A last line without a newline would swallow the appended one.
+    nl=''; [[ -z $(tail -c1 "$pam") ]] || nl=$'\n'
+    printf '%sauth       sufficient     pam_tid.so\n' "$nl" | sudo tee -a "$pam" >/dev/null
   else
     sudo cp "$pam.template" "$pam" && sudo sed -i '' 's/^#auth/auth/' "$pam"
   fi
@@ -579,7 +581,7 @@ fi
 
 step "Optional next steps"
 echo "  • Run 'bench-doctor' to verify the install"
-echo "  • Run 'bench-export' to refresh Brewfile/docs/ snapshots"
+echo "  • Run 'bench-export' to check the Brewfile and refresh the docs/ snapshots"
 echo "  • Add API keys to '$REPO_ROOT/secrets.zsh' (kept chmod 600, gitignored)"
 
 if [[ -s "$WARN_LOG" ]]; then

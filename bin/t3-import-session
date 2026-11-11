@@ -16,13 +16,14 @@ transcripts=("$HOME"/.claude/projects/*/"$id".jsonl)
 transcript=${transcripts[0]}
 
 # A live claude process, a resumed one included, registers its session in <config dir>/sessions/<pid>.json.
-# procStart is in UTC; a differing start time means the pid now belongs to another process.
+# procStart is in UTC; a differing start time means the pid now belongs to another process,
+# and a record without one counts as open.
 for reg in "$HOME"/.claude/sessions/*.json "$HOME"/.claude-swap-backup/sessions/*/sessions/*.json; do
   line=$(jaq -r --arg id "$id" 'select(.sessionId == $id) | [.pid, .procStart] | @tsv' "$reg" 2>/dev/null) || continue
   IFS=$'\t' read -r pid start <<<"$line"
   [[ -n $pid ]] || continue
   now=$(TZ=UTC LC_ALL=C ps -o lstart= -p "$pid" 2>/dev/null) || continue
-  if [[ "${now// /}" == "${start// /}" ]]; then
+  if [[ -z $start || "${now// /}" == "${start// /}" ]]; then
     echo "Session $id is still open in claude (PID $pid). Close it, then run this again." >&2
     exit 1
   fi
