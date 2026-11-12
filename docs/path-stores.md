@@ -38,7 +38,7 @@ Measured on 08.11.2026 with three sample paths (`~/dev/hackersandwizards/interna
 | opencode: `storage/project/*.json`, `storage/session/*.json`, `opencode.db` (`project`, `session.directory`, `project_directory`) | JSON/SQLite, absolute | opencode | text, SQL update |
 | Gemini and Antigravity: `~/.gemini/projects.json`, `trustedFolders.json`, `antigravity-cli/settings.json`, `antigravity-cli/cache/projects.json`, `config/projects/*.json` | JSON, absolute | Antigravity | text |
 | `~/Library/LaunchAgents/*.plist` (skhd and t3code store a `PATH` with `~/dev/hackersandwizards/internal/bench/bin` and `node_modules/.bin` folders) | XML plist, absolute | none | text, then reload: `launchctl bootout` and `bootstrap` |
-| Symlinks in `~` to depth 3, in `~/.claude/projects/*/` and `~/.claude-swap-backup/sessions/*/` (Stow links into this repo, `~/.claude/skills/claude-accounts`, project `memory` links) | symlink, relative or absolute | none | re-point, keeping the relative or absolute style |
+| Symlinks in `~` to depth 3, in `~/.claude/projects/*/` and `~/.claude-swap-backup/sessions/*/` (Stow links into this repo, project `memory` links) | symlink, relative or absolute | none | re-point, keeping the relative or absolute style |
 | `~/.config/**` except `gcloud/` (mole `purge_paths` and `whitelist`, Zed, Ghostty, skhd configs) | text, absolute or `$HOME` | none | text, at the symlink's target; the backup lands there too, which this repo's `.gitignore` covers |
 | `~/.zshrc`, `~/.zshenv`, `~/.zprofile` | zsh, `~` | none | text; open shells keep the old value until restarted |
 | `~/Library/Application Support/rtk/trusted_filters.json` | JSON, absolute | none | text |
