@@ -714,5 +714,43 @@ assert_ok "the repo-old project stays" test -d "$H/.claude/projects/$e-old"
 assert_eq "its memory link follows the move" "$H/opt/new/.git" "$(readlink "$H/.claude/projects/$n/memory")"
 rm -rf "$tdir"; unset -f bpx; unset _ZO_DATA_DIR
 
+step "chrome-devtools launcher hands the server only a build in the cache"
+# Offline: a stub @puppeteer/browsers installs a fake build, a stub `bun x` target prints the
+# path the launcher passes. The code is .mcp.json's; .codex/config.toml must carry the same.
+root=$(cd "$(dirname "$0")/.." && pwd)
+code=$(jq -r '.mcpServers["chrome-devtools"].args[2]' "$root/.mcp.json")
+assert_ok "Codex runs the same launcher" grep -qF "$code" "$root/.codex/config.toml"
+tdir=$(mktemp -d)
+mkdir -p "$tdir/node_modules/@puppeteer/browsers" "$tdir/node_modules/.bin"
+printf '{"name":"@puppeteer/browsers","main":"index.js"}' > "$tdir/node_modules/@puppeteer/browsers/package.json"
+cat > "$tdir/node_modules/@puppeteer/browsers/index.js" <<'JS'
+const { mkdirSync, writeFileSync } = require("node:fs");
+const { join } = require("node:path");
+exports.detectBrowserPlatform = () => "mac_arm";
+exports.getInstalledBrowsers = async () => [];
+exports.resolveBuildId = async () => "99.0.0.0";
+exports.install = async ({ buildId, cacheDir }) => {
+  const dir = join(cacheDir, "chrome", `mac_arm-${buildId}`, "chrome-mac-arm64");
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, "chrome"), "");
+  return { buildId, executablePath: join(dir, "chrome") };
+};
+JS
+printf '#!/bin/sh\necho "$@"\n' > "$tdir/node_modules/.bin/argecho"; chmod +x "$tdir/node_modules/.bin/argecho"
+launch() { (cd "$tdir" && PUPPETEER_CACHE_DIR="$tdir/cache" bun -e "$code" argecho 2>/dev/null); }
+build="$tdir/cache/chrome/mac_arm-99.0.0.0/chrome-mac-arm64/chrome"
+
+# Another install's archive beside the build: wait for that build, then take it from the cache.
+mkdir -p "$tdir/cache/chrome"; : > "$tdir/cache/chrome/99.0.0.0-chrome-mac-arm64.zip"
+( sleep 2; mkdir -p "${build%/chrome}"; : > "$build"; rm "$tdir/cache/chrome/99.0.0.0-chrome-mac-arm64.zip" ) &
+assert_eq "an unpack under way: the build it unpacked" "--executablePath $build" "$(launch)"
+wait
+
+# A build that cannot be moved in: fail, as scaffolding's place() does, never the private copy.
+rm -rf "$tdir/cache"; mkdir -p "$tdir/cache/chrome"; chmod 555 "$tdir/cache/chrome"
+assert_eq "a failed move: no path" "" "$(launch)"
+assert_eq "and no private install folder left" "" "$(find "$tdir/cache" -maxdepth 1 -name '.install-*')"
+chmod 755 "$tdir/cache/chrome"; rm -rf "$tdir"
+
 step "$passed passed, $failed failed"
 (( failed == 0 ))
