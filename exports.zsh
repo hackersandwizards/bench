@@ -48,4 +48,8 @@ export NPM_CONFIG_PREFIX=/opt/homebrew
 # bound (53 GB in two days). ~/.claude/settings.json sets the same for Claude sessions.
 export NODE_DISABLE_COMPILE_CACHE=1
 
+# Bun never prunes its runtime transpiler cache (~/Library/Caches/bun/@t@): each Company OS check
+# serving dist/server/entry.mjs adds a ~177 MB entry, 20-40 GB a day. Same in ~/.claude/settings.json.
+export BUN_RUNTIME_TRANSPILER_CACHE_PATH=0
+
 [[ -f "$ZSH_SETTINGS_DIR/secrets.zsh" ]] && source "$ZSH_SETTINGS_DIR/secrets.zsh"
