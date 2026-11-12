@@ -3,7 +3,8 @@ name: claude-accounts
 description: >-
   Run Claude Code across several subscription accounts with one kept protected, for "switch claude
   account", "which account am I on", "I hit my usage limit", "rate limit", "account rotation",
-  "claude usage", "how much did this session cost", and for Claude threads in T3 Code.
+  "claude usage", "how much did this session cost", before picking the account for a `cswap run`,
+  and for Claude threads in T3 Code.
 ---
 
 # Claude accounts
@@ -58,6 +59,15 @@ account served each turn. That works while the accounts' windows reset at differ
 | `cswap tui` | interactive dashboard |
 
 `cswap run` leaves the global login alone. `cswap switch` moves every later session too.
+
+The account `cswap list` marks `(active)` is the global login, which every terminal and T3 session
+outside `cswap run` spends, so a headless run goes on another account. A run that hits its
+account's limit ends mid-step, and so does every other run on that account. Before launching a run
+on a model with its own weekly window, such as Fable, pick an account whose `5h` window, where
+`cswap list` shows one, and that model's weekly window both have room for one more such run. With
+no reading yet of what one run costs, launch one, read `cswap list` again, then launch the next.
+Seen once: with one Fable polish and one Opus run on a Max 5x account, its `5h` window went from
+29 % to 100 % in about 23 minutes, and both runs ended on the limit.
 
 ## Automatic switching
 
