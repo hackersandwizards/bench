@@ -53,9 +53,11 @@ v() {
 # Claude Desktop keeps a repository's .mcp.json servers off where its .claude/settings.local.json
 # lists them, and brings its own connectors. A terminal session loads every .mcp.json server: the
 # flag adds them as a separate source, which that list does not reach. It also skips the trust
-# prompt for project servers. Subcommands (mcp, auth, agents ...) take no such flag.
+# prompt for project servers. Subcommands (mcp, auth, agents ...) take no such flag. A claude that
+# an agent starts from its Bash tool (CLAUDECODE is set there, Desktop sessions included) gets no
+# flag either: the tool's shell carries this function, and a child session keeps to its settings.
 claude() {
-  if [[ ( $# -eq 0 || $1 == -* ) && -f .mcp.json ]]; then
+  if [[ -z $CLAUDECODE && ( $# -eq 0 || $1 == -* ) && -f .mcp.json ]]; then
     command claude --mcp-config .mcp.json "$@"
   else
     command claude "$@"
