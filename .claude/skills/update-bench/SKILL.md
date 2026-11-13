@@ -104,7 +104,9 @@ passes the test and sits under "needs a human" is a mistake.
 
 **Needs a human.** Anything wanting a password, a browser login, a UI action, a font backup or a
 logout; anything whose remedy is `install.sh`, `macos.sh` or `brew bundle`, which replay a whole
-machine; a Stow warn, its `stow` command included; a stopped `skhd`, which may have been stopped on purpose. One line each, with the command doctor gave, where it gave one.
+machine; a Stow warn, its `stow` command included, since a restow also links every file a tool
+wrote into `home/` through a folded folder, and a human moves those out of the public repo first; a
+stopped `skhd`, which may have been stopped on purpose. One line each, with the command doctor gave, where it gave one.
 
 **Resolved by the export.** `bench-export` settles Dock, Finder sidebar and Safari favorites drift
 machine-is-truth, which `CLAUDE.md` ("Defaults ownership") pre-authorizes, and repoints a `docs/repos.txt` entry whose
