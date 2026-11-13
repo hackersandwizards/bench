@@ -32,7 +32,7 @@ fonts/                # Only fonts with verified redistribution rights (repo is 
 .codex/               # Codex CLI config
 ghostty/              # Ghostty terminal config
 home/                 # Dotfile templates symlinked via Stow; .config/mise/ holds the mise config
-docs/                 # Package + machine-state snapshots, replayed by install.sh (offline-readable); setup.md, theming.md and transcription.md are hand-written guides the README links; secret-keys.txt (expected key names) is hand-maintained, never dumped by bench-export; fonts.txt (restore checklist) is a union bench-export only adds to, pruned by hand; path-stores.md (every store keeping a ~/dev or ~/opt path, the list behind bench-paths) is hand-maintained; repos.txt (default clones) is hand-maintained in its selection, with bench-export repointing an entry whose clone moved or was renamed
+docs/                 # Package + machine-state snapshots, replayed by install.sh (offline-readable), except the Homebrew lists brews.txt, brew-leaves.txt and brew-taps.txt, which record what is installed (install.sh installs from the Brewfile); setup.md, theming.md and transcription.md are hand-written guides the README links; secret-keys.txt (expected key names) is hand-maintained, never dumped by bench-export; fonts.txt (restore checklist) is a union bench-export only adds to, pruned by hand; path-stores.md (every store keeping a ~/dev or ~/opt path, the list behind bench-paths) is hand-maintained; repos.txt (default clones) is hand-maintained in its selection, with bench-export repointing an entry whose clone moved or was renamed
 ```
 
 ## Conventions

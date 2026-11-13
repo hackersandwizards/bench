@@ -58,7 +58,7 @@ The `update-bench` skill (`.claude/skills/update-bench/`) runs the daily loop of
 - [Transcription](docs/transcription.md): the `transcribe` command and the measurements behind its model and flags.
 - [Theming](docs/theming.md): Ghostty's palette as the one colour source for the terminal tools.
 - [Path stores](docs/path-stores.md): every store that keeps a `~/dev` or `~/opt` path, the list behind `bench-paths`.
-- The `.txt` files in `docs/`: package and machine-state snapshots that `install.sh` replays.
+- The `.txt` files in `docs/`: package and machine-state snapshots that `install.sh` replays, except the Homebrew lists (`brews.txt`, `brew-leaves.txt`, `brew-taps.txt`): they record what is installed, and `install.sh` installs from the [Brewfile](Brewfile).
 
 ## Work on it
 
