@@ -39,8 +39,8 @@ export RIPGREP_CONFIG_PATH="$ZSH_SETTINGS_DIR/ripgreprc"
 export PIP_BREAK_SYSTEM_PACKAGES=1
 
 # npm comes from mise ("npm:npm" in the mise config) so it stays at its latest
-# release without touching the node formula's npm. Without this, that npm derives
-# its global prefix from the Cellar path of node. bin/_lib.sh sets the same.
+# release. Without this, that npm derives its global prefix from its own mise
+# install folder. bin/_lib.sh sets the same.
 export NPM_CONFIG_PREFIX=/opt/homebrew
 
 # astro and vite call module.enableCompileCache(). Bun keys each entry by file path and never

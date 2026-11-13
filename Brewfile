@@ -115,8 +115,6 @@ brew "mas"
 brew "mise"
 # Deep clean and optimize your Mac
 brew "mole"
-# Open-source, cross-platform JavaScript runtime environment
-brew "node"
 # Protocol buffers (Google's data interchange format)
 brew "protobuf"
 # Open source relational database management system
@@ -196,7 +194,7 @@ brew "asmvik/formulae/skhd"
 # Infrastructure-as-code CLI
 brew "hashicorp/tap/terraform"
 # High-performance, schema-free, document-oriented database
-brew "mongodb/brew/mongodb-community"
+brew "mongodb/brew/mongodb-community", args: ["without-mongosh"]
 # Redpanda CLI & toolbox
 brew "redpanda-data/tap/redpanda"
 cask "adguard"

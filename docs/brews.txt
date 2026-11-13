@@ -144,7 +144,6 @@ mise
 mole
 mongodb-community
 mongodb-database-tools
-mongosh
 mpdecimal
 mpfr
 mpg123
@@ -156,7 +155,6 @@ neo4j
 net-snmp
 nettle
 nmap
-node
 npth
 nspr
 nss

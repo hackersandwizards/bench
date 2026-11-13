@@ -9,6 +9,8 @@ deno = "latest"
 bun = "latest"
 node = "latest"
 "npm:npm" = "latest"
+# encodeurl@2.0.2, a dependency of mongosh, carries no trusted-publish proof; it matches git tag v2.0.2 and the maintainer's own publish.
+"npm:mongosh" = { version = "latest", trust_policy_excludes = ["encodeurl@2.0.2"] }
 uv = "latest"
 "pypi:claude-swap" = { version = "latest", with = ["rumps"] }
 "pypi:git+https://github.com/youssofal/MTPLX" = { version = "latest", with = ["llguidance"] }
