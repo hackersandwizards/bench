@@ -59,8 +59,8 @@ Keep the full output; the warn lines are this step's product. Shapes to read cor
 - Every step failing at once is one network problem, not fifteen findings. Say that instead.
 - A skipped Homebrew block is `brew_bottles_supported` false: macOS is newer than brew's bottles.
   Nothing to fix, and it clears itself.
-- `mise upgrade --prune` deletes the tool versions an upgrade replaced. Repeat every removal it
-  names in the report. Adopting a newer major line pinned in `home/.config/mise/config.toml` is a
+- `mise upgrade --prune` deletes the tool versions an upgrade replaced, and `mise prune` the ones
+  no tracked config selects. Repeat every removal they name in the report. Adopting a newer major line pinned in `home/.config/mise/config.toml` is a
   human's call, not a silent config edit.
 
 ### 3. Refresh the repo's picture of the machine
@@ -104,7 +104,7 @@ passes the test and sits under "needs a human" is a mistake.
 
 **Needs a human.** Anything wanting a password, a browser login, a UI action, a font backup or a
 logout; anything whose remedy is `install.sh`, `macos.sh` or `brew bundle`, which replay a whole
-machine; a stopped `skhd`, which may have been stopped on purpose. One line each, with the command doctor gave, where it gave one.
+machine; a Stow warn, its `stow` command included; a stopped `skhd`, which may have been stopped on purpose. One line each, with the command doctor gave, where it gave one.
 
 **Resolved by the export.** `bench-export` settles Dock, Finder sidebar and Safari favorites drift
 machine-is-truth, which `CLAUDE.md` ("Defaults ownership") pre-authorizes, and repoints a `docs/repos.txt` entry whose

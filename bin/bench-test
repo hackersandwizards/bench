@@ -264,6 +264,18 @@ assert_ok "and a foreign link and a dangling one, which would stop Stow" \
 assert_ok "and a dangling link on a parent folder" test -L "$(compgen -G "$tdir/home/.p.backup-*")"
 rm -rf "$tdir"
 
+step "bench-doctor prints the command that unfolds a folded Stow folder"
+tdir=$(mktemp -d)
+git init -q "$tdir/repo" && mkdir -p "$tdir/repo/home/.config/x" "$tdir/home/.config"
+echo keep > "$tdir/repo/home/.config/x/f" && git -C "$tdir/repo" add home
+ln -s ../../repo/home/.config/x "$tdir/home/.config/x"
+out=$(HOME="$tdir/home" bash -c ". '$REPO_ROOT/bin/_lib.sh'; REPO_ROOT='$tdir/repo'
+  $(sed -n '/^echo "=== Stow symlinks ===/,/^done < <(stow_files)/p' "$REPO_ROOT/bin/bench-doctor")" 2>&1)
+bash -c "$(sed -n 's/.*unfold it: //p' <<<"$out")" >/dev/null 2>&1
+assert_ok "running it leaves a real folder holding a link per file" \
+  test -d "$tdir/home/.config/x" -a ! -L "$tdir/home/.config/x" -a -L "$tdir/home/.config/x/f"
+rm -rf "$tdir"
+
 step "install.sh Touch ID step"
 # The block runs against a scratch file: sudo is a shim, ask always says yes.
 tdir=$(mktemp -d)

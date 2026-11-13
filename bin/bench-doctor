@@ -42,7 +42,7 @@ while IFS= read -r rel; do
     ok "$rel -> $(readlink "$HOME/$rel")"
   # A folded directory links a whole folder into the repo, so tools write there.
   elif [[ "$HOME/$rel" -ef "$REPO_ROOT/home/$rel" ]]; then
-    warn "$rel: its folder is a link into the repo — re-run install.sh's Stow step to unfold it"
+    warn "$rel: its folder is a link into the repo — unfold it: stow --dir='$REPO_ROOT' --target='$HOME' --no-folding --restow home"
   elif [[ -L "$HOME/$rel" ]]; then
     warn "$rel: a link to $(readlink "$HOME/$rel"), not to this repo's file — re-run install.sh's Stow step"
   elif [[ -e "$HOME/$rel" ]]; then
