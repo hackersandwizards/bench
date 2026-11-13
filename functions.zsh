@@ -50,12 +50,12 @@ v() {
           done | fzf -m -q "$*" -1) && vim ${${(f)files}/#\~/$HOME}
 }
 
-# Claude Desktop keeps Company OS's MCP servers off (the os checkout's .claude/settings.local.json)
-# and brings its own connectors. A terminal session started at the os root loads them from .mcp.json.
-# Subcommands (mcp, auth, agents ...) take no such flag.
+# Claude Desktop keeps a repository's .mcp.json servers off where its .claude/settings.local.json
+# lists them, and brings its own connectors. A terminal session loads every .mcp.json server: the
+# flag adds them as a separate source, which that list does not reach. It also skips the trust
+# prompt for project servers. Subcommands (mcp, auth, agents ...) take no such flag.
 claude() {
-  if [[ ( $# -eq 0 || $1 == -* ) && -f .mcp.json ]] \
-    && [[ $(git remote get-url origin 2>/dev/null) == */hackersandwizards/os(|.git) ]]; then
+  if [[ ( $# -eq 0 || $1 == -* ) && -f .mcp.json ]]; then
     command claude --mcp-config .mcp.json "$@"
   else
     command claude "$@"
