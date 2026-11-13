@@ -729,9 +729,8 @@ rm -rf "$tdir"; unset -f bpx; unset _ZO_DATA_DIR
 step "chrome-devtools launcher hands the server only a build in the cache"
 # Offline: a stub @puppeteer/browsers installs a fake build, a stub `bun x` target prints the
 # path the launcher passes. The code is .mcp.json's; .codex/config.toml must carry the same.
-root=$(cd "$(dirname "$0")/.." && pwd)
-code=$(jq -r '.mcpServers["chrome-devtools"].args[2]' "$root/.mcp.json")
-assert_ok "Codex runs the same launcher" grep -qF "$code" "$root/.codex/config.toml"
+code=$(jq -r '.mcpServers["chrome-devtools"].args[2]' "$REPO_ROOT/.mcp.json")
+assert_ok "Codex runs the same launcher" grep -qF "$code" "$REPO_ROOT/.codex/config.toml"
 tdir=$(mktemp -d)
 mkdir -p "$tdir/node_modules/@puppeteer/browsers" "$tdir/node_modules/.bin"
 printf '{"name":"@puppeteer/browsers","main":"index.js"}' > "$tdir/node_modules/@puppeteer/browsers/package.json"
