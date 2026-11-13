@@ -49,3 +49,15 @@ v() {
             [ -f "${line/#\~/$HOME}" ] && echo "$line"
           done | fzf -m -q "$*" -1) && vim ${${(f)files}/#\~/$HOME}
 }
+
+# Claude Desktop keeps Company OS's MCP servers off (the os checkout's .claude/settings.local.json)
+# and brings its own connectors. A terminal session started at the os root loads them from .mcp.json.
+# Subcommands (mcp, auth, agents ...) take no such flag.
+claude() {
+  if [[ ( $# -eq 0 || $1 == -* ) && -f .mcp.json ]] \
+    && [[ $(git remote get-url origin 2>/dev/null) == */hackersandwizards/os(|.git) ]]; then
+    command claude --mcp-config .mcp.json "$@"
+  else
+    command claude "$@"
+  fi
+}
