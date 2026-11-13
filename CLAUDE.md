@@ -12,7 +12,7 @@ Terminal and machine setup for hackers&wizards on Apple Silicon macOS: zsh confi
 init.zsh              # Main entry point, self-discovers $ZSH_SETTINGS_DIR
 exports.zsh           # PATH, env vars (sources secrets.zsh if present)
 aliases.zsh           # Shell aliases
-functions.zsh         # Shell functions (fkill, cdf, gs, gshow, v, fview, diff)
+functions.zsh         # Shell functions (fkill, cdf, gs, gshow, v, fview, diff, claude)
 fzf.zsh               # fzf defaults + preview command env vars
 plugins.txt           # Antidote main plugins (plugins.zsh generated, gitignored)
 plugins-post.txt      # Antidote post-compinit plugins (fzf-tab)
