@@ -7,6 +7,7 @@ quarkus = "latest"
 go = "latest"
 deno = "latest"
 bun = "latest"
+node = "latest"
 "npm:npm" = "latest"
 uv = "latest"
 "pypi:claude-swap" = { version = "latest", with = ["rumps"] }

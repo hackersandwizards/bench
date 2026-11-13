@@ -19,8 +19,9 @@ if [[ -f "$ANTIDOTE_SH" ]]; then
 fi
 
 # Runtimes and CLIs from home/.config/mise/config.toml. --prune removes the
-# versions an upgrade replaced.
-_mise_upgrade() ( cd "$HOME" && mise upgrade --prune )
+# versions an upgrade replaced; mise prune removes the ones a project pin installed
+# that no tracked config selects any more. A project that pins one again reinstalls it.
+_mise_upgrade() ( cd "$HOME" && mise upgrade --prune && mise prune )
 have mise && run "mise tools" _mise_upgrade
 
 # Rust belongs to rustup (Brewfile), not mise: mise wraps rustup but never moves its
