@@ -18,12 +18,11 @@ A store may spell the same folder five ways: absolute (`/Users/…/opt/x`), `~/o
 
 ## Stores bench-paths rewrites
 
-Measured on 08.11.2026 with three sample paths (`~/dev/hackersandwizards/internal/os`, `~/dev/hackersandwizards/internal/bench`, `~/dev/personal/benedikt.stemmildt.com`) and a sweep for any `~/dev` or `~/opt` path. The sweep covered `~/Library/Application Support`, `~/Library/Preferences`, `~/Library/LaunchAgents`, `~/Library/Containers`, `~/Library/Group Containers`, `~/.config`, `~/.local`, `~/.codex`, `~/.claude`, `~/.claude-swap-backup`, `~/.gemini`, `~/.docker`, `~/.orbstack`, `~/.ssh` and the dotfiles in `~`, binary files included.
+Measured on 08.11.2026 with three sample paths (`~/dev/hackersandwizards/internal/os`, `~/dev/hackersandwizards/internal/bench`, `~/dev/personal/benedikt.stemmildt.com`) and a sweep for any `~/dev` or `~/opt` path. The sweep covered `~/Library/Application Support`, `~/Library/Preferences`, `~/Library/LaunchAgents`, `~/Library/Containers`, `~/Library/Group Containers`, `~/.config`, `~/.local`, `~/.codex`, `~/.claude`, `~/.gemini`, `~/.docker`, `~/.orbstack`, `~/.ssh` and the dotfiles in `~`, binary files included.
 
 | Store | Format, spelling | App to quit first | Method |
 |---|---|---|---|
 | `~/.claude.json` (`projects` keys, `githubRepoPaths`) | JSON, absolute | every Claude Code session | text |
-| `~/.claude-swap-backup/configs/*.json` (cswap's copy of `.claude.json` per account, restored on switch) | JSON, absolute | every Claude Code session | text |
 | `~/.claude/projects/<encoded>/` (transcripts, `memory` symlink) | folder name, encoded | the sessions inside the folder | rename; a name already taken becomes a manual merge |
 | `~/.claude/plugins/known_marketplaces.json`, `installed_plugins.json` | JSON, absolute | none | text |
 | `~/.claude/scheduled-tasks/*/SKILL.md` | Markdown, absolute | none | text |
@@ -38,7 +37,7 @@ Measured on 08.11.2026 with three sample paths (`~/dev/hackersandwizards/interna
 | opencode: `storage/project/*.json`, `storage/session/*.json`, `opencode.db` (`project`, `session.directory`, `project_directory`) | JSON/SQLite, absolute | opencode | text, SQL update |
 | Gemini and Antigravity: `~/.gemini/projects.json`, `trustedFolders.json`, `antigravity-cli/settings.json`, `antigravity-cli/cache/projects.json`, `config/projects/*.json` | JSON, absolute | Antigravity | text |
 | `~/Library/LaunchAgents/*.plist` (skhd and t3code store a `PATH` with `~/dev/hackersandwizards/internal/bench/bin` and `node_modules/.bin` folders) | XML plist, absolute | none | text, then reload: `launchctl bootout` and `bootstrap` |
-| Symlinks in `~` to depth 3, in `~/.claude/projects/*/` and `~/.claude-swap-backup/sessions/*/` (Stow links into this repo, project `memory` links) | symlink, relative or absolute | none | re-point, keeping the relative or absolute style |
+| Symlinks in `~` to depth 3 and in `~/.claude/projects/*/` (Stow links into this repo, project `memory` links) | symlink, relative or absolute | none | re-point, keeping the relative or absolute style |
 | `~/.config/**` except `gcloud/` (mole `purge_paths` and `whitelist`, Zed, Ghostty, skhd configs) | text, absolute or `$HOME` | none | text, at the symlink's target; the backup lands there too, which this repo's `.gitignore` covers |
 | `~/.zshrc`, `~/.zshenv`, `~/.zprofile` | zsh, `~` | none | text; open shells keep the old value until restarted |
 | `~/Library/Application Support/rtk/trusted_filters.json` | JSON, absolute | none | text |
@@ -64,7 +63,7 @@ Every gate reads the process names from one `ps` listing, since `pgrep` leaves o
 
 These stores record where something happened. A stale entry there breaks nothing, or the tool drops or relearns it on its own.
 
-- Claude Code: transcripts `~/.claude/projects/*/*.jsonl`, `history.jsonl`, `file-history/`, `shell-snapshots/`, `paste-cache/`, `backups/`, `.claude.json.backup` and `.claude.json.tmp.*`, cswap's `sessions/*/shell-snapshots/`; live registries `~/.claude/sessions/<pid>.json`, `jobs/*/state.json`, `daemon/roster.json`, which end with their process. One exception: T3 files a transcript under its first recorded `cwd` and skips it when that folder is gone, so `t3-import-session` links the old path to the new one while it imports.
+- Claude Code: transcripts `~/.claude/projects/*/*.jsonl`, `history.jsonl`, `file-history/`, `shell-snapshots/`, `paste-cache/`, `backups/`, `.claude.json.backup` and `.claude.json.tmp.*`; live registries `~/.claude/sessions/<pid>.json`, `jobs/*/state.json`, `daemon/roster.json`, which end with their process. One exception: T3 files a transcript under its first recorded `cwd` and skips it when that folder is gone, so `t3-import-session` links the old path to the new one while it imports.
 - Codex: `logs_*.sqlite`, `memories_*.sqlite`, `threads.title`, `threads.preview` and `threads.first_user_message` in `state_*.sqlite`.
 - Shell and CLI history: atuin `history.command` and `records.db`, rtk `history.db` and `tee/*.log`, wrangler logs in `~/Library/Preferences/.wrangler/logs`.
 - macOS: Finder's Go-to-folder history in `com.apple.finder.plist`, the open/save panel's recents, `com.apple.sharedfilelist` recents, Office and Safari sandbox bookmarks, `Knowledge/knowledgeC.db`.

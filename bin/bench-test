@@ -458,7 +458,7 @@ rm -rf "$tdir"
 step "Claude temp sweep removes only finished sessions"
 tdir=$(mktemp -d)
 home="$tdir/home" root="$home/Library/Caches/claude-code-tmp/claude-$(id -u)" stub="$tdir/stub"
-mkdir -p "$home/.claude/sessions" "$home/.claude-swap-backup/sessions/1-x/sessions" "$root/-p" "$stub"
+mkdir -p "$home/.claude/sessions" "$root/-p" "$stub"
 ids=(aaaaaaaa bbbbbbbb cccccccc dddddddd eeeeeeee)
 for i in "${ids[@]}"; do mkdir -p "$root/-p/$i-0000-0000-0000-000000000000/scratchpad"; touch "$root/-p/$i-0000-0000-0000-000000000000/scratchpad/n"; done
 mkdir -p "$root/-p/not-a-uuid" "$root/odd" "$root/bundled-skills/1.0.0" "$root/bundled-skills/2.0.0"
@@ -471,7 +471,7 @@ sleep 120 >/dev/null 2>&1 & reused=$!
 exec 9<"$root/-p/eeeeeeee-0000-0000-0000-000000000000/scratchpad/n"
 exec 8<"$root/cache-break-state-cccccccc-0000-0000-0000-000000000000.json"
 record() { printf '{"pid":%s,"procStart":"%s","sessionId":"%s-0000-0000-0000-000000000000"%s}\n' "$1" "$2" "$3" "${4:+,\"version\":\"$4\"}"; }
-record "$active" "$(TZ=UTC LC_ALL=C ps -o lstart= -p "$active")" aaaaaaaa 2.0.0 > "$home/.claude-swap-backup/sessions/1-x/sessions/$active.json"
+record "$active" "$(TZ=UTC LC_ALL=C ps -o lstart= -p "$active")" aaaaaaaa 2.0.0 > "$home/.claude/sessions/$active.json"
 record "$reused" "Thu Jan  1 00:00:00 2026" dddddddd 1.0.0 > "$home/.claude/sessions/$reused.json"
 # shellcheck disable=SC2016  # single quotes keep $2 for the stub
 printf '#!/bin/sh\n[ "$2" = bash ] && exec /usr/bin/pgrep -ax bash\necho %s\n' "$active" > "$stub/pgrep"; chmod +x "$stub/pgrep"
@@ -529,10 +529,10 @@ chmod 000 "$root"
 sweep >"$tdir/out"
 chmod 755 "$root"
 assert_ok "a root it cannot enter is warned" grep -q 'cannot enter' "$tdir/out"
-record "$active" "$(TZ=UTC LC_ALL=C ps -o lstart= -p "$active")" aaaaaaaa > "$home/.claude-swap-backup/sessions/1-x/sessions/$active.json"
+record "$active" "$(TZ=UTC LC_ALL=C ps -o lstart= -p "$active")" aaaaaaaa > "$home/.claude/sessions/$active.json"
 sweep --dry-run >"$tdir/out"
 assert_fail "a live record without a version keeps every bundled-skills version" grep -q 'would remove bundled-skills' "$tdir/out"
-record "$active" "$(TZ=UTC LC_ALL=C ps -o lstart= -p "$active")" aaaaaaaa 2.0.0 > "$home/.claude-swap-backup/sessions/1-x/sessions/$active.json"
+record "$active" "$(TZ=UTC LC_ALL=C ps -o lstart= -p "$active")" aaaaaaaa 2.0.0 > "$home/.claude/sessions/$active.json"
 sweep >"$tdir/out"
 assert_eq "live, paused, open, symlinked and foreign entries stay; finished and reused-pid go" \
   "aaaaaaaa-0000-0000-0000-000000000000 cccccccc-0000-0000-0000-000000000000 eeeeeeee-0000-0000-0000-000000000000 ffffffff-0000-0000-0000-000000000000 not-a-uuid " "$(left)"

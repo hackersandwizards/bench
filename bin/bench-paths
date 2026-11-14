@@ -118,7 +118,7 @@ while IFS=$'\t' read -r l t abs; do
   if (( apply )); then ln -sfn "$nt" "$l" && say "relinked" "$l -> $nt"; else say "relink" "$l -> $nt"; fi
 done < <(
   { find "$HOME" -maxdepth 3 \( -path "$HOME/Library" -o -path "$HOME/dev" -o -path "$HOME/opt" \) -prune -o -type l -print
-    find "$projects" "$HOME/.claude-swap-backup/sessions" -mindepth 2 -maxdepth 2 -type l
+    find "$projects" -mindepth 2 -maxdepth 2 -type l
   } 2>/dev/null | python3 -I -c '
 import os, sys
 for l in sys.stdin.read().splitlines():
@@ -139,7 +139,6 @@ AS="$HOME/Library/Application Support"
 stores() {
   cat <<EOF
 text|claude|$HOME/.claude.json|
-text|claude|$HOME/.claude-swap-backup/configs|*.json
 text||$HOME/.claude/plugins/known_marketplaces.json|
 text||$HOME/.claude/plugins/installed_plugins.json|
 text||$HOME/.claude/scheduled-tasks|*.md

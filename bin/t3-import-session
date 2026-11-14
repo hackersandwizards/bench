@@ -15,10 +15,10 @@ transcripts=("$HOME"/.claude/projects/*/"$id".jsonl)
 [[ ${#transcripts[@]} -eq 1 ]] || { echo "Expected one transcript for $id under ~/.claude/projects, found ${#transcripts[@]}." >&2; exit 1; }
 transcript=${transcripts[0]}
 
-# A live claude process, a resumed one included, registers its session in <config dir>/sessions/<pid>.json.
+# A live claude process, a resumed one included, registers its session in ~/.claude/sessions/<pid>.json.
 # procStart is in UTC; a differing start time means the pid now belongs to another process,
 # and a record without one counts as open. A record it cannot read could be this session's.
-for reg in "$HOME"/.claude/sessions/*.json "$HOME"/.claude-swap-backup/sessions/*/sessions/*.json; do
+for reg in "$HOME"/.claude/sessions/*.json; do
   if ! line=$(jaq -r --arg id "$id" 'select(.sessionId == $id) | [.pid, .procStart] | @tsv' "$reg" 2>/dev/null); then
     [[ -e $reg ]] || continue  # its process ended while this loop ran
     echo "Cannot read $reg, so cannot tell whether $id is still open. Run this again." >&2
