@@ -17,6 +17,7 @@ dev/hackersandwizards/internal/hycle-private https://github.com/hackersandwizard
 dev/hackersandwizards/internal/software-factory-slides https://github.com/hackersandwizards/software-factory-slides.git
 dev/hackersandwizards/public/artificer https://github.com/hackersandwizards/artificer.git
 dev/hackersandwizards/public/certificate-verifier https://github.com/hackersandwizards/certificate-verifier.git
+# Archived on GitHub: read-only, cloned for reference.
 dev/hackersandwizards/public/claude-rust-guard-example https://github.com/hackersandwizards/claude-rust-guard-example.git
 dev/hackersandwizards/public/hycle https://github.com/hackersandwizards/hycle.git
 dev/hackersandwizards/public/practitioners https://github.com/hackersandwizards/practitioners.git
