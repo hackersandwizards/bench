@@ -31,7 +31,8 @@ sweep_cc_tmp() {  # sweep_cc_tmp [--dry-run]
     warn "Claude temp: pgrep or ps control failed, nothing swept"; return 0
   fi
 
-  for rec in "$HOME"/.claude/sessions/*.json; do
+  # Accounts other than the default keep their records under cswap's config dirs.
+  for rec in "$HOME"/.claude/sessions/*.json "$HOME"/.claude-swap-backup/sessions/*/sessions/*.json; do
     [[ -f "$rec" ]] || continue
     # read collapses an empty tab-separated field into the next one, so a missing sessionId would
     # take the version's place: version goes last and sid must be a UUID.
