@@ -1,14 +1,14 @@
 $HOME/.bun/install/global node_modules (587 installed)
 ├── @earendil-works/pi-coding-agent@1.5.2
-├── @github/copilot@1.0.112
+├── @github/copilot@1.0.113
 ├── @google/gemini-cli@0.68.0
 ├── @googleworkspace/cli@0.22.5
-├── @openai/codex@0.169.0
+├── @openai/codex@0.170.0
 ├── ccusage@20.0.51
 ├── chrome-devtools-mcp@1.13.0
 ├── corepack@0.36.0
 ├── mcp-remote@0.16.6
 ├── node-gyp@13.1.0
 ├── npm-check@6.0.1
-├── opencode-ai@1.19.5
+├── opencode-ai@1.19.6
 └── yarn@1.22.22
