@@ -48,8 +48,8 @@
   "skipAutoPermissionPrompt": true,
   "voiceEnabled": true,
   "enabledMcpjsonServers": [],
-  "model": "opus",
-  "effortLevel": "medium",
+  "model": "fable",
+  "effortLevel": "low",
   "claudeMdExcludes": [
     "/Users/*/.claude/rules/**",
     "/home/*/.claude/rules/**"
