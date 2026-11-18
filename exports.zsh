@@ -29,6 +29,16 @@ export VISUAL="vim"
 
 export CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1
 
+# The Claude desktop app and terminal sessions share ~/.claude.json, and each caches the account of
+# its own login there, so a tool that switches the terminal login finds the app's account in it.
+# With CLAUDE_CONFIG_DIR naming the default folder, terminal sessions keep that file at
+# ~/.claude/.claude.json and everything else where it was. The empty CLAUDE_SECURESTORAGE_CONFIG_DIR
+# keeps the login in the default keychain item, which CLAUDE_CONFIG_DIR alone would move. Only where
+# the file exists: copy ~/.claude.json there first, or a session starts without its project state.
+if [[ -f $HOME/.claude/.claude.json ]]; then
+  export CLAUDE_CONFIG_DIR="$HOME/.claude" CLAUDE_SECURESTORAGE_CONFIG_DIR=
+fi
+
 export BAT_THEME="ansi"
 
 export RIPGREP_CONFIG_PATH="$ZSH_SETTINGS_DIR/ripgreprc"

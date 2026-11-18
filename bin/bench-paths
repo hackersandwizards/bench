@@ -139,6 +139,7 @@ AS="$HOME/Library/Application Support"
 stores() {
   cat <<EOF
 text|claude|$HOME/.claude.json|
+text|claude|$HOME/.claude/.claude.json|
 text|claude|$HOME/.claude-swap-backup/configs|*.json
 text||$HOME/.claude/plugins/known_marketplaces.json|
 text||$HOME/.claude/plugins/installed_plugins.json|

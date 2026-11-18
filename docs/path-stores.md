@@ -23,6 +23,7 @@ Measured on 08.11.2026 with three sample paths (`~/dev/hackersandwizards/interna
 | Store | Format, spelling | App to quit first | Method |
 |---|---|---|---|
 | `~/.claude.json` (`projects` keys, `githubRepoPaths`) | JSON, absolute | every Claude Code session | text |
+| `~/.claude/.claude.json` (the same file for terminal sessions, where `exports.zsh` sets `CLAUDE_CONFIG_DIR`) | JSON, absolute | every Claude Code session | text |
 | `~/.claude-swap-backup/configs/*.json` (cswap's copy of `.claude.json` per account, restored on switch) | JSON, absolute | every Claude Code session | text |
 | `~/.claude/projects/<encoded>/` (transcripts, `memory` symlink) | folder name, encoded | the sessions inside the folder | rename; a name already taken becomes a manual merge |
 | `~/.claude/plugins/known_marketplaces.json`, `installed_plugins.json` | JSON, absolute | none | text |
