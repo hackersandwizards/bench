@@ -53,6 +53,5 @@
   "claudeMdExcludes": [
     "/Users/*/.claude/rules/**",
     "/home/*/.claude/rules/**"
-  ],
-  "advisorModel": "claude-fable-5-2"
+  ]
 }
