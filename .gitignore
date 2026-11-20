@@ -26,3 +26,4 @@ __pycache__/
 
 # bench-paths keeps the pre-rewrite copy of a Stow-linked config next to its target.
 *.bench-paths-bak
+/.bench-logs/

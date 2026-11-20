@@ -59,36 +59,61 @@ sweep_cc_tmp() {  # sweep_cc_tmp [--dry-run]
   [[ $'\n'"$line"$'\n' == *$'\n'"n$root"$'\n'* ]] || { warn "Claude temp: open-file control failed, nothing swept"; return 0; }
   open="|$(ROOT="n$root/" awk 'index($0, ENVIRON["ROOT"]) == 1 { split(substr($0, length(ENVIRON["ROOT"]) + 1), a, "/"); print (a[2] == "" ? a[1] : a[1] "/" a[2]) }' <<<"$line" | sort -u | tr '\n' '|')"
 
-  local dir key id recent rc removed=0 kept=0 kb=0 size verb=removed others
+  local dir key id recent rc removed=0 kb=0 size verb=removed others
+  local symlinks=0 unfinished=0 sessions=0 opened=0 changed=0 failed=0 reasons=
+  local age="-$((days * 1440))" age_hints i=0
+  local dirs=("$root"/-*/* "$root"/cache-break-state-*.json "$root"/bundled-skills/*)
   [[ "$dry" == --dry-run ]] && verb="would remove"
-  keep() { skip "Claude temp: kept $1"; kept=$((kept + 1)); }
-  for dir in "$root"/-*/* "$root"/cache-break-state-*.json "$root"/bundled-skills/*; do
+
+  # A recent entry is enough to keep it. Leave a minute of margin for find's
+  # -mmin rounding. Older entries still need find to check their descendants.
+  age_hints=$(set -o pipefail
+    printf '%s\0' "${dirs[@]}" | perl -0e '
+      $cutoff = time - (shift @ARGV) * 86400 + 60;
+      while (<STDIN>) {
+        chomp;
+        @entry = lstat($_);
+        print @entry && $entry[9] > $cutoff ? "1" : "0";
+      }
+    ' "$days" 2>/dev/null
+  ) || age_hints=
+
+  for dir in "${dirs[@]}"; do
+    ((i += 1))
     [[ -e "$dir" || -L "$dir" ]] || continue
     id=${dir##*/}; key=${dir#"$root"/}
-    if [[ -L "$dir" || -L "${dir%/*}" ]]; then keep "$key (symlink)"; continue; fi
+    if [[ -L "$dir" || -L "${dir%/*}" ]]; then ((symlinks += 1)); continue; fi
     case "$key" in
       cache-break-state-*) id=${id#cache-break-state-}; id=${id%.json}; [[ -f "$dir" && "$id" =~ $uuid ]] ;;
       bundled-skills/*) [[ -d "$dir" && "$versions" != "*" && "$versions" != *"|$id|"* ]] ;;
       *) [[ -d "$dir" && "$id" =~ $uuid ]] ;;
-    esac || { keep "$key (not a finished session's entry)"; continue; }
-    if [[ "$live" == *"|$id|"* ]]; then keep "$key (live session)"; continue; fi
-    if [[ "$open" == *"|$key|"* ]]; then keep "$key (files open)"; continue; fi
-    recent=$(find "$dir" -mmin "-$((days * 1440))" -print -quit 2>/dev/null); rc=$?
-    if (( rc != 0 )) || [[ -n "$recent" ]]; then keep "$key (changed within $days days or unreadable)"; continue; fi
+    esac || { ((unfinished += 1)); continue; }
+    if [[ "$live" == *"|$id|"* ]]; then ((sessions += 1)); continue; fi
+    if [[ "$open" == *"|$key|"* ]]; then ((opened += 1)); continue; fi
+    if [[ "${age_hints:i-1:1}" == 1 ]]; then ((changed += 1)); continue; fi
+    recent=$(find "$dir" -mmin "$age" -print -quit 2>/dev/null); rc=$?
+    if (( rc != 0 )) || [[ -n "$recent" ]]; then ((changed += 1)); continue; fi
     size=$(du -sk "$dir" 2>/dev/null | awk '{print $1}')
     if [[ "$dry" == --dry-run ]] || rm -rf "$dir"; then
       ok "Claude temp: $verb $key (${size:-?} KB)"; removed=$((removed + 1)); kb=$((kb + ${size:-0}))
     else
-      warn "Claude temp: removing $key failed"; kept=$((kept + 1))
+      warn "Claude temp: removing $key failed"; ((failed += 1))
     fi
   done
   others=$(find "$root" -mindepth 1 -maxdepth 1 ! \( -type d -name '-*' \) ! -name 'cache-break-state-*.json' \
     ! -name bundled-skills 2>/dev/null | wc -l)
-  ok "Claude temp: $verb $removed ($kb KB), kept $kept, ${others// /} other top-level entries left alone"
+  (( changed )) && reasons+=", $changed changed within $days days or unreadable"
+  (( sessions )) && reasons+=", $sessions live session"
+  (( opened )) && reasons+=", $opened files open"
+  (( symlinks )) && reasons+=", $symlinks symlink"
+  (( unfinished )) && reasons+=", $unfinished not a finished session's entry"
+  (( failed )) && reasons+=", $failed removal failed"
+  [[ -n "$reasons" ]] && reasons=" (${reasons:2})"
+  ok "Claude temp: $verb $removed ($kb KB), kept $((changed + sessions + opened + symlinks + unfinished + failed))$reasons, ${others// /} other top-level entries left alone"
 }
 
 case "${1:-}" in
-  "") ;;
+  "") maintenance_output bench-clean ;;
   --dry-run) step "Claude Code temp folders (dry run)"; sweep_cc_tmp --dry-run; exit 0 ;;
   *) fail "usage: bench-clean [--dry-run]"; exit 2 ;;
 esac
@@ -152,8 +177,8 @@ sweep_jetbrains() {
   # Named, not counted: these carry settings, not just cache.
   (( stale )) || ok "JetBrains: no superseded version dirs"
 }
-step "JetBrains version dirs"; sweep_jetbrains
+maintenance_report "JetBrains version dirs" sweep_jetbrains
 
-step "Claude Code temp folders"; sweep_cc_tmp
+maintenance_report "Claude Code temp folders" sweep_cc_tmp
 
 step "Done"

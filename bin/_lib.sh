@@ -6,7 +6,11 @@ step() { printf '\n\033[1;36m▸ %s\033[0m\n' "$1"; }
 ok()   { printf '\033[32m✓\033[0m %s\n' "$1"; }
 # A file, not an array: warns from piped subshells and child scripts
 # (macos.sh) must reach install.sh's end-of-run recap.
-warn() { printf '\033[33m⚠\033[0m %s\n' "$1"; printf '%s\n' "$1" >> "${WARN_LOG:-/dev/null}"; }
+warn() {
+  if [[ -n "${maintenance_warned+x}" ]]; then maintenance_warned=1; fi
+  printf '\033[33m⚠\033[0m %s\n' "$1"
+  printf '%s\n' "$1" >> "${WARN_LOG:-/dev/null}"
+}
 fail() { printf '\033[31m✗\033[0m %s\n' "$1"; }
 skip() { printf '\033[2m·\033[0m %s\n' "$1"; }
 have() { command -v "$1" >/dev/null 2>&1; }
@@ -29,10 +33,58 @@ ask() {
   [[ "$reply" =~ ^[Yy]$ ]]
 }
 
+maintenance_log=
+maintenance_output() {
+  case "${BENCH_OUTPUT:-auto}" in
+    auto) [[ -t 1 ]] || return 0 ;;
+    quiet) ;;
+    stream) return 0 ;;
+    *) warn "Unknown BENCH_OUTPUT=$BENCH_OUTPUT; streaming output"; return 0 ;;
+  esac
+  local dir="$REPO_ROOT/.bench-logs"
+  # One log per command, overwritten by its next run.
+  if mkdir -p "$dir" && : > "$dir/$1.log"; then
+    maintenance_log="$dir/$1.log"
+    trap 'printf "\nLog: %s\n" "$maintenance_log"' EXIT
+  else
+    warn "Cannot create a maintenance log; streaming output"
+  fi
+}
+
+maintenance_step() {
+  local label="$1" kind="$2" started=$SECONDS first_byte elapsed status=0 maintenance_warned=0
+  shift 2
+  step "$label" >> "$maintenance_log"
+  first_byte=$(wc -c < "$maintenance_log")
+  if "$@" >> "$maintenance_log" 2>&1; then :; else status=$?; fi
+  elapsed="($((SECONDS - started))s)"
+  if (( status )); then
+    warn "$label failed (continuing) $elapsed"
+  elif (( maintenance_warned )); then
+    # The report below already contains the warning and recorded it in WARN_LOG.
+    printf '\033[33m⚠\033[0m %s %s\n' "$label" "$elapsed"
+  else
+    ok "$label $elapsed"
+  fi
+  if [[ "$kind" == report ]]; then
+    tail -c "+$((first_byte + 1))" "$maintenance_log"
+  elif (( status )); then
+    tail -c "+$((first_byte + 1))" "$maintenance_log" | tail -n 12 | indent
+  fi
+}
+
 run() {
   local label="$1"; shift
+  if [[ -n "$maintenance_log" ]]; then maintenance_step "$label" tool "$@"; return; fi
   step "$label"
   if "$@"; then ok "$label"; else warn "$label failed (continuing)"; fi
+}
+
+maintenance_report() {
+  local label="$1"; shift
+  if [[ -n "$maintenance_log" ]]; then maintenance_step "$label" report "$@"; return; fi
+  step "$label"
+  "$@"
 }
 
 # Guards the docs/secret-keys.txt trust boundary: key names land unquoted in
@@ -55,6 +107,7 @@ secret_line() {
 # it here, the one file every script sources. Mirrors exports.zsh (interactive).
 export PIP_BREAK_SYSTEM_PACKAGES=1
 export NPM_CONFIG_PREFIX=/opt/homebrew
+export NPM_CONFIG_FUND=false
 
 # Homebrew maps the running macOS major to a codename (its macos_version.rb
 # SYMBOLS table). A macOS newer than the newest entry has no codename, so the

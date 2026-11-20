@@ -40,8 +40,7 @@ The Dock, Finder sidebar and Moom steps replace your own layout with the snapsho
 ## Daily use
 
 - `bench-doctor`: verify everything is wired up.
-- `bench-update`: upgrade brew, antidote, mise tools, Rust toolchains, pip, bun and npm globals.
-- `bench-clean`: reclaim disk: caches, .DS_Store, stale IDE versions, finished Claude temp folders. Alias `cleanup`; `--dry-run` lists the temp folders it would remove and changes nothing.
+- `bench-update` (`ua`) upgrades Homebrew, Antidote, mise tools, Rust toolchains, global packages and pi extensions.- `bench-clean` (`cleanup`) reclaims disk space from caches, `.DS_Store` files, stale IDE versions and finished Claude temp entries. The Claude sweep counts kept entries by reason. `--dry-run` prints only that sweep's report, names each entry it would remove and writes no log.
 - `bench-export`: check the Brewfile, snapshot installed packages into `docs/` and sync `home/` from `$HOME`.
 - `bench-paths <old> [<new>]`: before moving a folder, list every reference to it; `--apply` after the move.
 - `bench-prefs-diff snap`, change the setting in System Settings, then `bench-prefs-diff diff`: shows what changed, as `defaults` keys for `macos.sh`.
@@ -49,6 +48,8 @@ The Dock, Finder sidebar and Moom steps replace your own layout with the snapsho
 - `safari-favorites`: export or merge the Safari favorites bar.
 - `t3-import-session <session-id>`: import one ended Claude session into its T3 project.
 - `ZSH_PROFILE=1 zsh -i -c exit`: profile shell startup.
+
+In a terminal, `bench-update` and `bench-clean` show each step's result and duration, the tail of failed tool output, and the cleanup reports. They print the path to the full step log at the end, one file per command in `.bench-logs/` that its next run overwrites. With redirected stdout, tool output streams as it runs. Set `BENCH_OUTPUT=stream` or `BENCH_OUTPUT=quiet` to choose the mode explicitly. Use stream mode if an installer writes its prompt to stdout or stderr.
 
 The `update-bench` skill (`.claude/skills/update-bench/`) runs the daily loop of these commands and commits the refreshed snapshots. The `update-bench-daily` scheduled task fires it at 06:00, which is why `docs/` changes most days.
 

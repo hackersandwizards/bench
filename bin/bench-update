@@ -6,6 +6,8 @@ set -u
 # shellcheck source=_lib.sh
 . "$(dirname "$0")/_lib.sh"
 
+maintenance_output bench-update
+
 if brew_ready; then
   run "Homebrew update"   brew update
   run "Homebrew upgrade"  brew upgrade

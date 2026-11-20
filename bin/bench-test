@@ -37,6 +37,47 @@ assert_eq "collects warns across subshell boundaries" $'parent\npipeline' "$(cat
 rm -f "$WARN_LOG"; WARN_LOG=""
 assert_ok "no ledger configured — warn still succeeds" warn "unledgered"
 
+step "maintenance step output"
+tdir=$(mktemp -d)
+fixture_step() {
+  local reply
+  IFS= read -r reply || return 1
+  printf 'stdout: %s\n' "$reply"
+  printf 'stderr: %s\n' "$1" >&2
+  [[ "$1" == success ]]
+}
+out=$(BENCH_OUTPUT=quiet bash -c '
+  . "$1/bin/_lib.sh"; REPO_ROOT="$2"
+  eval "$3"
+  maintenance_output bench-test
+  run "Success" fixture_step success <<<"input"
+  run "Failure" fixture_step failure <<<"input"
+  maintenance_report "Sweep" warn "kept an unreadable entry"
+' test "$REPO_ROOT" "$tdir" "$(declare -f fixture_step)" 2>&1)
+log=$(sed -n 's/^Log: //p' <<<"$out")
+assert_ok "quiet success has a duration" grep -qE 'Success \([0-9]+s\)' <<<"$out"
+assert_ok "quiet failure has a duration and continues" grep -qE 'Failure failed \(continuing\) \([0-9]+s\)' <<<"$out"
+assert_ok "quiet failure exposes the failed step's stderr" grep -q 'stderr: failure' <<<"$out"
+assert_fail "quiet output hides successful tool chatter even before a failure" grep -q 'stderr: success' <<<"$out"
+assert_ok "quiet sweeps show their warnings" grep -q 'kept an unreadable entry' <<<"$out"
+assert_ok "quiet run logs stdout and keeps stdin available" grep -q 'stdout: input' "$log"
+assert_ok "quiet run logs stderr from successful steps" grep -q 'stderr: success' "$log"
+assert_ok "the full log identifies each step" grep -q '▸ Success' "$log"
+assert_ok "bench children have npm funding notices disabled" printenv NPM_CONFIG_FUND
+assert_eq "npm fund is false" false "${NPM_CONFIG_FUND:-}"
+for mode in auto stream; do
+  out=$(BENCH_OUTPUT="$mode" bash -c '
+    . "$1/bin/_lib.sh"; REPO_ROOT="$2"
+    maintenance_output bench-test
+    run "Stream" printf "streamed output\n"
+  ' test "$REPO_ROOT" "$tdir" 2>&1)
+  assert_ok "$mode streams when stdout is redirected" grep -qx 'streamed output' <<<"$out"
+  assert_fail "$mode leaves streaming runs without a log" grep -q '^Log: ' <<<"$out"
+done
+out=$(BENCH_OUTPUT=quiet run "Other caller" printf 'still streaming\n')
+assert_ok "run streams for callers that never opted in" grep -qx 'still streaming' <<<"$out"
+rm -rf "$tdir"
+
 step "parse_* (docs/ snapshot parsers)"
 fix=$(mktemp)
 printf 'requests==2.31.0\nurllib3==2.0.0\n' > "$fix"
@@ -466,6 +507,7 @@ for i in aaaaaaaa bbbbbbbb cccccccc; do echo '{}' > "$root/cache-break-state-$i-
 ln -s "$tdir" "$root/-p/ffffffff-0000-0000-0000-000000000000"
 find "$root" -not -type l -exec touch -t 202601010000 {} +
 touch "$root/-p/cccccccc-0000-0000-0000-000000000000/scratchpad/n"  # paused: recent, no process
+touch "$root/cache-break-state-dddddddd-0000-0000-0000-000000000000.json"
 sleep 120 >/dev/null 2>&1 & active=$!
 sleep 120 >/dev/null 2>&1 & reused=$!
 exec 9<"$root/-p/eeeeeeee-0000-0000-0000-000000000000/scratchpad/n"
@@ -485,7 +527,20 @@ assert_eq "dry run removes nothing" "$all" "$(left)"
 assert_eq "dry run names the finished and the reused-pid session" "2" "$(grep -c 'would remove -p/' "$tdir/dry")"
 assert_ok "dry run names the bundled skills no live session runs" grep -q 'would remove bundled-skills/1.0.0' "$tdir/dry"
 assert_eq "dry run keeps every bundled-skills version" "1.0.0 2.0.0" "$(command ls "$root/bundled-skills" | xargs)"
-assert_eq "dry run keeps every cache-break state" "3" "$(command ls "$root" | grep -c cache-break-state)"
+assert_eq "dry run keeps every cache-break state" "4" "$(command ls "$root" | grep -c cache-break-state)"
+assert_ok "Claude temp reports kept counts by reason" grep -qF \
+  'kept 9 (2 changed within 14 days or unreadable, 2 live session, 2 files open, 1 symlink, 2 not a finished session' "$tdir/dry"
+assert_fail "Claude temp omits per-entry keep lines" grep -q 'Claude temp: kept ' "$tdir/dry"
+blocked="$root/-p/bbbbbbbb-0000-0000-0000-000000000000/scratchpad"
+chmod 000 "$blocked"
+sweep --dry-run >"$tdir/out"
+chmod 755 "$blocked"
+assert_fail "an old entry with an unreadable subtree is kept" grep -q 'would remove -p/bbbbbbbb-' "$tdir/out"
+assert_ok "an unreadable subtree counts with the age checks" grep -qF '3 changed within 14 days or unreadable' "$tdir/out"
+printf '#!/bin/sh\nprintf 1111\nexit 1\n' > "$stub/perl"; chmod +x "$stub/perl"
+sweep --dry-run >"$tdir/out"
+assert_eq "an unavailable batch age check falls back to individual checks" "$(sed '1,2d' "$tdir/dry")" "$(cat "$tdir/out")"
+rm -f "$stub/perl"
 assert_fail "dry run stops before the cache steps" grep -q 'JetBrains' "$tdir/dry"
 assert_fail "an unknown flag is refused, never a full clean" env HOME="$home" PATH="$stub:$PATH" "$REPO_ROOT/bin/bench-clean" --dryrun
 printf '{"pid":%s,"procStart":"x","sessionId":null,"version":"2.0.0"}' "$active" > "$home/.claude/sessions/nosid.json"
@@ -539,8 +594,8 @@ assert_eq "live, paused, open, symlinked and foreign entries stay; finished and 
 assert_ok "a symlinked session entry leaves its target alone" test -f "$tdir/out"
 assert_ok "a foreign top-level entry stays" test -d "$root/odd"
 assert_eq "bundled skills of a version no live session runs go" "2.0.0" "$(command ls "$root/bundled-skills")"
-assert_eq "cache-break state of a finished session goes, a live or open one stays" \
-  "cache-break-state-aaaaaaaa-0000-0000-0000-000000000000.json cache-break-state-cccccccc-0000-0000-0000-000000000000.json" \
+assert_eq "only old, finished cache-break state goes" \
+  "cache-break-state-aaaaaaaa-0000-0000-0000-000000000000.json cache-break-state-cccccccc-0000-0000-0000-000000000000.json cache-break-state-dddddddd-0000-0000-0000-000000000000.json" \
   "$(command ls "$root" | grep cache-break-state | xargs)"
 exec 9<&- 8<&-
 kill "$active" "$reused" 2>/dev/null; wait "$active" "$reused" 2>/dev/null
