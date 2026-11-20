@@ -13,7 +13,7 @@ node = "latest"
 "npm:mongosh" = { version = "latest", trust_policy_excludes = ["encodeurl@2.0.2"] }
 uv = "latest"
 "pypi:claude-swap" = { version = "latest", with = ["rumps"] }
-"pypi:git+https://github.com/youssofal/MTPLX" = { version = "latest", with = ["llguidance"] }
+ollama = "0.40.17-rc3"
 "pypi:scrapling" = { version = "latest", extras = "shell" }
 "pypi:yt-dlp" = "latest"
 

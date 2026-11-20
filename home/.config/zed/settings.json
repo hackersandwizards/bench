@@ -22,31 +22,18 @@
     "favorite_models": [],
     "model_parameters": [],
     "default_model": {
-      "provider": "local-mlx-mtplx",
-      "model": "qwen3.8-27b"
+      "provider": "local-mlx",
+      "model": "inkling-2-mini"
     }
   },
   "language_models": {
     "openai_compatible": {
-      "local-mlx-mtplx": {
+      "local-mlx": {
         "api_url": "http://127.0.0.1:8001/v1",
         "available_models": [
           {
-            "name": "qwen3.8-27b",
-            "display_name": "Qwen 3.8 (27B) — local MTPLX",
-            "max_tokens": 262144,
-            "capabilities": {
-              "tools": true,
-              "images": true,
-              "parallel_tool_calls": true,
-              "prompt_cache_key": false,
-              "chat_completions": true,
-              "interleaved_reasoning": true
-            }
-          },
-          {
-            "name": "qwen3.6-35b",
-            "display_name": "Qwen 3.6 (35B-A3B) fast — local MTPLX",
+            "name": "inkling-2-mini",
+            "display_name": "Inkling 2 Mini — local Ollama",
             "max_tokens": 262144,
             "capabilities": {
               "tools": true,
