@@ -89,9 +89,8 @@ and a variable `exports.zsh` sets reaches every brew command.
 Check that the next run of the same step does not undo a fix.
 
 **Fixed by the run.** Every warn whose remedy passes the test this skill opens
-with, whichever tool printed it and whether or not this file names it. Of doctor's warns, two
-qualify today: `core.hooksPath` not `.githooks` and `secrets.zsh` not mode 600. Apply the test
-rather than keeping a catalogue here.
+with, whichever tool printed it and whether or not this file names it.
+ 
 The test also admits a repair scoped to the one formula that `bench-update` or `bench-doctor`
 reports broken or unlinked in the same run: `brew reinstall <formula>` (with
 `--build-from-source` when the bottle does not match the running macOS), `brew link <formula>`,
