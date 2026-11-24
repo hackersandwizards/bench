@@ -60,4 +60,8 @@ export NODE_DISABLE_COMPILE_CACHE=1
 # serving dist/server/entry.mjs adds a ~177 MB entry, 20-40 GB a day. Same in ~/.claude/settings.json.
 export BUN_RUNTIME_TRANSPILER_CACHE_PATH=0
 
+# agy takes one auto-compaction threshold for every model it runs. 400K is the limit Claude Code
+# sets for the Anthropic models, which agy offers too. Same in ~/.claude/settings.json.
+export AGY_CLI_AUTO_COMPACT_OVERRIDE=400K
+
 [[ -f "$ZSH_SETTINGS_DIR/secrets.zsh" ]] && source "$ZSH_SETTINGS_DIR/secrets.zsh"
