@@ -689,6 +689,26 @@ assert_ok "temp removal reports the summary without a line for each entry" grep 
 assert_eq "temp reports only the five shapes and the summary" 6 "$(grep -c 'Temp dir:' <<<"$out")"
 exec 9<&- 8<&-
 main_tmp=$tmp
+tmp=$(mktemp -d "$tdir/readonly.XXXXXX")
+readonly_entry="$tmp/tmp.readonly"
+readonly_target="$home/readonly-target"
+mkdir -p "$readonly_entry/locked"
+touch "$readonly_target" "$readonly_entry/locked/object" "$readonly_entry/object"
+ln -s "$readonly_target" "$readonly_entry/locked/link"
+find "$readonly_entry" -exec touch -h -t 202001010000 {} +
+chmod 444 "$readonly_target" "$readonly_entry/locked/object" "$readonly_entry/object"
+chmod 555 "$readonly_entry/locked"
+clean_fixture sweep_tmpdir --dry-run >/dev/null
+assert_ok "temp dry run keeps the read-only entry whole" \
+  test -f "$readonly_entry/locked/object" -a -f "$readonly_entry/object" -a -L "$readonly_entry/locked/link"
+out=$(clean_fixture sweep_tmpdir)
+assert_fail "temp removes the whole read-only entry" test -e "$readonly_entry"
+assert_fail "temp reports no removal failure for the read-only entry" grep -qF 'removing tmp.readonly failed' <<<"$out"
+assert_ok "temp leaves the read-only symlink target outside the root in place" test -f "$readonly_target"
+assert_eq "temp preserves the mode of the read-only symlink target" 444 "$(stat -f %Lp "$readonly_target")"
+chmod -R -P u+w "$tmp"
+rm -rf "$tmp"
+
 tmp="$tdir/failure"
 mkdir "$tmp"
 touch -t 202001010000 "$tmp/tmp.failed"
