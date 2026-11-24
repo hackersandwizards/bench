@@ -1,4 +1,2 @@
 asmvik/formulae
 hashicorp/tap
-mongodb/brew
-redpanda-data/tap

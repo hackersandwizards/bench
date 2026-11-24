@@ -1,13 +1,9 @@
-$HOME/.bun/install/global node_modules (585 installed)
+$HOME/.bun/install/global node_modules (573 installed)
 ├── @earendil-works/pi-coding-agent@1.6.0
-├── @github/copilot@1.0.115
-├── @google/gemini-cli@0.71.1
 ├── @googleworkspace/cli@0.22.5
 ├── @openai/codex@0.172.0
 ├── ccusage@20.1.1
 ├── chrome-devtools-mcp@1.14.0
-├── corepack@0.36.0
 ├── mcp-remote@0.16.7
 ├── node-gyp@13.1.0
-├── npm-check@6.0.1
-└── yarn@1.22.22
+└── npm-check@6.0.1

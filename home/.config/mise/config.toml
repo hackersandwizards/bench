@@ -1,16 +1,10 @@
 [tools]
 ruby = "4"
-java = ["temurin-27", "temurin-25", "temurin-21", "temurin-17", "temurin-11"]
-gradle = "latest"
-maven = "latest"
-quarkus = "latest"
+java = "temurin-27"
 go = "latest"
-deno = "latest"
 bun = "latest"
 node = "latest"
 "npm:npm" = "latest"
-# encodeurl@2.0.2, a dependency of mongosh, carries no trusted-publish proof; it matches git tag v2.0.2 and the maintainer's own publish.
-"npm:mongosh" = { version = "latest", trust_policy_excludes = ["encodeurl@2.0.2"] }
 uv = "latest"
 "pypi:claude-swap" = { version = "latest", with = ["rumps"] }
 "pypi:mtplx" = { version = "latest", extras = "server" }

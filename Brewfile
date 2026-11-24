@@ -1,8 +1,6 @@
 tap "anomalyco/tap"
 tap "asmvik/formulae" # maintained skhd fork; koekeishiya/skhd upstream is unmaintained
 tap "hashicorp/tap"
-tap "mongodb/brew"
-tap "redpanda-data/tap"
 # Plugin manager for zsh, inspired by antigen and antibody
 brew "antidote"
 # Library for manipulating PNG images
@@ -19,18 +17,12 @@ brew "betterleaks"
 brew "bfs"
 # GNU binary tools for native development
 brew "binutils"
-# Resource monitor. C++ version and continuation of bashtop and bpytop
-brew "btop"
 # Software library to render fonts
 brew "freetype"
 # Vector graphics library with cross-device output support
 brew "cairo"
 # Get a file from an HTTP, HTTPS or FTP server
 brew "curl"
-# General-purpose scripting language
-brew "php"
-# Dependency Manager for PHP
-brew "composer"
 # GNU File, Shell, and Text utilities
 brew "coreutils"
 # File comparison utilities
@@ -41,8 +33,6 @@ brew "direnv"
 brew "dockutil"
 # Select default apps for documents and URL schemes on macOS
 brew "duti"
-# Classic UNIX line editor
-brew "ed"
 # Modern, maintained replacement for ls
 brew "eza"
 # Simple, fast and user-friendly alternative to find
@@ -71,24 +61,16 @@ brew "git-lfs"
 brew "gitleaks"
 # Open-source GitLab command-line tool
 brew "glab"
-# C code prettifier
-brew "gnu-indent"
 # GNU implementation of the famous stream editor
 brew "gnu-sed"
 # GNU version of the tar archiving utility
 brew "gnu-tar"
 # GNU implementation of which utility
 brew "gnu-which"
-# Apply a diff file to an original
-brew "gpatch"
 # GNU grep, egrep and fgrep
 brew "grep"
 # Popular GNU data compression program
 brew "gzip"
-# Cross-platform program for developing Haskell projects
-brew "haskell-stack"
-# Kubernetes package manager
-brew "helm"
 # Client library for huggingface.co hub
 brew "hf"
 # JQ clone focussed on correctness, speed, and simplicity
@@ -97,14 +79,7 @@ brew "jaq"
 brew "jq"
 # Handy way to save and run project-specific commands
 brew "just"
-# Kubernetes CLI To Manage Your Clusters In Style!
-brew "k9s"
-# Open-source distributed event streaming platform
-brew "kafka"
-# Kubernetes command-line interface
-brew "kubernetes-cli"
 # Simple terminal UI for git commands
-brew "lazygit"
 # Fast and powerful Git hooks manager for any type of projects
 brew "lefthook"
 # Pager program similar to more
@@ -117,14 +92,8 @@ brew "mise"
 brew "mole"
 # Protocol buffers (Google's data interchange format)
 brew "protobuf"
-# Open source relational database management system
-brew "mysql"
 # Free (GNU) replacement for the Pico text editor
 brew "nano"
-# Robust (fully ACID) transactional property graph database
-brew "neo4j"
-# Port scanning utility for large networks
-brew "nmap"
 # 7-Zip (high compression file archiver) implementation
 brew "p7zip"
 # Swiss-army knife of markup format conversion
@@ -137,8 +106,6 @@ brew "parallel"
 brew "pkgconf"
 # PDF rendering library (based on the xpdf-3.0 code base)
 brew "poppler"
-# Object-relational database system
-brew "postgresql@18"
 # Perl-powered file rename script with many helpful built-ins
 brew "rename"
 # Search tool like grep and The Silver Searcher
@@ -147,18 +114,12 @@ brew "ripgrep"
 brew "rsync"
 # Rust toolchain installer
 brew "rustup"
-# Terminal multiplexer with VT100/ANSI terminal emulation
-brew "screen"
 # Static analysis and lint tool, for (ba)sh scripts
 brew "shellcheck"
-# Test SSL/TLS enabled services to discover supported cipher suites
-brew "sslscan"
 # Cross-shell prompt for astronauts
 brew "starship"
 # Organize software neatly under a single directory tree (e.g. /usr/local)
 brew "stow"
-# Terminal multiplexer
-brew "tmux"
 # Display directories as trees (with optional color/HTML output)
 brew "tree"
 # Ultra fast grep with query UI, fuzzy search, archive search, and more
@@ -169,8 +130,6 @@ brew "unzip"
 brew "vim"
 # Executes a program periodically, showing output fullscreen
 brew "watch"
-# Display word differences between text files
-brew "wdiff"
 # Internet file retriever
 brew "wget"
 # Port of OpenAI's Whisper model in C/C++
@@ -181,8 +140,6 @@ brew "wireguard-tools"
 brew "xh"
 # Tool for managing your YubiKey configuration
 brew "ykman"
-# High-performance, asynchronous messaging library
-brew "zeromq"
 # General-purpose lossless data-compression library
 brew "zlib"
 # Shell extension to navigate your filesystem faster
@@ -193,10 +150,6 @@ brew "zsh"
 brew "asmvik/formulae/skhd"
 # Infrastructure-as-code CLI
 brew "hashicorp/tap/terraform"
-# High-performance, schema-free, document-oriented database
-brew "mongodb/brew/mongodb-community", args: ["without-mongosh"]
-# Redpanda CLI & toolbox
-brew "redpanda-data/tap/redpanda"
 cask "adguard"
 cask "anomalyco/tap/hex", trusted: true
 cask "antigravity-cli"
@@ -234,4 +187,3 @@ cask "zed"
 cask "zoom"
 mas "Amphetamine", id: 937984704
 mas "Moom Classic", id: 419330170
-mas "Xcode", id: 497799835

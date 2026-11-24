@@ -73,4 +73,4 @@ These stores record where something happened. A stale entry there breaks nothing
 
 ## Searched and empty
 
-`~/.gitconfig` has no `includeIf` and no `safe.directory`. direnv's allow list is empty. 1Password has no SSH agent config (`~/.config/1Password/ssh/agent.toml` does not exist). `~/.ssh/config`, `~/.tmux.conf`, skhd's `skhdrc` and the Ghostty config name no folder under `~/dev` or `~/opt`. VS Code and Cursor are not installed.
+`~/.gitconfig` has no `includeIf` and no `safe.directory`. direnv's allow list is empty. 1Password has no SSH agent config (`~/.config/1Password/ssh/agent.toml` does not exist). `~/.ssh/config`, skhd's `skhdrc` and the Ghostty config name no folder under `~/dev` or `~/opt`. VS Code and Cursor are not installed.

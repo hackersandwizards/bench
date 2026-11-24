@@ -6,8 +6,6 @@ alias lt="eza -la --sort=modified"
 alias tree="eza --tree"
 alias cat="bat --paging=never"
 alias less="bat --paging=always"
-alias htop="btop"
-alias lg="lazygit"
 alias http="xh"
 alias https="xh --https"
 
@@ -21,7 +19,6 @@ alias c="clear"
 # --- Tools ---
 alias b="brew"
 alias g="git"
-alias k=kubectl
 alias t=terraform
 alias j=just
 alias ez='vim "$ZSH_SETTINGS_DIR/init.zsh"'

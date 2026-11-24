@@ -9,6 +9,5 @@ The 16 ANSI palette colors plus `background`/`foreground`/`cursor`/`selection` i
 | fzf        | `FZF_DEFAULT_OPTS --color=fg:0,bg:-1,hl:4,...`           |
 | delta      | `syntax-theme = GitHub`, `light = true` (not ANSI)       |
 | vim        | no `termguicolors` -> terminal palette                   |
-| tmux       | named colors in status-style                             |
 
 To change the theme: edit the `palette` section in `ghostty/config.ghostty`. Every tool in the table except delta follows automatically.
