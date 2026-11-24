@@ -144,6 +144,7 @@ text|claude|$HOME/.claude-swap-backup/configs|*.json
 text||$HOME/.claude/plugins/known_marketplaces.json|
 text||$HOME/.claude/plugins/installed_plugins.json|
 text||$HOME/.claude/scheduled-tasks|*.md
+text||$HOME/.claude/schedules|*.md
 source||$HOME/.claude/rules|
 source||$HOME/.claude/skills|
 source||$HOME/.claude/agents|
@@ -159,9 +160,6 @@ sqlite|codex,Codex|$HOME/.codex|state_*.sqlite threads.cwd project_roots.path
 sqlite|codex,Codex|$HOME/.codex/sqlite|codex-dev.db local_thread_catalog.cwd
 text|idea,jetbrains-toolbox|$AS/JetBrains|{*.xml,db.json,session-identities.json}
 sqlite|zed|$AS/Zed/db|*/db.sqlite workspaces.paths workspaces.identity_paths trusted_worktrees.absolute_path sidebar_threads.folder_paths sidebar_threads.main_worktree_paths editors.buffer_path kv_store.value
-text|opencode|$HOME/.local/share/opencode/storage/project|*.json
-text|opencode|$HOME/.local/share/opencode/storage/session|*.json
-sqlite|opencode|$HOME/.local/share/opencode|opencode.db project.worktree project.sandboxes session.directory project_directory.directory
 text|Antigravity|$HOME/.gemini/projects.json|
 text|Antigravity|$HOME/.gemini/trustedFolders.json|
 text|Antigravity|$HOME/.gemini/antigravity-cli/settings.json|

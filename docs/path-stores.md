@@ -36,7 +36,6 @@ Measured on 08.11.2026 with three sample paths (`~/dev/hackersandwizards/interna
 | `~/.codex/sqlite/codex-dev.db` (`local_thread_catalog.cwd`) | SQLite, absolute | codex, Codex | SQL update |
 | JetBrains: `*/options/recentProjects.xml`, `trusted-paths.xml`, `other.xml`, `runner.layout.xml`, `*/workspace/*.xml`, `jba_config/*.xml`, `air/session-identities/*/session-identities.json`, Toolbox and Daemon `rhizome/db.json` | XML/JSON, `$USER_HOME$` and absolute | idea, jetbrains-toolbox | text |
 | Zed: `db/*/db.sqlite` (`workspaces`, `trusted_worktrees`, `sidebar_threads`, `editors.buffer_path`, `kv_store.value`) | SQLite, absolute | zed | SQL update |
-| opencode: `storage/project/*.json`, `storage/session/*.json`, `opencode.db` (`project`, `session.directory`, `project_directory`) | JSON/SQLite, absolute | opencode | text, SQL update |
 | Gemini and Antigravity: `~/.gemini/projects.json`, `trustedFolders.json`, `antigravity-cli/settings.json`, `antigravity-cli/cache/projects.json`, `config/projects/*.json` | JSON, absolute | Antigravity | text |
 | `~/Library/LaunchAgents/*.plist` (skhd and t3code store a `PATH` with `~/dev/hackersandwizards/internal/bench/bin` and `node_modules/.bin` folders) | XML plist, absolute | none | text, then reload: `launchctl bootout` and `bootstrap` |
 | Symlinks in `~` to depth 3, in `~/.claude/projects/*/` and `~/.claude-swap-backup/sessions/*/` (Stow links into this repo, project `memory` links) | symlink, relative or absolute | none | re-point, keeping the relative or absolute style |
@@ -70,7 +69,7 @@ These stores record where something happened. A stale entry there breaks nothing
 - Shell and CLI history: atuin `history.command` and `records.db`, rtk `history.db` and `tee/*.log`, wrangler logs in `~/Library/Preferences/.wrangler/logs`.
 - macOS: Finder's Go-to-folder history in `com.apple.finder.plist`, the open/save panel's recents, `com.apple.sharedfilelist` recents, Office and Safari sandbox bookmarks, `Knowledge/knowledgeC.db`.
 - Chrome for Testing crash dumps and the `Chrome-headless/scoped_dir*` profiles that headless runs leave behind.
-- JetBrains `tasks/*.zip` and `app-internal-state.db`, Zed `threads/`, Gemini and Antigravity conversations, opencode `storage/message` and `storage/part`, Docker buildx refs.
+- JetBrains `tasks/*.zip` and `app-internal-state.db`, Zed `threads/`, Gemini and Antigravity conversations, Docker buildx refs.
 
 ## Searched and empty
 
