@@ -199,6 +199,7 @@ brew "mongodb/brew/mongodb-community", args: ["without-mongosh"]
 brew "redpanda-data/tap/redpanda"
 cask "adguard"
 cask "anomalyco/tap/hex", trusted: true
+cask "antigravity-cli"
 cask "azure-cli"
 cask "claude"
 cask "crossover"

@@ -225,6 +225,7 @@ zlib-ng-compat
 zoxide
 zsh
 zstd
+antigravity-cli
 azure-cli
 font-fira-sans
 font-input
