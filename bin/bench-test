@@ -468,7 +468,7 @@ mkdir -p "$tdir/Applications/Zzzide.app/Contents/Resources" \
   "$tdir/Library/Caches/JetBrains/Yyyide2026.1" "$tdir/Library/Logs/JetBrains/Zzzide2026.1" \
   "$tdir/Library/Application Support/JetBrains/Zzzide2026.1"
 printf '{"dataDirectoryName":"Zzzide2026.2"}' > "$tdir/Applications/Zzzide.app/Contents/Resources/product-info.json"
-jb() { HOME="$tdir" bash -c ". '$REPO_ROOT/bin/_lib.sh'; $(sed -n '/^sweep_jetbrains()/,/^}/p' "$REPO_ROOT/bin/bench-clean"); sweep_jetbrains" 2>&1; }
+jb() { HOME="$tdir" TMPDIR="$tdir" bash -c ". '$REPO_ROOT/bin/_lib.sh'; $(sed -n '/^sweep_jetbrains()/,/^}/p' "$REPO_ROOT/bin/bench-clean"); sweep_jetbrains" 2>&1; }
 jb >/dev/null
 assert_ok "an older dir stays while the installed version has no settings dir of its own" \
   test -d "$tdir/Library/Application Support/JetBrains/Zzzide2026.1" -a -d "$tdir/Library/Caches/JetBrains/Zzzide2026.1"
@@ -499,7 +499,7 @@ rm -rf "$tdir"
 step "Claude temp sweep removes only finished sessions"
 tdir=$(mktemp -d)
 home="$tdir/home" root="$home/Library/Caches/claude-code-tmp/claude-$(id -u)" stub="$tdir/stub"
-mkdir -p "$home/.claude/sessions" "$home/.claude-swap-backup/sessions/1-x/sessions" "$root/-p" "$stub"
+mkdir -p "$tdir/tmp" "$home/.claude/sessions" "$home/.claude-swap-backup/sessions/1-x/sessions" "$root/-p" "$stub"
 ids=(aaaaaaaa bbbbbbbb cccccccc dddddddd eeeeeeee)
 for i in "${ids[@]}"; do mkdir -p "$root/-p/$i-0000-0000-0000-000000000000/scratchpad"; touch "$root/-p/$i-0000-0000-0000-000000000000/scratchpad/n"; done
 mkdir -p "$root/-p/not-a-uuid" "$root/odd" "$root/bundled-skills/1.0.0" "$root/bundled-skills/2.0.0"
@@ -519,10 +519,10 @@ record "$reused" "Thu Jan  1 00:00:00 2026" dddddddd 1.0.0 > "$home/.claude/sess
 printf '#!/bin/sh\n[ "$2" = bash ] && exec /usr/bin/pgrep -ax bash\necho %s\n' "$active" > "$stub/pgrep"; chmod +x "$stub/pgrep"
 # The full-clean steps stay inert even if --dry-run ever ran on into them.
 printf '#!/bin/sh\nexit 0\n' | tee "$stub/brew" > "$stub/fd"; chmod +x "$stub/brew" "$stub/fd"
-sweep() { HOME="$home" PATH="$stub:$PATH" bash -c ". '$REPO_ROOT/bin/_lib.sh'; $(sed -n '/^sweep_cc_tmp()/,/^}/p' "$REPO_ROOT/bin/bench-clean"); sweep_cc_tmp \"\$@\"" sweep "$@" 2>&1; }
+sweep() { HOME="$home" TMPDIR="$tdir/tmp" PATH="$stub:$PATH" bash -c ". '$REPO_ROOT/bin/_lib.sh'; $(sed -n '/^sweep_cc_tmp()/,/^}/p' "$REPO_ROOT/bin/bench-clean"); sweep_cc_tmp \"\$@\"" sweep "$@" 2>&1; }
 left() { command ls "$root/-p" | tr '\n' ' '; }
 all="aaaaaaaa-0000-0000-0000-000000000000 bbbbbbbb-0000-0000-0000-000000000000 cccccccc-0000-0000-0000-000000000000 dddddddd-0000-0000-0000-000000000000 eeeeeeee-0000-0000-0000-000000000000 ffffffff-0000-0000-0000-000000000000 not-a-uuid "
-HOME="$home" PATH="$stub:$PATH" "$REPO_ROOT/bin/bench-clean" --dry-run >"$tdir/dry" 2>&1
+HOME="$home" TMPDIR="$tdir/tmp" PATH="$stub:$PATH" "$REPO_ROOT/bin/bench-clean" --dry-run >"$tdir/dry" 2>&1
 assert_eq "dry run removes nothing" "$all" "$(left)"
 assert_eq "dry run names the finished and the reused-pid session" "2" "$(grep -c 'would remove -p/' "$tdir/dry")"
 assert_ok "dry run names the bundled skills no live session runs" grep -q 'would remove bundled-skills/1.0.0' "$tdir/dry"
@@ -539,10 +539,10 @@ assert_fail "an old entry with an unreadable subtree is kept" grep -q 'would rem
 assert_ok "an unreadable subtree counts with the age checks" grep -qF '3 changed within 14 days or unreadable' "$tdir/out"
 printf '#!/bin/sh\nprintf 1111\nexit 1\n' > "$stub/perl"; chmod +x "$stub/perl"
 sweep --dry-run >"$tdir/out"
-assert_eq "an unavailable batch age check falls back to individual checks" "$(sed '1,2d' "$tdir/dry")" "$(cat "$tdir/out")"
+assert_eq "an unavailable batch age check falls back to individual checks" "$(grep "Claude temp:" "$tdir/dry")" "$(cat "$tdir/out")"
 rm -f "$stub/perl"
 assert_fail "dry run stops before the cache steps" grep -q 'JetBrains' "$tdir/dry"
-assert_fail "an unknown flag is refused, never a full clean" env HOME="$home" PATH="$stub:$PATH" "$REPO_ROOT/bin/bench-clean" --dryrun
+assert_fail "an unknown flag is refused, never a full clean" env HOME="$home" TMPDIR="$tdir/tmp" PATH="$stub:$PATH" "$REPO_ROOT/bin/bench-clean" --dryrun
 printf '{"pid":%s,"procStart":"x","sessionId":null,"version":"2.0.0"}' "$active" > "$home/.claude/sessions/nosid.json"
 sweep >"$tdir/out"
 assert_eq "a record without a session id stops the run" "$all" "$(left)"
@@ -576,8 +576,8 @@ assert_ok "pgrep control failing is warned" grep -q 'control failed' "$tdir/out"
 sleep 0 & gone=$!; wait "$gone"
 # shellcheck disable=SC2016  # single quotes keep $2 for the stub
 printf '#!/bin/sh\n[ "$2" = bash ] && exec /usr/bin/pgrep -ax bash\necho %s\n' "$gone" > "$stub/pgrep"
-HOME="$home" PATH="$stub:$PATH" "$REPO_ROOT/bin/bench-clean" --dry-run >"$tdir/out" 2>&1
-assert_ok "a claude that exited after pgrep does not stop the run" grep -q 'would remove' "$tdir/out"
+HOME="$home" TMPDIR="$tdir/tmp" PATH="$stub:$PATH" "$REPO_ROOT/bin/bench-clean" --dry-run >"$tdir/out" 2>&1
+assert_ok "a claude that exited after pgrep does not stop the run" grep -q 'Claude temp: would remove -p/' "$tdir/out"
 # shellcheck disable=SC2016  # single quotes keep $2 for the stub
 printf '#!/bin/sh\n[ "$2" = bash ] && exec /usr/bin/pgrep -ax bash\necho %s\n' "$active" > "$stub/pgrep"
 chmod 000 "$root"
@@ -599,6 +599,336 @@ assert_eq "only old, finished cache-break state goes" \
   "$(command ls "$root" | grep cache-break-state | xargs)"
 exec 9<&- 8<&-
 kill "$active" "$reused" 2>/dev/null; wait "$active" "$reused" 2>/dev/null
+rm -rf "$tdir"
+
+step "bench-clean sweeps only old per-run temp entries"
+tdir=$(mktemp -d)
+home="$tdir/home" stub="$tdir/stub" tmp="$tdir/tmp"
+mkdir -p "$home" "$stub" "$tmp"
+tmp=$(cd "$tmp" && pwd -P)
+# Load only the sweep functions. A fixture copy of the entry point isolates its log path too.
+clean_fixture() {
+  HOME="$home" TMPDIR="$tmp" PATH="$stub:/usr/bin:/bin:/usr/sbin" /bin/bash -uc "
+    . '$REPO_ROOT/bin/_lib.sh'
+    $(sed -n '/^resolve_tmpdir()/,/^case /p' "$REPO_ROOT/bin/bench-clean" | sed '$d')
+    cd '$tmp'
+    \"\$@\"
+  " fixture "$@" 2>&1
+}
+old_temp=('com.google.chrome.for.testing.launch' '.tmpAb12Cd' 'tmp.old'
+          'bundler20261124-51234-x1y2z3' 'a b-Ab12Cd' $'line\nbreak-Zb12Cd')
+kept_temp=('tmp.recent' 'tmp.tree' 'tmp.unreadable' 'tmp.open' $'tmp.open\nline'
+           'tmp.link' 'tmp.pipe' 'com.apple.x-Ab12Cd' 'StatusKitAgent'
+           'mediaanalysisd-access' 'node-compile-cache' 'x-Helper')
+for n in "${old_temp[@]}" "${kept_temp[@]}"; do mkdir "$tmp/$n"; done
+rmdir "$tmp/tmp.link" "$tmp/tmp.pipe" "$tmp/tmp.old"
+touch "$tmp/tmp.old" "$home/target"
+ln -s "$home/target" "$tmp/tmp.link"
+ln -s "$home/target" "$tmp/com.google.chrome.for.testing.launch/target"
+touch -h -t 202001010000 "$tmp/tmp.link" "$tmp/com.google.chrome.for.testing.launch/target"
+mkfifo "$tmp/tmp.pipe"
+mkdir "$tmp/tmp.unreadable/blocked"
+touch "$tmp/tmp.tree/new" "$tmp/tmp.open/n" "$tmp/"$'tmp.open\nline/n'
+find "$tmp" ! -type l -exec touch -t "$(date -v-3d +%Y%m%d%H%M)" {} +
+touch -t "$(date -v-1d +%Y%m%d%H%M)" "$tmp/tmp.recent" "$tmp/tmp.tree/new"
+chmod 000 "$tmp/tmp.unreadable/blocked"
+exec 9<"$tmp/tmp.open/n" 8<"$tmp/"$'tmp.open\nline/n'
+
+out=$(clean_fixture sweep_tmpdir --dry-run)
+for n in "${old_temp[@]}"; do
+  assert_ok "temp dry run keeps ${n//$'\n'/\\n}" test -e "$tmp/$n"
+done
+assert_ok "temp dry run reports all six eligible entries and counts the rest" grep -qE \
+  "Temp dir: would remove 6 \([0-9]+ KB\), kept 7 \(3 changed within 2 days or unreadable, 2 files open, 2 not the user's plain file or folder\), 5 other entries left alone" <<<"$out"
+for shape in 'Chrome for Testing launch folders' 'Rust tempfile entries' 'mktemp entries' \
+  'Ruby Dir.mktmpdir folders' 'node fs.mkdtemp entries'; do
+  assert_ok "temp dry run reports $shape" grep -qF "$shape (" <<<"$out"
+done
+
+outside=$(mktemp -d /tmp/bench-test.XXXXXX)
+touch -t 202001010000 "$outside/tmp.outside"
+ln -s "$tmp" "$tdir/tmp-link"
+for setting in unset empty outside symlink missing lsof; do
+  eligible="$tmp/tmp.old"
+  # shellcheck disable=SC2016  # evaluated inside the fixture shell
+  case "$setting" in
+    unset) reason='TMPDIR is unset'; setup='unset TMPDIR' ;;
+    empty) reason='TMPDIR is empty'; setup='TMPDIR=' ;;
+    outside) reason='resolves outside'; setup='TMPDIR="$GUARD_OUTSIDE"'; eligible="$outside/tmp.outside" ;;
+    symlink) reason='TMPDIR is a symlink'; setup='TMPDIR="$TMPDIR/../tmp-link/"' ;;
+    missing) reason='cannot enter TMPDIR'; setup='TMPDIR="$TMPDIR-missing"' ;;
+    lsof)
+      reason='open-file control failed'; setup=:
+      printf '#!/bin/sh\nexit 1\n' > "$stub/lsof"; chmod +x "$stub/lsof"
+      ;;
+  esac
+  out=$(GUARD_OUTSIDE="$outside" clean_fixture eval "$setup;" sweep_tmpdir)
+  assert_ok "temp $setting guard warns once" test "$(grep -c "⚠.*$reason" <<<"$out")" = 1
+  assert_ok "temp $setting guard preserves the eligible entry" test -e "$eligible"
+done
+rm -rf "$outside"
+rm -f "$stub/lsof"
+newline_tmp="$tmp-newline"$'\n'
+mkdir "$newline_tmp" "$tmp-newline"
+touch -t 202001010000 "$tmp-newline/tmp.neighbor"
+# shellcheck disable=SC2016  # evaluated inside the fixture shell
+out=$(GUARD_NEWLINE="$newline_tmp" clean_fixture eval 'TMPDIR="$GUARD_NEWLINE";' sweep_tmpdir)
+assert_ok "a temp root ending in a newline fails the exact lsof control" grep -q 'open-file control failed' <<<"$out"
+assert_ok "a temp root ending in a newline cannot sweep its neighbor" test -f "$tmp-newline/tmp.neighbor"
+out=$(clean_fixture sweep_tmpdir)
+chmod 755 "$tmp/tmp.unreadable/blocked"
+for n in "${old_temp[@]}"; do
+  assert_fail "temp removes ${n//$'\n'/\\n}" test -e "$tmp/$n"
+done
+for n in "${kept_temp[@]}"; do
+  assert_ok "temp preserves ${n//$'\n'/\\n}" test -e "$tmp/$n"
+done
+assert_ok "temp symlink leaves its target untouched" test -f "$home/target"
+assert_ok "temp removal reports the summary without a line for each entry" grep -qE \
+  "Temp dir: removed 6 \([0-9]+ KB\), kept 7 \(3 changed within 2 days or unreadable, 2 files open, 2 not the user's plain file or folder\), 5 other entries left alone" <<<"$out"
+assert_eq "temp reports only the five shapes and the summary" 6 "$(grep -c 'Temp dir:' <<<"$out")"
+exec 9<&- 8<&-
+main_tmp=$tmp
+tmp="$tdir/failure"
+mkdir "$tmp"
+touch -t 202001010000 "$tmp/tmp.failed"
+chmod 555 "$tmp"
+out=$(clean_fixture sweep_tmpdir)
+chmod 755 "$tmp"
+assert_ok "a failed temp removal names the entry" grep -q '⚠.*removing tmp.failed failed' <<<"$out"
+assert_ok "a failed temp removal counts as kept" grep -qF \
+  'Temp dir: removed 0 (0 KB), kept 1 (1 removal failed), 0 other entries left alone' <<<"$out"
+tmp=$main_tmp
+
+step "bench-clean uses Codex to delete old sessions and sweeps old UUID image folders"
+old_id=aaaaaaaa-0000-0000-0000-000000000000
+second_id=bbbbbbbb-0000-0000-0000-000000000000
+recent_id=cccccccc-0000-0000-0000-000000000000
+linked_id=dddddddd-0000-0000-0000-000000000000
+archived_id=eeeeeeee-0000-0000-0000-000000000000
+orphan_id=ffffffff-0000-0000-0000-000000000000
+sessions="$home/.codex/sessions/2026/01"
+archive="$home/.codex/archived_sessions"
+images="$home/.codex/generated_images"
+old_session="$sessions/rollout-first-$old_id.jsonl"
+second_session="$sessions/rollout-second-$second_id.jsonl"
+mkdir -p "$sessions" "$archive/nested" "$images/$old_id" "$images/$recent_id" \
+  "$images/$linked_id" "$images/$archived_id" "$images/foreign"
+codex_old=$(date -v-31d +%Y%m%d%H%M)
+touch -t "$codex_old" "$old_session" "$second_session" "$images/$old_id" "$images/foreign"
+touch -t "$(date -v-29d +%Y%m%d%H%M)" "$sessions/rollout-recent-$recent_id.jsonl" "$images/$recent_id/new"
+touch -t "$codex_old" "$images/$recent_id"
+touch -t "$codex_old" "$images/$linked_id" "$images/$archived_id" \
+  "$archive/nested/rollout-archived-EEEEEEEE-0000-0000-0000-000000000000.jsonl"
+touch "$sessions/rollout-linked-$linked_id.jsonl"
+touch -t 202001010000 "$sessions/rollout-other.jsonl"
+cat > "$stub/codex" <<'SH'
+#!/bin/sh
+printf '%s\n' "$*" >> "$HOME/codex-calls"
+[ "$#" -eq 3 ] && [ "$1 $2" = 'delete --force' ] && [ /dev/stdin -ef /dev/null ] &&
+  [ "$CODEX_HOME" = "$HOME/.codex" ] || exit 99
+case "$(cat "$HOME/codex-mode")" in
+  leaves) exit 0 ;;
+  fails) exit 1 ;;
+esac
+find -H "$CODEX_HOME/sessions" -name "*-$3.jsonl" -type f -delete
+SH
+cat > "$stub/gtimeout" <<'SH'
+#!/bin/sh
+[ "$1 $2" = '--signal=KILL 60s' ] || exit 99
+printf '%s\n' "$*" >> "$HOME/timeout-calls"
+shift 2
+[ "$(cat "$HOME/codex-mode")" != timeout ] || exit 124
+exec "$@"
+SH
+chmod +x "$stub/codex" "$stub/gtimeout"
+echo leaves > "$home/codex-mode"
+out=$(clean_fixture sweep_codex --dry-run)
+assert_ok "Codex dry run previews two old sessions and keeps both recent sessions" grep -qE \
+  'Codex sessions: would remove 2 \([0-9]+ KB\), kept 2 newer than 30 days' <<<"$out"
+assert_ok "Codex dry run keeps images while their rollout still exists" grep -qF \
+  'Codex images: would remove 0 (0 KB), kept 5 (1 changed within 30 days or unreadable, 3 session still exists, 1 not a UUID folder)' <<<"$out"
+assert_fail "Codex dry run never calls the CLI" test -e "$home/codex-calls"
+assert_ok "Codex dry run leaves sessions and images on disk" \
+  test -f "$old_session" -a -f "$second_session" -a -d "$images/$old_id"
+for mode in leaves fails timeout; do
+  mkdir -p "$images/$old_id"; touch -t "$codex_old" "$images/$old_id"
+  printf '%s\n' "$mode" > "$home/codex-mode"
+  : > "$home/codex-calls"
+  : > "$home/timeout-calls"
+  out=$(clean_fixture sweep_codex)
+  assert_ok "Codex $mode warns with the failed UUID" grep -qE \
+    "⚠.*deleting ($old_id|$second_id) failed, stopping session sweep" <<<"$out"
+  case "$mode" in
+    timeout) calls=0 ;;
+    *) calls=1 ;;
+  esac
+  assert_eq "Codex $mode never calls the second deletion" "$calls" "$(wc -l < "$home/codex-calls" | xargs)"
+  assert_eq "Codex $mode makes only one timed attempt" 1 "$(wc -l < "$home/timeout-calls" | xargs)"
+  assert_ok "Codex $mode keeps both sessions" test -f "$old_session" -a -f "$second_session"
+done
+mv "$stub/codex" "$stub/disabled-codex"
+out=$(clean_fixture sweep_codex)
+assert_ok "missing Codex warns" grep -q '⚠.*codex or gtimeout missing' <<<"$out"
+assert_ok "missing Codex leaves old sessions on disk" test -f "$old_session" -a -f "$second_session"
+mv "$stub/disabled-codex" "$stub/codex"
+mkdir "$images/$orphan_id"
+touch -t "$codex_old" "$images/$orphan_id"
+echo delete > "$home/codex-mode"
+out=$(clean_fixture sweep_codex)
+assert_eq "Codex receives the force deletion command for each old UUID" \
+  "$(printf 'delete --force %s\n' "$old_id" "$second_id")" "$(sort "$home/codex-calls")"
+assert_fail "the CLI removed the first old session" test -e "$old_session"
+assert_fail "the CLI removed the second old session" test -e "$second_session"
+assert_ok "Codex keeps the recent and non-UUID sessions" \
+  test -f "$sessions/rollout-recent-$recent_id.jsonl" -a -f "$sessions/rollout-other.jsonl"
+assert_fail "Codex removes images after deleting their rollout in the same run" test -e "$images/$old_id"
+assert_fail "Codex removes an old image folder with no rollout" test -e "$images/$orphan_id"
+assert_ok "Codex keeps an old image folder with a rollout in sessions" test -d "$images/$linked_id"
+assert_ok "Codex keeps an old image folder with a rollout in archived_sessions" test -d "$images/$archived_id"
+assert_ok "Codex keeps the recent tree and non-UUID folder" test -d "$images/$recent_id" -a -d "$images/foreign"
+assert_ok "Codex image summary counts kept folders by reason" grep -qE \
+  'Codex images: removed 2 \([0-9]+ KB\), kept 4 \(1 changed within 30 days or unreadable, 2 session still exists, 1 not a UUID folder\)' <<<"$out"
+mkdir "$images/$orphan_id"
+touch -t "$codex_old" "$images/$orphan_id"
+chmod 000 "$archive/nested"
+out=$(clean_fixture sweep_codex)
+chmod 755 "$archive/nested"
+assert_ok "Codex warns when the rollout listing fails" grep -q '⚠.*cannot list rollouts, nothing swept' <<<"$out"
+assert_ok "Codex keeps every image folder when the rollout listing fails" \
+  test -d "$images/$orphan_id" -a -d "$images/$linked_id" -a -d "$images/$archived_id" \
+  -a -d "$images/$recent_id" -a -d "$images/foreign"
+mv "$home/.codex/sessions" "$home/symlinked-sessions"
+ln -s "$home/symlinked-sessions" "$home/.codex/sessions"
+touch -t 202001010000 "$old_session"
+out=$(clean_fixture sweep_codex)
+assert_ok "Codex warns on a symlinked sweep folder" grep -q '⚠.*sessions is a symlink' <<<"$out"
+assert_ok "Codex leaves the symlink target untouched" test -f "$old_session"
+unlink "$home/.codex/sessions"
+mv "$home/symlinked-sessions" "$home/.codex/sessions"
+
+step "bench-clean sweeps only old regular T3 provider logs"
+logs="$home/.t3/userdata/logs/provider"
+mkdir -p "$logs/old-dir"
+touch -t "$(date -v-13d +%Y%m%d%H%M)" "$logs/new"
+touch -t "$(date -v-15d +%Y%m%d%H%M)" "$logs/.old" "$logs/old-dir" "$logs/old-dir/old" "$logs/../outside"
+ln -s "$logs/../outside" "$logs/link"
+out=$(clean_fixture sweep_t3_logs)
+assert_fail "T3 removes the old provider log" test -e "$logs/.old"
+assert_ok "T3 keeps recent logs, folders, links and other logs" \
+  test -f "$logs/new" -a -f "$logs/old-dir/old" -a -L "$logs/link" -a -f "$logs/../outside"
+assert_ok "T3 summary counts the three kept entries" grep -qE \
+  'T3 provider logs: removed 1 \([0-9]+ KB\), kept 3$' <<<"$out"
+mv "$logs" "$home/provider-target"
+ln -s "$home/provider-target" "$logs"
+touch -t 202001010000 "$logs/.old"
+out=$(clean_fixture sweep_t3_logs)
+assert_ok "T3 warns on a symlinked provider folder" grep -q '⚠.*provider is a symlink' <<<"$out"
+assert_ok "T3 leaves a symlinked provider target untouched" test -f "$logs/.old"
+unlink "$logs"
+mv "$home/provider-target" "$logs"
+
+step "bench-clean reports store sizes and budgets"
+mkdir -p "$home/Library/Application Support/Claude"
+cat > "$stub/du" <<'SH'
+#!/bin/sh
+[ "$1 $2" = '-sk --' ] || exit 99
+case "$3" in
+  */tmp) printf '1572864\t%s\n' "$3"; exit 1 ;;
+  */.codex) printf '16777216\t%s\n' "$3" ;;
+  */Application\ Support/Claude) exit 1 ;;
+  *) printf '0\t%s\n' "$3" ;;
+esac
+SH
+chmod +x "$stub/du"
+out=$(clean_fixture report_sizes)
+# shellcheck disable=SC2016  # the first store label is literal
+assert_ok "a partial du result of 1572864 KB still reports 1.5 GB within budget" \
+  grep -qE '✓.* Size: \$TMPDIR 1\.5 GB of 2 GB' <<<"$out"
+assert_ok "a store over budget warns" grep -q '⚠.*Size: ~/.codex 16.0 GB, over its 15 GB budget' <<<"$out"
+assert_ok "a missing store skips" grep -q '·.*Size: ~/.claude/projects does not exist' <<<"$out"
+assert_ok "du with no number warns" grep -q '⚠.*Size: ~/Library/Application Support/Claude cannot be read' <<<"$out"
+assert_eq "all six stores are reported" 6 "$(grep -c 'Size:' <<<"$out")"
+rm -f "$stub/du"
+
+step "bench-clean dry run previews every sweep without running cleanup or writing logs"
+mkdir -p "$tdir/repo/bin" "$images/$old_id"
+cp "$REPO_ROOT/bin/bench-clean" "$REPO_ROOT/bin/_lib.sh" "$tdir/repo/bin/"
+ccroot="$home/Library/Caches/claude-code-tmp/claude-$UID/-p/$old_id"
+mkdir -p "$ccroot"
+touch -t 202001010000 "$ccroot" "$images/$old_id" "$tmp/tmp.preview"
+cat > "$stub/pgrep" <<'SH'
+#!/bin/sh
+[ "$2" != bash ] || exec /usr/bin/pgrep -ax bash
+exit 1
+SH
+cat > "$stub/brew" <<'SH'
+#!/bin/sh
+echo called >> "$HOME/full-clean-calls"
+SH
+cp "$stub/brew" "$stub/fd"
+cat > "$stub/du" <<'SH'
+#!/bin/sh
+case "$3" in */Application\ Support/Claude) exit 1 ;; esac
+exec /usr/bin/du "$@"
+SH
+chmod +x "$stub/pgrep" "$stub/brew" "$stub/fd" "$stub/du"
+: > "$home/codex-calls"
+out=$(HOME="$home" TMPDIR="$tmp" PATH="$stub:$PATH" BENCH_OUTPUT=quiet WARN_LOG="$home/warnings" \
+  "$tdir/repo/bin/bench-clean" --dry-run 2>&1)
+assert_eq "end-to-end dry run exits successfully" 0 "$?"
+for label in 'Claude temp' 'Temp dir' 'Codex sessions' 'Codex images' 'T3 provider logs'; do
+  assert_ok "end-to-end dry run previews $label" grep -qE "$label: would remove [1-9]" <<<"$out"
+done
+assert_ok "end-to-end dry run reports store sizes" grep -q 'Size:' <<<"$out"
+assert_ok "end-to-end dry run leaves all eligible entries on disk" \
+  test -d "$ccroot" -a -f "$tmp/tmp.preview" -a -f "$old_session" -a -d "$images/$old_id" \
+  -a -d "$images/$orphan_id" -a -f "$logs/.old"
+assert_eq "end-to-end dry run never calls Codex" "" "$(cat "$home/codex-calls")"
+assert_fail "end-to-end dry run omits non-sweep steps" grep -qE 'Homebrew cleanup|Sweep \.DS_Store|JetBrains|Claude HTTP cache' <<<"$out"
+assert_fail "end-to-end dry run never calls brew or fd" test -e "$home/full-clean-calls"
+assert_fail "end-to-end dry run writes no log" test -e "$tdir/repo/.bench-logs" -o -e "$home/warnings"
+unset -f clean_fixture
+rm -rf "$tdir"
+
+step "bench-doctor checks cache variables without printing config contents"
+tdir=$(mktemp -d)
+mkdir -p "$tdir/.t3" "$tdir/.codex"
+doctor_caches() {
+  HOME="$tdir" bash -c ". '$REPO_ROOT/bin/_lib.sh'
+    $(sed -n '/^check_runtime_caches()/,/^}/p' "$REPO_ROOT/bin/bench-doctor")
+    check_runtime_caches" 2>&1
+}
+assert_eq "doctor emits nothing when both files are absent" "" "$(doctor_caches)"
+service="$tdir/.t3/service.env"
+config="$tdir/.codex/config.toml"
+printf '%s\n' 'export NODE_DISABLE_COMPILE_CACHE='"'1'" 'BUN_RUNTIME_TRANSPILER_CACHE_PATH="0"' > "$service"
+printf '%s\n' 'shell_environment_policy.set = { NODE_DISABLE_COMPILE_CACHE = "1", BUN_RUNTIME_TRANSPILER_CACHE_PATH = "0" }' > "$config"
+out=$(doctor_caches)
+assert_eq "quoted T3 values and inline TOML both pass" 2 "$(grep -c '✓.*sets both runtime cache variables' <<<"$out")"
+printf '%s\n' 'NODE_DISABLE_COMPILE_CACHE=1' 'DOCTOR_TEST_SECRET=SENTINEL_VALUE' > "$service"
+printf '%s\n' '[shell_environment_policy.set]' '# NODE_DISABLE_COMPILE_CACHE = "1"' \
+  'BUN_RUNTIME_TRANSPILER_CACHE_PATH = "0"' 'DOCTOR_TEST_SECRET = "SENTINEL_VALUE"' > "$config"
+out=$(doctor_caches)
+assert_ok "T3 missing Bun names the exact line to add" grep -q \
+  '⚠.*/service.env: add BUN_RUNTIME_TRANSPILER_CACHE_PATH=0$' <<<"$out"
+assert_ok "Codex commented-out Node setting warns with table and line to add" grep -q \
+  '⚠.*/config.toml \[shell_environment_policy.set\]: add NODE_DISABLE_COMPILE_CACHE = "1"$' <<<"$out"
+assert_eq "doctor warns only on the two missing settings" 2 "$(grep -c '⚠' <<<"$out")"
+assert_fail "doctor never displays unrelated config content" grep -qE 'DOCTOR_TEST_SECRET|SENTINEL_VALUE' <<<"$out"
+printf '%s\n' 'BUN_RUNTIME_TRANSPILER_CACHE_PATH=0' 'BUN_RUNTIME_TRANSPILER_CACHE_PATH=WRONG_BUN' > "$service"
+printf '%s\n' '[shell_environment_policy.set]' 'NODE_DISABLE_COMPILE_CACHE = "WRONG_NODE"' > "$config"
+out=$(doctor_caches)
+assert_ok "T3 missing Node warns by name" grep -q '⚠.*/service.env: add NODE_DISABLE_COMPILE_CACHE=1$' <<<"$out"
+assert_ok "T3 rejects a later wrong Bun value" grep -q '⚠.*/service.env: add BUN_RUNTIME_TRANSPILER_CACHE_PATH=0$' <<<"$out"
+assert_ok "Codex missing Bun warns by name" grep -q '⚠.*/config.toml .*add BUN_RUNTIME_TRANSPILER_CACHE_PATH = "0"$' <<<"$out"
+assert_ok "Codex wrong Node value warns by name" grep -q '⚠.*/config.toml .*add NODE_DISABLE_COMPILE_CACHE = "1"$' <<<"$out"
+assert_fail "doctor never displays the wrong values" grep -qE 'WRONG_NODE|WRONG_BUN' <<<"$out"
+printf '%s\n' 'DOCTOR_TEST_SECRET = "SENTINEL_VALUE' > "$config"
+out=$(doctor_caches)
+assert_ok "doctor warns on unparsable TOML" grep -q '⚠.*/config.toml .*cannot be read or parsed' <<<"$out"
+assert_fail "parse errors never display the original input" grep -qE 'DOCTOR_TEST_SECRET|SENTINEL_VALUE' <<<"$out"
+unset -f doctor_caches
 rm -rf "$tdir"
 
 step "bench-clean keeps the Chrome for Testing builds repos pin"

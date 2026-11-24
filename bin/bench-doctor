@@ -6,6 +6,66 @@ set -u
 # shellcheck source=_lib.sh
 . "$(dirname "$0")/_lib.sh"
 
+# Neither the T3 service nor commands Codex runs read exports.zsh. Without
+# these variables, Node and Bun fill the temp folder with compile caches
+# without reporting an error.
+check_runtime_caches() {
+  local service="$HOME/.t3/service.env" codex="$HOME/.codex/config.toml"
+  local file target missing setting key value
+  local settings=(NODE_DISABLE_COMPILE_CACHE=1 BUN_RUNTIME_TRANSPILER_CACHE_PATH=0)
+  [[ -e "$service" || -e "$codex" ]] || return 0
+
+  echo
+  echo "=== Runtime caches ==="
+  for file in "$service" "$codex"; do
+    [[ -e "$file" ]] || continue
+    target=$file
+    [[ "$file" == "$codex" ]] && target+=" [shell_environment_policy.set]"
+    if ! [[ -f "$file" ]] || ! missing=$(python3 -B - "$file" "${settings[@]}" 2>/dev/null <<'PYTHON'
+import re
+import sys
+import tomllib
+from pathlib import Path
+
+file = Path(sys.argv[1])
+expected = dict(setting.split("=") for setting in sys.argv[2:])
+contents = file.read_text(encoding="utf-8")
+if file.name == "config.toml":
+    values = tomllib.loads(contents)
+    for key in ("shell_environment_policy", "set"):
+        values = values.get(key) if isinstance(values, dict) else None
+    values = values if isinstance(values, dict) else {}
+    missing = [key for key, value in expected.items() if values.get(key) != value]
+else:
+    values = {}
+    for line in contents.splitlines():
+        key, sep, value = re.sub(r"^export[ \t]+", "", line.strip()).partition("=")
+        if sep and key in expected:
+            values[key] = value
+    missing = [
+        key for key, value in expected.items()
+        if values.get(key) not in (value, f"'{value}'", f'"{value}"')
+    ]
+print("\n".join(missing))
+PYTHON
+    ); then
+      warn "$target cannot be read or parsed"
+    elif [[ -z "$missing" ]]; then
+      ok "$target sets both runtime cache variables"
+    else
+      for setting in "${settings[@]}"; do
+        key=${setting%%=*}; value=${setting#*=}
+        [[ $'\n'"$missing"$'\n' == *$'\n'"$key"$'\n'* ]] || continue
+        if [[ "$file" == "$codex" ]]; then
+          warn "$target: add $key = \"$value\""
+        else
+          warn "$target: add $setting"
+        fi
+      done
+    fi
+  done
+}
+
 echo "=== Environment ==="
 if [[ -n "${ZSH_SETTINGS_DIR:-}" ]]; then
   ok "ZSH_SETTINGS_DIR=$ZSH_SETTINGS_DIR"
@@ -19,6 +79,8 @@ else
     warn "ZSH_SETTINGS_DIR unset even in an interactive zsh — is init.zsh sourced from ~/.zshrc?"
   fi
 fi
+
+check_runtime_caches
 
 echo
 echo "=== Required tools ==="

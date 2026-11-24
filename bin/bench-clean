@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
-# Reclaim disk: purge regenerable caches, drop superseded JetBrains
-# versions (older than the installed one), sweep .DS_Store, remove finished Claude Code sessions' temp entries.
-# --dry-run reports the temp sweep and does nothing else.
-# Removes only auto-regenerating caches, superseded files and finished sessions' temp entries, never
-# installed tools.
+# Reclaim disk from caches, .DS_Store files, superseded JetBrains versions,
+# finished Claude temp entries, per-run temp files, old Codex sessions and
+# images, and old T3 provider logs. Report store sizes against their budgets.
+# --dry-run previews the Claude, temp, Codex and T3 sweeps and reports sizes.
 set -u
 
 # shellcheck source-path=SCRIPTDIR
@@ -112,9 +111,331 @@ sweep_cc_tmp() {  # sweep_cc_tmp [--dry-run]
   ok "Claude temp: $verb $removed ($kb KB), kept $((changed + sessions + opened + symlinks + unfinished + failed))$reasons, ${others// /} other top-level entries left alone"
 }
 
+resolve_tmpdir() {
+  local destination="$1" candidate="${TMPDIR-}"
+  [[ -n "${TMPDIR+x}" ]] || { printf -v "$destination" '%s' 'TMPDIR is unset'; return 1; }
+  [[ -n "$candidate" ]] || { printf -v "$destination" '%s' 'TMPDIR is empty'; return 1; }
+  while [[ "$candidate" == */ && "$candidate" != / ]]; do candidate=${candidate%/}; done
+  [[ ! -L "$candidate" ]] || { printf -v "$destination" '%s' 'TMPDIR is a symlink'; return 1; }
+  # The sentinel preserves a newline at the end of a directory name.
+  candidate=$(CDPATH='' cd -- "$candidate" 2>/dev/null && pwd -P && printf .) ||
+    { printf -v "$destination" '%s' 'cannot enter TMPDIR'; return 1; }
+  candidate=${candidate%$'\n.'}
+  case "$candidate" in
+    /private/var/folders/?*|/var/folders/?*) printf -v "$destination" '%s' "$candidate" ;;
+    *) printf -v "$destination" '%s' 'TMPDIR resolves outside /var/folders'; return 1 ;;
+  esac
+}
+
+sweep_tmpdir() {
+  local dry="${1:-}" root listing tag count size verb=removed summary=
+  local removed=0 kb=0 failed=0 changed=0 opened=0 foreign=0 other=0 reasons=
+  [[ "$dry" == --dry-run ]] && verb="would remove"
+  resolve_tmpdir root || { warn "Temp dir: $root, nothing swept"; return 0; }
+
+  # The subshell's cwd must appear in lsof, as in the Claude sweep.
+  listing=$(cd -- "$root" && LC_ALL=C lsof -nP -u "$UID" -Fn 2>/dev/null)
+  [[ $'\n'"$listing"$'\n' == *$'\n'"n$root"$'\n'* ]] ||
+    { warn "Temp dir: open-file control failed, nothing swept"; return 0; }
+
+  while IFS= read -r -d '' tag && IFS= read -r -d '' count && IFS= read -r -d '' size; do
+    case "$tag" in
+      failed)
+        printf -v count '%q' "$count"
+        warn "Temp dir: removing $count failed"
+        ((failed += 1))
+        ;;
+      changed) changed=$count ;;
+      opened) opened=$count ;;
+      foreign) foreign=$count ;;
+      other) other=$count ;;
+      done) summary=1 ;;
+      *) ok "Temp dir: $verb $count $tag ($size KB)"; ((removed += count, kb += size)) ;;
+    esac
+  done < <(
+    cd -- "$root" && perl -MFcntl=:mode -MFile::Path=remove_tree -e '
+      my ($root, $uid, $dry) = @ARGV;
+      my $cutoff = time - 2 * 86400;
+      my @shapes = (
+        # Chrome names per-launch profiles with this prefix.
+        ["Chrome for Testing launch folders", qr/\Acom\.google\.chrome\.for\.testing\./],
+        # Rust tempfile adds six random alphanumerics to its default prefix.
+        ["Rust tempfile entries", qr/\A\.tmp[A-Za-z0-9]{6}\z/],
+        # mktemp uses tmp. for its default template.
+        ["mktemp entries", qr/\Atmp\./],
+        # Ruby appends the date, PID and a random base-36 suffix.
+        ["Ruby Dir.mktmpdir folders", qr/[0-9]{8}-[0-9]+-[a-z0-9]+\z/],
+        # Node fs.mkdtemp suffixes exclude role names like -access and -Helper.
+        ["node fs.mkdtemp entries", qr/-[A-Za-z0-9](?=[A-Za-z0-9]{0,4}[A-Z0-9])[A-Za-z0-9]{5}\z/],
+      );
+      my %open;
+      while (<STDIN>) {
+        if (m{\An\Q$root\E/([^/\n]+)}) { $open{$1} = 1; }
+      }
+
+      # In the C locale, lsof escapes the path bytes that cannot print literally.
+      my %escape = ("\\" => "\\\\", "\n" => "\\n", "\r" => "\\r", "\t" => "\\t",
+                    "\b" => "\\b", "\f" => "\\f");
+      sub lsof_name {
+        my ($name) = @_;
+        $name =~ s{([\\\x01-\x1f\x7f-\xff])}{
+          $escape{$1} // (ord($1) < 32 ? "^" . chr(ord($1) + 64) : sprintf("\\x%02x", ord $1))
+        }ge;
+        return $name;
+      }
+
+      sub entries {
+        my ($path) = @_;
+        opendir(my $dir, $path) or return;
+        local $! = 0;
+        my @names = readdir($dir);
+        return if $!;
+        closedir($dir) or return;
+        return [grep { $_ ne "." && $_ ne ".." } @names];
+      }
+
+      sub old_blocks {
+        my ($path, @stat) = @_;
+        my $blocks = 0;
+        my @pending;
+        while (1) {
+          return if !@stat || $stat[9] >= $cutoff;
+          $blocks += $stat[12];
+          if (S_ISDIR($stat[2])) {
+            my $children = entries($path) or return;
+            push @pending, map { "$path/$_" } @$children;
+          }
+          last unless @pending;
+          $path = pop @pending;
+          @stat = lstat($path);
+        }
+        return $blocks;
+      }
+
+      sub report { print join("\0", @_), "\0"; }
+      my $names = entries(".") or exit 1;
+      my (%counts, %blocks, %kept);
+      for my $name (@$names) {
+        my ($shape) = grep { $name =~ $_->[1] } @shapes;
+        if (!$shape || $name =~ /\Acom\.apple\./) { $kept{other}++; next; }
+        my $path = "./$name";
+        my @stat = lstat($path);
+        if (!@stat || $stat[4] != $uid || !(S_ISREG($stat[2]) || S_ISDIR($stat[2]))) {
+          $kept{foreign}++; next;
+        }
+        if ($open{$name} || $open{lsof_name($name)}) { $kept{opened}++; next; }
+        my $blocks = old_blocks($path, @stat);
+        if (!defined $blocks) { $kept{changed}++; next; }
+        if (!$dry) {
+          # Check identity and mtime again before passing the entry to the remover.
+          my @now = lstat($path);
+          if (!@now || grep { $now[$_] != $stat[$_] } (0, 1, 2, 4, 9, 10)) {
+            $kept{changed}++; next;
+          }
+          my $removed = S_ISDIR($stat[2]) ? remove_tree($path, {safe => 1, error => \my $errors})
+                                          : unlink($path);
+          if (!$removed || lstat($path)) { report("failed", $name, 0); next; }
+        }
+        $counts{$shape->[0]}++;
+        $blocks{$shape->[0]} += $blocks;
+      }
+      for my $shape (@shapes) {
+        my $label = $shape->[0];
+        report($label, $counts{$label}, int(($blocks{$label} + 1) / 2)) if $counts{$label};
+      }
+      report($_, $kept{$_} // 0, 0) for qw(changed opened foreign other done);
+    ' "$root" "$UID" "$dry" <<<"$listing"
+  )
+  [[ -n "$summary" ]] || { warn "Temp dir: could not complete the temp scan"; return 0; }
+  (( changed )) && reasons+=", $changed changed within 2 days or unreadable"
+  (( opened )) && reasons+=", $opened files open"
+  (( foreign )) && reasons+=", $foreign not the user's plain file or folder"
+  (( failed )) && reasons+=", $failed removal failed"
+  [[ -n "$reasons" ]] && reasons=" (${reasons:2})"
+  ok "Temp dir: $verb $removed ($kb KB), kept $((changed + opened + foreign + failed))$reasons, $other other entries left alone"
+}
+
+sweep_codex_sessions() {
+  local root="$1" dry="$2" rollout="$3" age=+$((30 * 1440)) verb=removed
+  local file id size complete=0 removed=0 kb=0 newer=0
+  [[ "$dry" == --dry-run ]] && verb="would remove"
+  [[ -d "$root" ]] || { skip "Codex sessions: no folder yet"; return 0; }
+
+  while IFS= read -r -d '' file; do
+    [[ -n "$file" ]] || { complete=1; break; }
+    [[ "${file##*/}" =~ $rollout ]] && ((newer += 1))
+  done < <(find "$root" -type f -name 'rollout-*.jsonl' ! -mmin "$age" -print0 2>/dev/null && printf '\0')
+  (( complete )) || { warn "Codex sessions: cannot list sessions, nothing swept"; return 0; }
+
+  if [[ -z "$dry" ]] && { ! have codex || ! have gtimeout; }; then
+    warn "Codex sessions: codex or gtimeout missing, no sessions deleted"
+  else
+    complete=0
+    while IFS= read -r -d '' file; do
+      [[ -n "$file" ]] || { complete=1; break; }
+      [[ "${file##*/}" =~ $rollout ]] || continue
+      id=${BASH_REMATCH[1]}
+      # A session can resume while earlier deletions are in progress.
+      [[ -n "$(find "$file" -type f -mmin "$age" -print 2>/dev/null)" ]] || continue
+      size=$(allocated_kb "$file")
+      if [[ -z "$dry" ]] &&
+        { ! CODEX_HOME="${root%/*}" gtimeout --signal=KILL 60s codex delete --force "$id" </dev/null >/dev/null 2>&1 ||
+          [[ -e "$file" || -L "$file" ]]; }; then
+        warn "Codex sessions: deleting $id failed, stopping session sweep"
+        complete=1
+        break
+      fi
+      ((removed += 1, kb += ${size:-0}))
+    done < <(find "$root" -type f -name 'rollout-*.jsonl' -mmin "$age" -print0 2>/dev/null && printf '\0')
+    (( complete )) || warn "Codex sessions: could not complete the session scan"
+  fi
+  ok "Codex sessions: $verb $removed ($kb KB), kept $newer newer than 30 days"
+}
+
+sweep_codex_images() {
+  local root="$1" dry="$2" uuid="$3" rollout="$4" age=+$((30 * 1440)) verb=removed
+  local dir changed size complete=0 removed=0 kb=0 recent=0 linked=0 other=0 failed=0 reasons=
+  local store file id rollout_ids='|' stores=() LC_ALL=C
+  [[ "$dry" == --dry-run ]] && verb="would remove"
+  [[ -d "$root" ]] || { skip "Codex images: no folder yet"; return 0; }
+  [[ -r "$root" && -x "$root" ]] ||
+    { warn "Codex images: cannot read folder, nothing swept"; return 0; }
+
+  for store in "${root%/*}/sessions" "${root%/*}/archived_sessions"; do
+    if [[ -L "$store" || ( -e "$store" && ! -d "$store" ) ]]; then
+      warn "Codex images: cannot list rollouts, nothing swept"; return 0
+    fi
+    [[ -d "$store" ]] && stores+=("$store")
+  done
+  # A partial listing cannot prove a UUID has no session.
+  if [[ -n "${stores[0]-}" ]]; then
+    while IFS= read -r -d '' file; do
+      [[ -n "$file" ]] || { complete=1; break; }
+      [[ "${file##*/}" =~ $rollout ]] || continue
+      id=${BASH_REMATCH[1]}
+      if [[ "$id" == *[A-F]* ]] && ! id=$(tr 'A-F' 'a-f' <<<"$id"); then
+        warn "Codex images: cannot list rollouts, nothing swept"; return 0
+      fi
+      rollout_ids+="$id|"
+    done < <(find "${stores[@]}" -type f -name 'rollout-*.jsonl' -print0 2>/dev/null && printf '\0')
+    (( complete )) || { warn "Codex images: cannot list rollouts, nothing swept"; return 0; }
+  fi
+
+  complete=0
+  while IFS= read -r -d '' dir; do
+    [[ -n "$dir" ]] || { complete=1; break; }
+    if ! [[ "${dir##*/}" =~ ^$uuid$ && -d "$dir" && ! -L "$dir" ]]; then ((other += 1)); continue; fi
+    if ! changed=$(find "$dir" ! -mmin "$age" -print -quit 2>/dev/null) || [[ -n "$changed" ]]; then
+      ((recent += 1)); continue
+    fi
+    id=${dir##*/}
+    if [[ "$id" == *[A-F]* ]] && ! id=$(tr 'A-F' 'a-f' <<<"$id"); then
+      warn "Codex images: cannot normalize UUID ${dir##*/}, stopping image sweep"; return 0
+    fi
+    if [[ "$rollout_ids" == *"|$id|"* ]]; then
+      ((linked += 1)); continue
+    fi
+    size=$(allocated_kb "$dir")
+    if [[ "$dry" == --dry-run ]] || rm -rf -- "$dir"; then
+      ((removed += 1, kb += ${size:-0}))
+    else
+      warn "Codex images: removing ${dir##*/} failed"; ((failed += 1))
+    fi
+  done < <(find "$root" -mindepth 1 -maxdepth 1 -print0 2>/dev/null && printf '\0')
+  (( complete )) || warn "Codex images: could not complete the image scan"
+  (( recent )) && reasons+=", $recent changed within 30 days or unreadable"
+  (( linked )) && reasons+=", $linked session still exists"
+  (( other )) && reasons+=", $other not a UUID folder"
+  (( failed )) && reasons+=", $failed removal failed"
+  [[ -n "$reasons" ]] && reasons=" (${reasons:2})"
+  ok "Codex images: $verb $removed ($kb KB), kept $((recent + linked + other + failed))$reasons"
+}
+
+sweep_codex() {
+  local dry="${1:-}" base="$HOME/.codex" folder
+  local uuid='[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}'
+  local rollout="^rollout-.*-($uuid)\.jsonl$"
+  for folder in "$base" "$base/sessions" "$base/generated_images"; do
+    [[ ! -L "$folder" ]] || { warn "Codex: $folder is a symlink, nothing swept"; return 0; }
+  done
+  [[ -d "$base" ]] || { skip "Codex: no folder yet"; return 0; }
+  sweep_codex_sessions "$base/sessions" "$dry" "$rollout"
+  sweep_codex_images "$base/generated_images" "$dry" "$uuid" "$rollout"
+}
+
+sweep_t3_logs() {
+  local dry="${1:-}" base="$HOME/.t3" root folder
+  local file size verb=removed complete=0 removed=0 kb=0 total=0 failed=0 reason=
+  root="$base/userdata/logs/provider"
+  [[ "$dry" == --dry-run ]] && verb="would remove"
+  for folder in "$base" "$base/userdata" "$base/userdata/logs" "$root"; do
+    [[ ! -L "$folder" ]] || { warn "T3 provider logs: $folder is a symlink, nothing swept"; return 0; }
+  done
+  [[ -d "$root" ]] || { skip "T3 provider logs: no folder yet"; return 0; }
+  while IFS= read -r -d '' file; do
+    [[ -n "$file" ]] || { complete=1; break; }
+    ((total += 1))
+  done < <(find "$root" -mindepth 1 -maxdepth 1 -print0 2>/dev/null && printf '\0')
+  (( complete )) || { warn "T3 provider logs: cannot list folder, nothing swept"; return 0; }
+  complete=0
+  while IFS= read -r -d '' file; do
+    [[ -n "$file" ]] || { complete=1; break; }
+    [[ -f "$file" && ! -L "$file" ]] || continue
+    size=$(allocated_kb "$file")
+    if [[ "$dry" == --dry-run ]] || rm -- "$file"; then
+      ((removed += 1, kb += ${size:-0}))
+    else
+      warn "T3 provider logs: removing ${file##*/} failed"; ((failed += 1))
+    fi
+  done < <(find "$root" -mindepth 1 -maxdepth 1 -type f -mmin "+$((14 * 1440))" \
+    -print0 2>/dev/null && printf '\0')
+  (( complete )) || warn "T3 provider logs: could not complete the log scan"
+  (( failed )) && reason=" ($failed removal failed)"
+  ok "T3 provider logs: $verb $removed ($kb KB), kept $((total - removed))$reason"
+}
+
+allocated_kb() {
+  du -sk -- "$1" 2>/dev/null | awk 'NR == 1 && $1 ~ /^[0-9]+$/ { print $1 }'
+}
+
+report_sizes() {
+  local label budget folder size gb temp_label="\$TMPDIR"
+  while IFS='|' read -r label budget; do
+    if [[ "$label" == "$temp_label" ]]; then
+      resolve_tmpdir folder || { skip "Size: $label ($folder)"; continue; }
+    else
+      folder="$HOME/${label#\~/}"
+      [[ -e "$folder" || -L "$folder" ]] || { skip "Size: $label does not exist"; continue; }
+    fi
+    size=$(allocated_kb "$folder")
+    [[ -n "$size" ]] || { warn "Size: $label cannot be read"; continue; }
+    gb=$(LC_ALL=C awk -v kb="$size" 'BEGIN { printf "%.1f", kb / 1048576 }')
+    if (( size > budget * 1048576 )); then
+      warn "Size: $label $gb GB, over its $budget GB budget"
+    else
+      ok "Size: $label $gb GB of $budget GB"
+    fi
+  done <<'STORES'
+$TMPDIR|2
+~/Library/Caches/claude-code-tmp|5
+~/.claude/projects|40
+~/.codex|15
+~/.t3|10
+~/Library/Application Support/Claude|6
+STORES
+}
+
 case "${1:-}" in
   "") maintenance_output bench-clean ;;
-  --dry-run) step "Claude Code temp folders (dry run)"; sweep_cc_tmp --dry-run; exit 0 ;;
+  --dry-run)
+    WARN_LOG=/dev/null
+    maintenance_report "Claude Code temp folders (dry run)" sweep_cc_tmp --dry-run
+    maintenance_report "Temp folder leftovers (dry run)" sweep_tmpdir --dry-run
+    maintenance_report "Codex sessions and images (dry run)" sweep_codex --dry-run
+    maintenance_report "T3 provider logs (dry run)" sweep_t3_logs --dry-run
+    maintenance_report "Store sizes" report_sizes
+    exit 0
+    ;;
   *) fail "usage: bench-clean [--dry-run]"; exit 2 ;;
 esac
 
@@ -180,5 +501,9 @@ sweep_jetbrains() {
 maintenance_report "JetBrains version dirs" sweep_jetbrains
 
 maintenance_report "Claude Code temp folders" sweep_cc_tmp
+maintenance_report "Temp folder leftovers" sweep_tmpdir
+maintenance_report "Codex sessions and images" sweep_codex
+maintenance_report "T3 provider logs" sweep_t3_logs
+maintenance_report "Store sizes" report_sizes
 
 step "Done"
