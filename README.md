@@ -40,7 +40,7 @@ The Dock, Finder sidebar and Moom steps replace your own layout with the snapsho
 ## Daily use
 
 - `bench-doctor`: verify everything is wired up.
-- `bench-update` (`ua`) upgrades Homebrew, Antidote, mise tools, Rust toolchains, global packages and pi extensions.
+- `bench-update` (`ua`) upgrades Homebrew, Antidote, mise tools, Rust toolchains, and global packages.
 - `bench-clean` (`cleanup`) clears caches, `.DS_Store` files and stale IDE versions, sweeps finished Claude temp entries, per-run leftovers in `$TMPDIR`, Codex sessions and images older than 30 days and T3 provider logs older than 14, and reports store sizes against their budgets. `--dry-run` previews those sweeps and the sizes, and writes no log.
 - `bench-export`: check the Brewfile, snapshot installed packages into `docs/` and sync `home/` from `$HOME`.
 - `bench-paths <old> [<new>]`: before moving a folder, list every reference to it; `--apply` after the move.

@@ -1,5 +1,4 @@
-$HOME/.bun/install/global node_modules (573 installed)
-├── @earendil-works/pi-coding-agent@1.6.0
+$HOME/.bun/install/global node_modules (448 installed)
 ├── @googleworkspace/cli@0.22.5
 ├── @openai/codex@0.172.0
 ├── ccusage@20.1.1
