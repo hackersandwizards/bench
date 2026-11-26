@@ -1,7 +1,7 @@
 $HOME/.bun/install/global node_modules (448 installed)
 ├── @googleworkspace/cli@0.22.5
 ├── @openai/codex@0.172.0
-├── ccusage@20.1.1
+├── ccusage@20.1.2
 ├── chrome-devtools-mcp@1.14.0
 ├── mcp-remote@0.16.7
 ├── node-gyp@13.1.0
