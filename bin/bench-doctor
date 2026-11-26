@@ -261,10 +261,7 @@ fi
 
 echo
 echo "=== IntelliJ JDK pins ==="
-# IntelliJ pins JDKs by absolute path. A pin on a mise line symlink
-# (installs/java/temurin-21) survives bench-update's prune, a pin on an exact
-# version or on the retired ~/.sdkman does not. IntelliJ rewrites these files on
-# exit, so this only reports: repoint in the IDE, never from a script.
+# The mise version-line symlink survives bench-update's prune of patch versions.
 shopt -s nullglob
 jdk_tables=("$HOME/Library/Application Support/JetBrains"/*/options/jdk.table.xml)
 shopt -u nullglob
@@ -273,12 +270,48 @@ if (( ${#jdk_tables[@]} == 0 )); then
 else
   for t in "${jdk_tables[@]}"; do
     ide=$(basename "$(dirname "$(dirname "$t")")")
-    dangling=$(grep -oE '(\.sdkman/candidates/java|\.local/share/mise/installs/java)/[^"!/]*' "$t" | sort -u \
-      | while read -r rel; do [[ -d "$HOME/$rel" ]] || printf '%s ' "${rel##*/}"; done)
-    if [[ -z "$dangling" ]]; then
-      ok "$ide JDK pins all resolve"
+    if jdk_status=$(python3 -B - "$REPO_ROOT/home/.config/mise/config.toml" "$t" 2>&1 <<'PYTHON'
+import sys
+import tomllib
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
+config, table = map(Path, sys.argv[1:])
+try:
+    versions = tomllib.loads(config.read_text(encoding="utf-8"))["tools"]["java"]
+except (OSError, ValueError, KeyError):
+    sys.exit("cannot read tools.java from the bench mise config — check home/.config/mise/config.toml")
+if isinstance(versions, str):
+    versions = [versions]
+if not isinstance(versions, list) or not versions or not all(isinstance(v, str) and v for v in versions):
+    sys.exit("invalid tools.java in the bench mise config — set the Java version line")
+try:
+    sdks = ET.parse(table).findall(".//jdk")
+except (OSError, ET.ParseError):
+    sys.exit("cannot read jdk.table.xml — check the SDKs in IntelliJ Project Structure")
+
+home = Path.home()
+for version in versions:
+    expected = home / ".local/share/mise/installs/java" / version
+    matching = [
+        sdk for sdk in sdks
+        if sdk.find(f"./name[@value='{version}']") is not None
+        and sdk.find("./type[@value='JavaSDK']") is not None
+    ]
+    if not (expected / "bin/java").is_file():
+        sys.exit(f"{expected} is missing its JDK — run mise install from your home directory")
+    if not matching:
+        sys.exit(f"add the {version} SDK in IntelliJ Project Structure at {expected}")
+    for sdk in matching:
+        registered = sdk.find("./homePath")
+        if registered is None or registered.get("value", "").replace("$USER_HOME$", str(home)) != str(expected):
+            sys.exit(f"repoint the {version} SDK in IntelliJ Project Structure to {expected}")
+print(f"{', '.join(versions)} SDK resolves")
+PYTHON
+    ); then
+      ok "$ide: $jdk_status"
     else
-      warn "$ide pins missing SDKs: ${dangling% } — repoint the project SDK in IntelliJ"
+      warn "$ide: $jdk_status"
     fi
     # Projects pick their SDK by name, so a name the table lacks breaks a project
     # even when every path above resolves.

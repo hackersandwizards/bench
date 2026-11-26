@@ -317,6 +317,46 @@ assert_ok "running it leaves a real folder holding a link per file" \
   test -d "$tdir/home/.config/x" -a ! -L "$tdir/home/.config/x" -a -L "$tdir/home/.config/x/f"
 rm -rf "$tdir"
 
+step "bench-doctor checks the JDK configured in mise"
+tdir=$(mktemp -d)
+ide_options="$tdir/home/Library/Application Support/JetBrains/IntelliJFixture/options"
+mkdir -p "$ide_options" "$tdir/repo/home/.config/mise" "$tdir/home/.local/share/mise/installs/java/temurin-99/bin"
+printf '[tools]\njava = "temurin-99"\n' > "$tdir/repo/home/.config/mise/config.toml"
+touch "$tdir/home/.local/share/mise/installs/java/temurin-99/bin/java"
+chmod +x "$tdir/home/.local/share/mise/installs/java/temurin-99/bin/java"
+fixture_jdk_table() {
+  cat > "$ide_options/jdk.table.xml" <<XML
+<application><component name="ProjectJdkTable">
+  <jdk>
+    <name value="$1" />
+    <type value="JavaSDK" />
+    <homePath value="$tdir/home/.local/share/mise/installs/java/$2" />
+  </jdk>
+  <jdk>
+    <name value="temurin-88" />
+    <type value="JavaSDK" />
+    <homePath value="$tdir/home/.local/share/mise/installs/java/temurin-88" />
+  </jdk>
+</component></application>
+XML
+}
+fixture_jdk_doctor() {
+  HOME="$tdir/home" bash -c ". '$REPO_ROOT/bin/_lib.sh'; REPO_ROOT='$tdir/repo'
+    $(sed -n '/^echo "=== IntelliJ JDK pins ==="/,/^echo "=== Git auth ==="/p' "$REPO_ROOT/bin/bench-doctor")"
+}
+fixture_jdk_table temurin-99 temurin-99
+out=$(fixture_jdk_doctor)
+assert_ok "doctor confirms the configured JDK" grep -qF 'temurin-99 SDK resolves' <<< "$out"
+assert_fail "doctor ignores an obsolete SDK entry" grep -qF 'temurin-88' <<< "$out"
+fixture_jdk_table other-name temurin-99
+assert_ok "doctor reports a missing configured SDK registration" \
+  grep -qF 'add the temurin-99 SDK' <<< "$(fixture_jdk_doctor)"
+fixture_jdk_table temurin-99 temurin-88
+assert_ok "doctor reports a configured SDK pinned to the wrong path" \
+  grep -qF 'repoint the temurin-99 SDK' <<< "$(fixture_jdk_doctor)"
+unset -f fixture_jdk_table fixture_jdk_doctor
+rm -rf "$tdir"
+
 step "install.sh Touch ID step"
 # The block runs against a scratch file: sudo is a shim, ask always says yes.
 tdir=$(mktemp -d)
