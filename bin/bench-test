@@ -1208,5 +1208,139 @@ assert_eq "a failed move: no path" "" "$(launch)"
 assert_eq "and no private install folder left" "" "$(find "$tdir/cache" -maxdepth 1 -name '.install-*')"
 chmod 755 "$tdir/cache/chrome"; rm -rf "$tdir"
 
+step "macos/ghostty-grid.js surfaces unexpected errors and retries transient AX failures"
+grid_jxa() {
+  osascript -l JavaScript - "$REPO_ROOT/macos/ghostty-grid.js" "$1" <<'JXA' 2>&1
+ObjC.import('Foundation');
+function run(argv) {
+  const src = ObjC.unwrap(
+    $.NSString.stringWithContentsOfFileEncodingError(argv[0], $.NSUTF8StringEncoding, null)
+  ).replace(/^#![^\n]*\n/, '');
+  const mode = argv[1];
+  const osaErr = function (num, msg) {
+    const e = new Error(msg);
+    e.errorNumber = num;
+    return e;
+  };
+  let tiled = 0;
+  const makeWin = function (opts) {
+    let pos = [10, 20], sz = [100, 100], writes = 0, reads = 0;
+    const w = {
+      subrole: function () {
+        if (opts.subroleErr) throw opts.subroleErr;
+        return 'AXStandardWindow';
+      },
+      attributes: { byName: function () { return { value: function () { return false; } }; } },
+      position: function () {
+        reads++;
+        if (opts.readErr && reads === 1) throw opts.readErr;
+        return pos;
+      },
+      size: function () { return sz; },
+    };
+    Object.defineProperty(w, 'position', {
+      get: function () {
+        return function () {
+          reads++;
+          if (opts.readErr && reads === 1) throw opts.readErr;
+          return pos;
+        };
+      },
+      set: function (v) {
+        writes++;
+        if (opts.writeErr && writes === 1) throw opts.writeErr;
+        pos = v;
+        tiled++;
+      },
+    });
+    Object.defineProperty(w, 'size', {
+      get: function () { return function () { return sz; }; },
+      set: function (v) { sz = v; },
+    });
+    return w;
+  };
+  const fakeScreen = {
+    visibleFrame: { origin: { x: 0, y: 0 }, size: { width: 2056, height: 1290 } },
+    frame: { size: { height: 1290 } },
+  };
+  let fakeWindows = [];
+  const stubs = {
+    ObjC: { import: function () {} },
+    $: {
+      NSThread: { sleepForTimeInterval: function () {} },
+      NSScreen: { screens: { count: 1, objectAtIndex: function () { return fakeScreen; } } },
+    },
+    Application: function () {
+      return {
+        processes: {
+          Ghostty: {
+            exists: function () { return true; },
+            windows: Object.assign(
+              function () { return fakeWindows; },
+              { at: function (i) { return fakeWindows[i]; } }
+            ),
+          },
+        },
+      };
+    },
+  };
+  const mod = new Function('ObjC', '$', 'Application', src + '\nreturn { setFrame: setFrame, run: run };')(
+    stubs.ObjC, stubs.$, stubs.Application
+  );
+  let caught = null;
+  if (mode === 'write-transient') {
+    const ok = mod.setFrame(makeWin({ writeErr: osaErr(-10000, 'AX busy') }), 50, 60, 400, 300);
+    return ok ? 'ok' : 'fail';
+  }
+  if (mode === 'write-unexpected') {
+    try { mod.setFrame(makeWin({ writeErr: new TypeError('bad arg') }), 50, 60, 400, 300); }
+    catch (e) { caught = e; }
+    return caught ? caught.name + ':' + caught.message : 'swallowed';
+  }
+  if (mode === 'write-denied') {
+    try { mod.setFrame(makeWin({ writeErr: osaErr(-25211, 'assistive disabled') }), 50, 60, 400, 300); }
+    catch (e) { caught = e; }
+    return caught ? String(caught.errorNumber) : 'swallowed';
+  }
+  if (mode === 'verify-transient') {
+    const ok = mod.setFrame(makeWin({ readErr: osaErr(-25204, 'cannot complete') }), 50, 60, 400, 300);
+    return ok ? 'ok' : 'fail';
+  }
+  if (mode === 'verify-unexpected') {
+    try { mod.setFrame(makeWin({ readErr: new TypeError('bad read') }), 50, 60, 400, 300); }
+    catch (e) { caught = e; }
+    return caught ? caught.name + ':' + caught.message : 'swallowed';
+  }
+  if (mode === 'collect-transient') {
+    fakeWindows = [makeWin({ subroleErr: osaErr(-1719, 'invalid index') }), makeWin({})];
+    mod.run();
+    return tiled === 1 ? 'ok' : 'tiled:' + tiled;
+  }
+  if (mode === 'collect-unexpected') {
+    fakeWindows = [makeWin({ subroleErr: new TypeError('broken ref') }), makeWin({})];
+    try { mod.run(); }
+    catch (e) { caught = e; }
+    return caught ? caught.name + ':' + caught.message : 'swallowed';
+  }
+  if (mode === 'collect-denied') {
+    fakeWindows = [makeWin({ subroleErr: osaErr(-1743, 'not permitted') }), makeWin({})];
+    try { mod.run(); }
+    catch (e) { caught = e; }
+    return caught ? String(caught.errorNumber) : 'swallowed';
+  }
+  throw new Error('unknown mode: ' + mode);
+}
+JXA
+}
+assert_eq "setFrame retries a transient AX write error" "ok" "$(grid_jxa write-transient)"
+assert_eq "setFrame surfaces an unexpected error on write" "TypeError:bad arg" "$(grid_jxa write-unexpected)"
+assert_eq "setFrame surfaces a permission error on write" "-25211" "$(grid_jxa write-denied)"
+assert_eq "setFrame retries a transient AX read error during frame verify" "ok" "$(grid_jxa verify-transient)"
+assert_eq "setFrame surfaces an unexpected error during frame verify" "TypeError:bad read" "$(grid_jxa verify-unexpected)"
+assert_eq "run skips a vanished window and tiles the rest" "ok" "$(grid_jxa collect-transient)"
+assert_eq "run surfaces an unexpected error while reading windows" "TypeError:broken ref" "$(grid_jxa collect-unexpected)"
+assert_eq "run surfaces an Automation permission error while reading windows" "-1743" "$(grid_jxa collect-denied)"
+unset -f grid_jxa
+
 step "$passed passed, $failed failed"
 (( failed == 0 ))

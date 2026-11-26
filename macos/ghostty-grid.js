@@ -20,6 +20,27 @@ function sameFrame(win, x, y, w, h) {
          Math.abs(s[1] - h) <= 2;
 }
 
+// Apple Event / Accessibility codes (MacErrors.h, AXError.h) for a vanished
+// window or transient refusal while windows settle; auth errors (-1743, -25211)
+// and JS errors are excluded so they propagate.
+const TRANSIENT_AX_ERRORS = new Set([
+  -1719,  // errAEIllegalIndex
+  -1728,  // errAENoSuchObject
+  -10000, // errAEEventFailed
+  -10006, // errAEWriteDenied
+  -25200, // kAXErrorFailure
+  -25202, // kAXErrorInvalidUIElement
+  -25204, // kAXErrorCannotComplete
+  -25205, // kAXErrorAttributeUnsupported
+  -25212, // kAXErrorNoValue
+]);
+
+function rethrowUnlessTransientAxError(err) {
+  if (!err || typeof err.errorNumber !== 'number' || !TRANSIENT_AX_ERRORS.has(err.errorNumber)) {
+    throw err;
+  }
+}
+
 function setFrame(win, x, y, w, h) {
   for (var attempt = 0; attempt < 3; attempt++) {
     try {
@@ -27,15 +48,37 @@ function setFrame(win, x, y, w, h) {
       // on-screen from its current spot, but never clamps a position write.
       win.position = [x, y];
       win.size = [w, h];
-    } catch (_) {
+    } catch (err) {
       // Retry below; AX writes can fail while windows are settling.
+      rethrowUnlessTransientAxError(err);
     }
     sleep(0.06);
     try {
       if (sameFrame(win, x, y, w, h)) return true;
-    } catch (_) {}
+    } catch (err) {
+      rethrowUnlessTransientAxError(err);
+    }
   }
   return false;
+}
+
+function collectWindows(proc) {
+  const wins = [];
+  for (let i = 0, count = proc.windows().length; i < count; i++) {
+    try {
+      const win = proc.windows.at(i);
+      if (String(win.subrole()) !== 'AXStandardWindow') continue;
+      if (win.attributes.byName('AXMinimized').value()) continue;
+      if (win.attributes.byName('AXFullScreen').value()) continue;
+
+      const pos = win.position();
+      wins.push({ w: win, x: pos[0], y: pos[1] });
+    } catch (err) {
+      // Window vanished or AX refused one read; tile the remaining windows.
+      rethrowUnlessTransientAxError(err);
+    }
+  }
+  return wins;
 }
 
 function run() {
@@ -61,20 +104,7 @@ function run() {
   var se = Application('System Events');
   var proc = se.processes[APP];
   if (!proc.exists()) return;
-  var wins = [];
-  for (var i = 0, count = proc.windows().length; i < count; i++) {
-    try {
-      var win = proc.windows.at(i);
-      if (String(win.subrole()) !== 'AXStandardWindow') continue;
-      if (win.attributes.byName('AXMinimized').value()) continue;
-      if (win.attributes.byName('AXFullScreen').value()) continue;
-
-      var pos = win.position();
-      wins.push({ w: win, x: pos[0], y: pos[1] });
-    } catch (_) {
-      // Window vanished or AX refused one read; tile the remaining windows.
-    }
-  }
+  const wins = collectWindows(proc);
   var n = wins.length;
   if (n === 0) return;
 
