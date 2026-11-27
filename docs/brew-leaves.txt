@@ -60,7 +60,6 @@ unzip
 vim
 watch
 wget
-whisper.cpp
 wireguard-tools
 xh
 ykman

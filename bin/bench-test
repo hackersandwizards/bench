@@ -383,36 +383,45 @@ assert_eq "without sudo_local the template is copied and enabled" "ok" "$(touchi
 unset -f touchid; rm -rf "$tdir"
 
 step "transcribe"
-# whisper-cli at its default context invents repeated sentences and can lose
-# punctuation for a whole file (docs/transcription.md), so the wrapper's fixed
-# flags are the product. A shim records what the wrapper passes: no model, no
-# audio, no GPU. HOME moves so the fixed model path resolves inside the fixture.
+# A fake HOME isolates the model check. Neither stub needs audio or the network.
 tdir=$(mktemp -d)
-mkdir -p "$tdir/bin" "$tdir/home/.cache/whisper" "$tdir/out"
-printf '#!/bin/sh\nprintf "%%s\\n" "$*" > "%s/args"\n' "$tdir" > "$tdir/bin/whisper-cli"
-chmod +x "$tdir/bin/whisper-cli"
+model="$tdir/home/.t3/userdata/speech/models/parakeet-ultra-Q8_0.gguf"
+mkdir -p "$tdir/bin" "${model%/*}" "$tdir/out"
+printf '#!/bin/sh\nprintf "%%s\\n" "$@" > "%s/args"\n' "$tdir" > "$tdir/bin/uv"
+printf '#!/bin/sh\nprintf "%%s\\n" "$@" > "%s/ffmpeg-args"\n' "$tdir" > "$tdir/bin/ffmpeg"
+printf '#!/bin/sh\nmkdir "%s/wav" && printf "%%s\\n" "%s/wav"\n' "$tdir" "$tdir" > "$tdir/bin/mktemp"
+chmod +x "$tdir/bin/uv" "$tdir/bin/ffmpeg" "$tdir/bin/mktemp"
+fixture_transcribe() {
+  env HOME="$tdir/home" PATH="$tdir/bin:$PATH" "$REPO_ROOT/bin/transcribe" "$@"
+}
 : > "$tdir/talk.wav"
-assert_fail "refuses to run without the model file" \
-  env HOME="$tdir/home" PATH="$tdir/bin:$PATH" "$REPO_ROOT/bin/transcribe" "$tdir/talk.wav"
-assert_eq "and names the download instead of fetching" "1" \
-  "$(env HOME="$tdir/home" PATH="$tdir/bin:$PATH" "$REPO_ROOT/bin/transcribe" "$tdir/talk.wav" 2>&1 | grep -c 'curl -fL')"
-: > "$tdir/home/.cache/whisper/ggml-large-v3-turbo.bin"
-assert_ok "runs once the model file exists" \
-  env HOME="$tdir/home" PATH="$tdir/bin:$PATH" "$REPO_ROOT/bin/transcribe" -o "$tdir/out" "$tdir/talk.wav"
-assert_eq "passes -mc 0, the fixed model, text and SRT output" \
-  "-m $tdir/home/.cache/whisper/ggml-large-v3-turbo.bin -l en -mc 0 -f $tdir/talk.wav -otxt -osrt -of $tdir/out/talk -np" \
+out=$(fixture_transcribe "$tdir/talk.wav" 2>&1)
+assert_eq "exits 1 without the T3 model" 1 "$?"
+assert_eq "tells the reader to download Parakeet Ultra in T3 Code" \
+  "transcribe: model missing at $model. Download Parakeet Ultra in T3 Code's speech settings." "$out"
+: > "$model"
+assert_ok "runs once the model file exists" fixture_transcribe -o "$tdir/out" "$tdir/talk.wav"
+assert_eq "passes the pinned runtime, exact T3 model path, converted WAV and output base" \
+  "$(printf '%s\n' run --no-project --with transcribe-cpp==0.5.0 python - "$model" "$tdir/wav/audio.wav" "$tdir/out/talk")" \
   "$(cat "$tdir/args" 2>/dev/null)"
-printf '#!/bin/sh\nexit 0\n' > "$tdir/bin/ffmpeg"; chmod +x "$tdir/bin/ffmpeg"
+assert_eq "converts WAV inputs to 16 kHz mono PCM" \
+  "$(printf '%s\n' -nostdin -loglevel error -y -i "$tdir/talk.wav" -vn -ac 1 -ar 16000 -c:a pcm_s16le "$tdir/wav/audio.wav")" \
+  "$(cat "$tdir/ffmpeg-args" 2>/dev/null)"
+assert_eq "prints the text and SRT paths" "$tdir/out/talk.txt"$'\n'"$tdir/out/talk.srt" \
+  "$(fixture_transcribe -o "$tdir/out" "$tdir/talk.wav" 2>/dev/null)"
+assert_eq "rejects the retired language option with usage status" 2 \
+  "$(fixture_transcribe -l de "$tdir/talk.wav" >/dev/null 2>&1; echo "$?")"
 mkdir -p "$tdir/rec.2026" "$tdir/a" "$tdir/b"; : > "$tdir/rec.2026/talk"; : > "$tdir/a/talk.wav"; : > "$tdir/b/talk.wav"
-env HOME="$tdir/home" PATH="$tdir/bin:$PATH" "$REPO_ROOT/bin/transcribe" "$tdir/rec.2026/talk" >/dev/null 2>&1
-assert_ok "names the output after the file, not a dotted folder" grep -q -- "-of $tdir/rec.2026/talk -np" "$tdir/args"
+fixture_transcribe "$tdir/rec.2026/talk" >/dev/null 2>&1
+assert_ok "names the output after the file, not a dotted folder" grep -qxF "$tdir/rec.2026/talk" "$tdir/args"
 rm -f "$tdir/args"
 assert_fail "refuses two inputs that would write one output" \
-  env HOME="$tdir/home" PATH="$tdir/bin:$PATH" "$REPO_ROOT/bin/transcribe" -o "$tdir/out" "$tdir/a/talk.wav" "$tdir/b/talk.wav"
+  fixture_transcribe -o "$tdir/out" "$tdir/a/talk.wav" "$tdir/b/talk.wav"
 assert_fail "before transcribing either" test -e "$tdir/args"
 : > "$tdir/a/TALK.mp3"
 assert_fail "and two that differ only in spelling or case" \
-  env HOME="$tdir/home" PATH="$tdir/bin:$PATH" "$REPO_ROOT/bin/transcribe" "$tdir/a/talk.wav" "$tdir/b/../a/TALK.mp3"
+  fixture_transcribe "$tdir/a/talk.wav" "$tdir/b/../a/TALK.mp3"
+unset -f fixture_transcribe
 rm -rf "$tdir"
 
 step "bench-export dumpers fail with their producer"
@@ -1145,13 +1154,33 @@ rm -rf "$tdir"
 
 step "transcribe cleans up after a failure"
 tdir=$(mktemp -d)
-mkdir -p "$tdir/bin" "$tdir/home/.cache/whisper" "$tdir/tmp"
-printf '#!/bin/sh\nexit 1\n' > "$tdir/bin/ffmpeg"; chmod +x "$tdir/bin/ffmpeg"
+model="$tdir/home/.t3/userdata/speech/models/parakeet-ultra-Q8_0.gguf"
+mkdir -p "$tdir/bin" "${model%/*}" "$tdir/tmp"
 # macOS mktemp -d ignores TMPDIR without a template, so a shim pins the location.
-printf '#!/bin/sh\nexec /usr/bin/mktemp -d "%s/tmp/t.XXXXXX"\n' "$tdir" > "$tdir/bin/mktemp"; chmod +x "$tdir/bin/mktemp"
-: > "$tdir/home/.cache/whisper/ggml-large-v3-turbo.bin"; : > "$tdir/talk.mp4"
-env HOME="$tdir/home" PATH="$tdir/bin:$PATH" "$REPO_ROOT/bin/transcribe" "$tdir/talk.mp4" >/dev/null 2>&1
+printf '#!/bin/sh\nexec /usr/bin/mktemp -d "%s/tmp/t.XXXXXX"\n' "$tdir" > "$tdir/bin/mktemp"
+printf '#!/bin/sh\nexit 7\n' > "$tdir/bin/ffmpeg"
+chmod +x "$tdir/bin/mktemp" "$tdir/bin/ffmpeg"
+: > "$model"; : > "$tdir/talk.mp4"
+fixture_transcribe_status() {
+  env HOME="$tdir/home" PATH="$tdir/bin:$PATH" "$REPO_ROOT/bin/transcribe" "$tdir/talk.mp4" >/dev/null 2>&1
+  echo "$?"
+}
+assert_eq "propagates ffmpeg failure" 7 "$(fixture_transcribe_status)"
 assert_eq "no temp directory left when ffmpeg fails" "" "$(command ls "$tdir/tmp")"
+cat > "$tdir/bin/ffmpeg" <<'SH'
+#!/bin/sh
+for dest do :; done
+: > "$dest"
+SH
+cat > "$tdir/bin/uv" <<'SH'
+#!/bin/sh
+[ -f "$7" ] || exit 1
+exit 8
+SH
+chmod +x "$tdir/bin/uv"
+assert_eq "propagates runner failure after conversion and cleans up" $'8\ndone' \
+  "$(fixture_transcribe_status; command ls "$tdir/tmp"; printf '%s\n' 'done')"
+unset -f fixture_transcribe_status
 rm -rf "$tdir"
 
 step "init.zsh caches"

@@ -1,24 +1,16 @@
 #!/usr/bin/env bash
-# Speech to text with whisper.cpp: writes <name>.txt and <name>.srt (segment
-# timestamps) per input. The one supported transcription path on this bench.
-# docs/transcription.md has the measurements behind the fixed flags.
 set -euo pipefail
 
-MODEL="$HOME/.cache/whisper/ggml-large-v3-turbo.bin"
-MODEL_URL="https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin"
+MODEL="$HOME/.t3/userdata/speech/models/parakeet-ultra-Q8_0.gguf"
 
 usage() {
-  echo "usage: transcribe [-l lang] [-o outdir] file..."
-  echo "  -l lang    spoken language, default en. en and de are measured (docs/transcription.md)."
+  echo "usage: transcribe [-o outdir] file..."
   echo "  -o outdir  write there instead of next to each input"
-  echo "  flac, mp3, ogg and wav go to whisper-cli as they are; anything else"
-  echo "  (mp4, m4a, mov, ...) is converted with ffmpeg first."
 }
 
-lang=en out=""
-while getopts l:o:h opt; do
+out=""
+while getopts o:h opt; do
   case $opt in
-    l) lang=$OPTARG ;;
     o) out=$OPTARG ;;
     h) usage; exit 0 ;;
     *) usage >&2; exit 2 ;;
@@ -28,8 +20,7 @@ shift $((OPTIND - 1))
 (($#)) || { usage >&2; exit 2; }
 
 if [[ ! -f $MODEL ]]; then
-  echo "transcribe: model missing: $MODEL (1.6 GB). Fetch it with:" >&2
-  echo "  curl -fL --create-dirs -o \"$MODEL\" \"$MODEL_URL\"" >&2
+  echo "transcribe: model missing at $MODEL. Download Parakeet Ultra in T3 Code's speech settings." >&2
   exit 1
 fi
 
@@ -46,27 +37,62 @@ for f; do
   seen+="$k"$'\n' outs+=("$o")
 done
 
-# set -e leaves the loop on a failed ffmpeg or whisper-cli; the trap still drops
-# the converted WAV, which runs to about 115 MB per hour of audio.
 tmp=""
 trap '[[ -z $tmp ]] || rm -rf "$tmp"' EXIT
 i=0
 for f; do
   o=${outs[i]}; i=$((i + 1))
   mkdir -p "${o%/*}"
-  src=$f
-  case $(printf '%s' "${f##*.}" | tr '[:upper:]' '[:lower:]') in
-    flac | mp3 | ogg | wav) ;;
-    *)
-      tmp=$(mktemp -d)
-      src="$tmp/${o##*/}.wav"
-      ffmpeg -nostdin -loglevel error -y -i "$f" -vn -ac 1 -ar 16000 -c:a pcm_s16le "$src"
-      ;;
-  esac
-  # -mc 0 is the reason this wrapper exists (docs/transcription.md), and
-  # bench-test fails if the flag goes missing.
-  whisper-cli -m "$MODEL" -l "$lang" -mc 0 -f "$src" -otxt -osrt -of "$o" -np >/dev/null
-  [[ -z $tmp ]] || rm -rf "$tmp"
+  tmp=$(mktemp -d)
+  src="$tmp/audio.wav"
+  ffmpeg -nostdin -loglevel error -y -i "$f" -vn -ac 1 -ar 16000 -c:a pcm_s16le "$src"
+  uv run --no-project --with transcribe-cpp==0.5.0 python - "$MODEL" "$src" "$o" >/dev/null <<'PY'
+from array import array
+from pathlib import Path
+import sys
+import wave
+
+from transcribe_cpp import Model
+
+
+def word_cues(words):
+    cue = []
+    for word in words:
+        if cue and word.t1_ms - cue[0].t0_ms > 10_000:
+            yield cue
+            cue = []
+        cue.append(word)
+        if word.text.rstrip().rstrip('”’"»)]}').endswith((".", "?", "!", "…")):
+            yield cue
+            cue = []
+    if cue:
+        yield cue
+
+
+def srt_time(ms):
+    seconds, millis = divmod(ms, 1000)
+    minutes, seconds = divmod(seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+    return f"{hours:02}:{minutes:02}:{seconds:02},{millis:03}"
+
+
+model_path, wav_path, output_base = sys.argv[1:]
+with wave.open(wav_path, "rb") as audio:
+    samples = array("h", audio.readframes(audio.getnframes()))
+pcm = array("f", (sample / 32768 for sample in samples))
+with Model(model_path) as model, model.session() as session:
+    result = session.run(pcm, timestamps="word")
+
+Path(output_base + ".txt").write_text(result.text + "\n", encoding="utf-8")
+with open(output_base + ".srt", "w", encoding="utf-8") as subtitles:
+    end = 0
+    for number, cue in enumerate(word_cues(result.words), 1):
+        start = max(end, cue[0].t0_ms)
+        end = max(start + 1, cue[-1].t1_ms)
+        text = " ".join(word.text.strip() for word in cue)
+        subtitles.write(f"{number}\n{srt_time(start)} --> {srt_time(end)}\n{text}\n\n")
+PY
+  rm -rf "$tmp"
   tmp=""
   printf '%s\n' "$o.txt" "$o.srt"
 done

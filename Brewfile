@@ -131,8 +131,6 @@ brew "vim"
 brew "watch"
 # Internet file retriever
 brew "wget"
-# Port of OpenAI's Whisper model in C/C++
-brew "whisper.cpp"
 # Tools for the WireGuard secure network tunnel
 brew "wireguard-tools"
 # Friendly and fast tool for sending HTTP requests

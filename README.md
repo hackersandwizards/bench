@@ -11,7 +11,7 @@ The machine setup of hackers&wizards for Apple Silicon Macs: an install wizard t
 | Set up a new Mac | [Before you start](#before-you-start), then [Install](#install) |
 | Finish what the wizard leaves to you | [docs/setup.md](docs/setup.md#after-the-wizard) |
 | Keep a machine current, move a folder, capture a setting | [Daily use](#daily-use) |
-| Transcribe a recording | [docs/transcription.md](docs/transcription.md) |
+| Transcribe a recording with T3 Code's Parakeet Ultra | [docs/transcription.md](docs/transcription.md) |
 | Change the terminal colours | [docs/theming.md](docs/theming.md) |
 | Change this repository | [Work on it](#work-on-it) |
 
@@ -45,7 +45,7 @@ The Dock, Finder sidebar and Moom steps replace your own layout with the snapsho
 - `bench-export`: check the Brewfile, snapshot installed packages into `docs/` and sync `home/` from `$HOME`.
 - `bench-paths <old> [<new>]`: before moving a folder, list every reference to it; `--apply` after the move.
 - `bench-prefs-diff snap`, change the setting in System Settings, then `bench-prefs-diff diff`: shows what changed, as `defaults` keys for `macos.sh`.
-- `transcribe <file>`: speech to text, writes `.txt` and `.srt` ([docs/transcription.md](docs/transcription.md)).
+- `transcribe <file>` writes a transcript and subtitles using T3 Code's Parakeet Ultra model. [Transcription guide](docs/transcription.md)
 - `safari-favorites`: export or merge the Safari favorites bar.
 - `t3-import-session <session-id>`: import one ended Claude session into its T3 project.
 - `ZSH_PROFILE=1 zsh -i -c exit`: profile shell startup.
@@ -57,7 +57,7 @@ The `update-bench` skill (`.claude/skills/update-bench/`) runs the daily loop of
 ## Documentation
 
 - [Setup](docs/setup.md): what each wizard step does, the checklist after it, the AdGuard download workaround.
-- [Transcription](docs/transcription.md): the `transcribe` command and the measurements behind its model and flags.
+- [Transcription](docs/transcription.md) covers model setup, subtitle timing and the measurements behind the choice of Parakeet Ultra.
 - [Theming](docs/theming.md): Ghostty's palette as the one colour source for the terminal tools.
 - [Path stores](docs/path-stores.md): every store that keeps a `~/dev` or `~/opt` path, the list behind `bench-paths`.
 - The `.txt` files in `docs/`: package and machine-state snapshots that `install.sh` replays, except the Homebrew lists (`brews.txt`, `brew-leaves.txt`, `brew-taps.txt`): they record what is installed, and `install.sh` installs from the [Brewfile](Brewfile).

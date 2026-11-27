@@ -154,8 +154,6 @@ vim
 watch
 webp
 wget
-whisper-cpp
-whisper.cpp
 wireguard-go
 wireguard-tools
 x264
