@@ -793,15 +793,23 @@ archive="$home/.codex/archived_sessions"
 images="$home/.codex/generated_images"
 old_session="$sessions/rollout-first-$old_id.jsonl"
 second_session="$sessions/rollout-second-$second_id.jsonl"
+recent_session="$sessions/rollout-recent-$recent_id.jsonl"
+linked_session="$sessions/rollout-linked-$linked_id.jsonl"
 mkdir -p "$sessions" "$archive/nested" "$images/$old_id" "$images/$recent_id" \
   "$images/$linked_id" "$images/$archived_id" "$images/foreign"
+printf '{"type":"session_meta","payload":{"id":"%s"}}\n' "$old_id" > "$old_session"
+printf '{"type":"session_meta","payload":{"id":"%s"}}\n' "$second_id" > "$second_session"
+printf '{"type":"session_meta","payload":{"id":"%s"}}\n' "$recent_id" > "$recent_session"
+printf '{"type":"session_meta","payload":{"id":"%s"}}\n' "$linked_id" > "$linked_session"
+printf '{"type":"session_meta","payload":{"id":"%s"}}\n' "$orphan_id" > "$sessions/rollout-other.jsonl"
+printf '{"type":"session_meta","payload":{"id":"%s"}}\n' "$archived_id" \
+  > "$archive/nested/rollout-archived-EEEEEEEE-0000-0000-0000-000000000000.jsonl"
 codex_old=$(date -v-31d +%Y%m%d%H%M)
 touch -t "$codex_old" "$old_session" "$second_session" "$images/$old_id" "$images/foreign"
-touch -t "$(date -v-29d +%Y%m%d%H%M)" "$sessions/rollout-recent-$recent_id.jsonl" "$images/$recent_id/new"
+touch -t "$(date -v-29d +%Y%m%d%H%M)" "$recent_session" "$images/$recent_id/new"
 touch -t "$codex_old" "$images/$recent_id"
 touch -t "$codex_old" "$images/$linked_id" "$images/$archived_id" \
   "$archive/nested/rollout-archived-EEEEEEEE-0000-0000-0000-000000000000.jsonl"
-touch "$sessions/rollout-linked-$linked_id.jsonl"
 touch -t 202001010000 "$sessions/rollout-other.jsonl"
 cat > "$stub/codex" <<'SH'
 #!/bin/sh
@@ -811,6 +819,12 @@ printf '%s\n' "$*" >> "$HOME/codex-calls"
 case "$(cat "$HOME/codex-mode")" in
   leaves) exit 0 ;;
   fails) exit 1 ;;
+  cascade)
+    if [ "$3" = 11111111-0000-0000-0000-000000000000 ]; then
+      while IFS= read -r child; do
+        find -H "$CODEX_HOME/sessions" -name "*-$child.jsonl" -type f -delete || exit 1
+      done < "$HOME/codex-descendants"
+    fi ;;
 esac
 find -H "$CODEX_HOME/sessions" -name "*-$3.jsonl" -type f -delete
 SH
@@ -826,7 +840,7 @@ chmod +x "$stub/codex" "$stub/gtimeout"
 echo leaves > "$home/codex-mode"
 out=$(clean_fixture sweep_codex --dry-run)
 assert_ok "Codex dry run previews two old sessions and keeps both recent sessions" grep -qE \
-  'Codex sessions: would remove 2 \([0-9]+ KB\), kept 2 newer than 30 days' <<<"$out"
+  'Codex sessions: would remove 2 \([0-9]+ KB\), kept 2 newer than 30 days, 0 with a newer subagent session$' <<<"$out"
 assert_ok "Codex dry run keeps images while their rollout still exists" grep -qF \
   'Codex images: would remove 0 (0 KB), kept 5 (1 changed within 30 days or unreadable, 3 session still exists, 1 not a UUID folder)' <<<"$out"
 assert_fail "Codex dry run never calls the CLI" test -e "$home/codex-calls"
@@ -862,7 +876,7 @@ assert_eq "Codex receives the force deletion command for each old UUID" \
 assert_fail "the CLI removed the first old session" test -e "$old_session"
 assert_fail "the CLI removed the second old session" test -e "$second_session"
 assert_ok "Codex keeps the recent and non-UUID sessions" \
-  test -f "$sessions/rollout-recent-$recent_id.jsonl" -a -f "$sessions/rollout-other.jsonl"
+  test -f "$recent_session" -a -f "$sessions/rollout-other.jsonl"
 assert_fail "Codex removes images after deleting their rollout in the same run" test -e "$images/$old_id"
 assert_fail "Codex removes an old image folder with no rollout" test -e "$images/$orphan_id"
 assert_ok "Codex keeps an old image folder with a rollout in sessions" test -d "$images/$linked_id"
@@ -881,12 +895,95 @@ assert_ok "Codex keeps every image folder when the rollout listing fails" \
   -a -d "$images/$recent_id" -a -d "$images/foreign"
 mv "$home/.codex/sessions" "$home/symlinked-sessions"
 ln -s "$home/symlinked-sessions" "$home/.codex/sessions"
+printf '{"type":"session_meta","payload":{"id":"%s"}}\n' "$old_id" > "$old_session"
 touch -t 202001010000 "$old_session"
 out=$(clean_fixture sweep_codex)
 assert_ok "Codex warns on a symlinked sweep folder" grep -q '⚠.*sessions is a symlink' <<<"$out"
 assert_ok "Codex leaves the symlink target untouched" test -f "$old_session"
 unlink "$home/.codex/sessions"
 mv "$home/symlinked-sessions" "$home/.codex/sessions"
+
+step "bench-clean keeps recent Codex descendants and deletes old subtrees once"
+original_home=$home
+home="$tdir/codex-tree-home"
+tree_sessions="$home/.codex/sessions"
+mkdir -p "$tree_sessions"
+parent_id=11111111-0000-0000-0000-000000000000
+child_id=22222222-0000-0000-0000-000000000000
+grandchild_id=33333333-0000-0000-0000-000000000000
+parent_session="$tree_sessions/rollout-parent-$parent_id.jsonl"
+child_session="$tree_sessions/rollout-child-$child_id.jsonl"
+grandchild_session="$tree_sessions/rollout-grandchild-$grandchild_id.jsonl"
+printf '{"type":"session_meta","payload":{"id":"%s"}}\n' "$parent_id" > "$parent_session"
+printf '{"type":"session_meta","payload":{"id":"%s","parent_thread_id":"%s"}}\n' \
+  "$child_id" "$parent_id" > "$child_session"
+touch -t "$codex_old" "$parent_session"
+touch -t "$(date -v-1d +%Y%m%d%H%M)" "$child_session"
+echo leaves > "$home/codex-mode"
+: > "$home/codex-calls"
+out=$(clean_fixture sweep_codex)
+assert_fail "Codex never calls delete for a parent with a 1-day-old child" grep -qF "$parent_id" "$home/codex-calls"
+printf '{"type":"session_meta","payload":{"id":"%s","parent_thread_id":"%s"}}\n' \
+  "$grandchild_id" "$child_id" > "$grandchild_session"
+touch -t "$codex_old" "$child_session"
+touch -t "$(date -v-1d +%Y%m%d%H%M)" "$grandchild_session"
+: > "$home/codex-calls"
+out=$(clean_fixture sweep_codex)
+assert_fail "Codex never calls delete for an ancestor of a 1-day-old grandchild" \
+  grep -qE "$parent_id|$child_id" "$home/codex-calls"
+assert_ok "Codex counts both ancestors of the recent grandchild" grep -qF \
+  '2 with a newer subagent session' <<<"$out"
+touch -t "$codex_old" "$grandchild_session"
+invalid_session="$tree_sessions/rollout-invalid.jsonl"
+printf '{"type":"session_meta","payload":{"parent_thread_id":"%s"}}\n' "$parent_id" > "$invalid_session"
+: > "$home/codex-calls"
+out=$(clean_fixture sweep_codex)
+assert_ok "Codex warns when a rollout has no session_meta id" grep -qF \
+  'rollout-invalid.jsonl, nothing swept' <<<"$out"
+assert_fail "Codex makes no delete calls when a rollout has no session_meta id" test -s "$home/codex-calls"
+rm "$invalid_session"
+echo cascade > "$home/codex-mode"
+printf '%s\n' "$child_id" "$grandchild_id" > "$home/codex-descendants"
+: > "$home/codex-calls"
+size=$(du -ck "$parent_session" "$child_session" "$grandchild_session" | awk 'END {print $1}')
+out=$(clean_fixture sweep_codex)
+assert_eq "Codex calls delete once for the all-old subtree" \
+  "delete --force $parent_id" "$(cat "$home/codex-calls")"
+assert_ok "Codex includes cascade deletions and their sizes in the summary" grep -qF \
+  "Codex sessions: removed 3 ($size KB)" <<<"$out"
+
+tree_archive="$home/.codex/archived_sessions"
+archived_child="$tree_archive/rollout-child-$child_id.jsonl"
+mkdir -p "$tree_archive"
+printf '{"type":"session_meta","payload":{"id":"%s"}}\n' "$parent_id" > "$parent_session"
+printf '{"type":"session_meta","payload":{"id":"%s","parent_thread_id":"%s"}}\n' \
+  "$child_id" "$parent_id" > "$archived_child"
+touch -t "$codex_old" "$parent_session"
+touch -t "$(date -v-1d +%Y%m%d%H%M)" "$archived_child"
+echo leaves > "$home/codex-mode"
+: > "$home/codex-calls"
+out=$(clean_fixture sweep_codex)
+assert_fail "Codex never calls delete for a parent with a 1-day-old archived child" \
+  grep -qF "$parent_id" "$home/codex-calls"
+
+touch -t "$codex_old" "$archived_child"
+chmod 000 "$archived_child"
+: > "$home/codex-calls"
+out=$(clean_fixture sweep_codex)
+chmod 644 "$archived_child"
+assert_ok "Codex warns when an archived rollout header is unreadable" grep -qF \
+  "$archived_child, nothing swept" <<<"$out"
+assert_fail "Codex makes no delete calls when an archived header is unreadable" test -s "$home/codex-calls"
+
+echo delete > "$home/codex-mode"
+: > "$home/codex-calls"
+size=$(du -sk "$parent_session" | awk '{print $1}')
+out=$(clean_fixture sweep_codex)
+assert_eq "Codex calls delete only for the active parent of an old archived child" \
+  "delete --force $parent_id" "$(cat "$home/codex-calls")"
+assert_ok "Codex counts only the active rollout in that deletion" grep -qF \
+  "Codex sessions: removed 1 ($size KB)" <<<"$out"
+home=$original_home
 
 step "bench-clean sweeps only old regular T3 provider logs"
 logs="$home/.t3/userdata/logs/provider"

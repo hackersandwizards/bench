@@ -286,40 +286,131 @@ sweep_tmpdir() {
 }
 
 sweep_codex_sessions() {
-  local root="$1" dry="$2" rollout="$3" age=+$((30 * 1440)) verb=removed
-  local file id size complete=0 removed=0 kb=0 newer=0
+  local root="$1" dry="$2" rollout="$3" uuid="$4" minutes=$((30 * 1440)) verb=removed
+  local file id count index newer protected size group_kb scan_error='' files=() complete=0 removed=0 kb=0
   [[ "$dry" == --dry-run ]] && verb="would remove"
-  [[ -d "$root" ]] || { skip "Codex sessions: no folder yet"; return 0; }
+  {
+    if ! IFS= read -r -d '' scan_error || [[ -n "$scan_error" ]] ||
+      ! IFS= read -r -d '' newer || ! IFS= read -r -d '' protected; then
+      warn "Codex sessions: ${scan_error:-could not complete the session scan}, nothing swept"
+      return 1
+    fi
+    [[ -d "$root" ]] || { skip "Codex sessions: no folder yet"; return 0; }
+    if [[ -z "$dry" ]] && { ! have codex || ! have gtimeout; }; then
+      warn "Codex sessions: codex or gtimeout missing, no sessions deleted"
+    else
+      while IFS= read -r -d '' id; do
+        [[ -n "$id" ]] || { complete=1; break; }
+        IFS= read -r -d '' count || break
+        files=()
+        group_kb=0
+        for ((index = 0; index < count; index++)); do
+          IFS= read -r -d '' file || break 2
+          files+=("$file")
+          size=$(allocated_kb "$file")
+          ((group_kb += ${size:-0}))
+        done
+        # A session can resume while earlier deletions are in progress.
+        for file in "${files[@]}"; do
+          [[ -n "$(find "$file" -type f -mmin "+$minutes" -print 2>/dev/null)" ]] || continue 2
+        done
+        if [[ -z "$dry" ]]; then
+          if ! CODEX_HOME="${root%/*}" gtimeout --signal=KILL 60s codex delete --force "$id" </dev/null >/dev/null 2>&1; then
+            warn "Codex sessions: deleting $id failed, stopping session sweep"
+            complete=1
+            break
+          fi
+          for file in "${files[@]}"; do
+            if [[ -e "$file" || -L "$file" ]]; then
+              warn "Codex sessions: deleting $id failed, stopping session sweep"
+              complete=1
+              break 2
+            fi
+          done
+        fi
+        ((removed += count, kb += group_kb))
+      done
+      (( complete )) || warn "Codex sessions: could not complete the deletion scan"
+    fi
+  } < <(codex_session_plan "$root" "$minutes" "$rollout" "$uuid")
+  ok "Codex sessions: $verb $removed ($kb KB), kept $newer newer than 30 days, $protected with a newer subagent session"
+}
 
-  while IFS= read -r -d '' file; do
-    [[ -n "$file" ]] || { complete=1; break; }
-    [[ "${file##*/}" =~ $rollout ]] && ((newer += 1))
-  done < <(find "$root" -type f -name 'rollout-*.jsonl' ! -mmin "$age" -print0 2>/dev/null && printf '\0')
-  (( complete )) || { warn "Codex sessions: cannot list sessions, nothing swept"; return 0; }
-
-  if [[ -z "$dry" ]] && { ! have codex || ! have gtimeout; }; then
-    warn "Codex sessions: codex or gtimeout missing, no sessions deleted"
-  else
-    complete=0
-    while IFS= read -r -d '' file; do
-      [[ -n "$file" ]] || { complete=1; break; }
-      [[ "${file##*/}" =~ $rollout ]] || continue
-      id=${BASH_REMATCH[1]}
-      # A session can resume while earlier deletions are in progress.
-      [[ -n "$(find "$file" -type f -mmin "$age" -print 2>/dev/null)" ]] || continue
-      size=$(allocated_kb "$file")
-      if [[ -z "$dry" ]] &&
-        { ! CODEX_HOME="${root%/*}" gtimeout --signal=KILL 60s codex delete --force "$id" </dev/null >/dev/null 2>&1 ||
-          [[ -e "$file" || -L "$file" ]]; }; then
-        warn "Codex sessions: deleting $id failed, stopping session sweep"
-        complete=1
-        break
-      fi
-      ((removed += 1, kb += ${size:-0}))
-    done < <(find "$root" -type f -name 'rollout-*.jsonl' -mmin "$age" -print0 2>/dev/null && printf '\0')
-    (( complete )) || warn "Codex sessions: could not complete the session scan"
+codex_session_plan() {
+  local root="$1" archive="${1%/*}/archived_sessions" stores=()
+  if [[ -L "$archive" || ( -e "$archive" && ! -d "$archive" ) ]]; then
+    printf 'cannot list rollouts\0'
+    return 1
   fi
-  ok "Codex sessions: $verb $removed ($kb KB), kept $newer newer than 30 days"
+  [[ -d "$root" ]] && stores+=("$root")
+  [[ -d "$archive" ]] && stores+=("$archive")
+  # Codex deletes the entire spawned subtree in one call. Validate the full graph before emitting any groups.
+  { { [[ -z "${stores[0]-}" ]] || find "${stores[@]}" -type f -name 'rollout-*.jsonl' -print0 2>/dev/null; } &&
+    printf '\0'; } |
+    /usr/bin/perl -MJSON::PP=decode_json -0e '
+      sub invalid_scan { print $_[0], "\0"; exit 1; }
+      my ($root, $minutes, $rollout, $uuid) = @ARGV;
+      my (%path, %parent, %old, %named, %protected, %groups, @ids, $complete);
+      my $cutoff = time - $minutes * 60; # BSD find rounds the age up to the next minute.
+      while (my $file = <STDIN>) {
+        chomp $file;
+        if ($file eq "") { $complete = 1; last; }
+        my $invalid = "cannot read session_meta for $file";
+        open my $handle, "<", $file or invalid_scan($invalid);
+        my ($line, @stat);
+        { local $/ = "\n"; $line = <$handle>; }
+        @stat = stat($handle);
+        defined $line && @stat or invalid_scan($invalid);
+        my $meta = eval { decode_json($line) };
+        ref($meta) eq "HASH" && ($meta->{type} // "") eq "session_meta" &&
+          ref($meta->{payload}) eq "HASH" or invalid_scan($invalid);
+        my ($id, $parent_id) = @{$meta->{payload}}{qw(id parent_thread_id)};
+        defined $id && $id =~ /\A$uuid\z/ &&
+          (!defined $parent_id || $parent_id =~ /\A$uuid\z/) or invalid_scan($invalid);
+        $id = lc $id;
+        !exists $parent{$id} or invalid_scan($invalid);
+        push @ids, $id;
+        $parent{$id} = defined $parent_id ? lc $parent_id : "";
+        $old{$id} = $stat[9] < $cutoff;
+        # Archived rollouts inform the graph without contributing paths to deletion groups.
+        next unless index($file, "$root/") == 0;
+        $path{$id} = $file;
+        my ($name) = $file =~ m{([^/]+)\z};
+        if ($name =~ /$rollout/) {
+          lc($1) eq $id or invalid_scan($invalid);
+          $named{$id} = 1;
+        }
+      }
+      $complete or invalid_scan("cannot list rollouts");
+
+      for my $id (@ids) {
+        my %seen;
+        for (my $ancestor = $id; exists $parent{$ancestor}; $ancestor = $parent{$ancestor}) {
+          !$seen{$ancestor}++ or invalid_scan("parent cycle at $ancestor");
+          $protected{$ancestor} = 1 unless $old{$id};
+        }
+      }
+      my ($newer, $kept) = (0, 0);
+      for my $id (@ids) {
+        next unless exists $path{$id};
+        if ($protected{$id}) {
+          if ($named{$id}) { $old{$id} ? $kept++ : $newer++; }
+          next;
+        }
+        my $target;
+        for (my $ancestor = $id; exists $parent{$ancestor} && !$protected{$ancestor}; $ancestor = $parent{$ancestor}) {
+          $target = $ancestor if $named{$ancestor};
+        }
+        push @{$groups{$target}}, $path{$id} if defined $target;
+      }
+      print "\0$newer\0$kept\0";
+      for my $id (@ids) {
+        next unless exists $groups{$id};
+        my @files = @{$groups{$id}};
+        print join("\0", $id, scalar @files, @files), "\0";
+      }
+      print "\0";
+    ' "$root" "$2" "$3" "$4"
 }
 
 sweep_codex_images() {
@@ -389,7 +480,7 @@ sweep_codex() {
     [[ ! -L "$folder" ]] || { warn "Codex: $folder is a symlink, nothing swept"; return 0; }
   done
   [[ -d "$base" ]] || { skip "Codex: no folder yet"; return 0; }
-  sweep_codex_sessions "$base/sessions" "$dry" "$rollout"
+  sweep_codex_sessions "$base/sessions" "$dry" "$rollout" "$uuid" || return 0
   sweep_codex_images "$base/generated_images" "$dry" "$uuid" "$rollout"
 }
 

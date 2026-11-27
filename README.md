@@ -41,7 +41,7 @@ The Dock, Finder sidebar and Moom steps replace your own layout with the snapsho
 
 - `bench-doctor`: verify the machine setup, including the IntelliJ SDK for the Java version selected in mise.
 - `bench-update` (`ua`) upgrades Homebrew, Antidote, mise tools, Rust toolchains, and global packages.
-- `bench-clean` (`cleanup`) clears caches, `.DS_Store` files and stale IDE versions, sweeps finished Claude temp entries, per-run leftovers in `$TMPDIR`, Codex sessions and images older than 30 days and T3 provider logs older than 14, and reports store sizes against their budgets. `--dry-run` previews those sweeps and the sizes, and writes no log.
+- `bench-clean` (`cleanup`) clears caches, `.DS_Store` files and stale IDE versions, sweeps finished Claude temp entries, per-run leftovers in `$TMPDIR`, Codex images older than 30 days and T3 provider logs older than 14, and reports store sizes against their budgets. It deletes a Codex session only when the session and all its descendants are older than 30 days. `--dry-run` previews those sweeps and the sizes, and writes no log.
 - `bench-export`: check the Brewfile, snapshot installed packages into `docs/` and sync `home/` from `$HOME`.
 - `bench-paths <old> [<new>]`: before moving a folder, list every reference to it; `--apply` after the move.
 - `bench-prefs-diff snap`, change the setting in System Settings, then `bench-prefs-diff diff`: shows what changed, as `defaults` keys for `macos.sh`.
