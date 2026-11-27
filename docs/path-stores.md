@@ -28,6 +28,7 @@ Measured on 08.11.2026 with three sample paths (`~/dev/hackersandwizards/interna
 | `~/.claude/projects/<encoded>/` (transcripts, `memory` symlink) | folder name, encoded | the sessions inside the folder | rename; a name already taken becomes a manual merge |
 | `~/.claude/plugins/known_marketplaces.json`, `installed_plugins.json` | JSON, absolute | none | text |
 | `~/.claude/scheduled-tasks/*/SKILL.md` | Markdown, absolute | none | text |
+| `~/.claude/schedules/*.md` | Markdown, absolute | none | text |
 | Claude app: `claude_desktop_config.json`, `git-worktrees.json`, `ccd-session-presets.json`, `remote-control-state.json` | JSON, absolute | Claude | text |
 | Claude app: `claude-code-sessions/**/*.json` (session index with `cwd`, `originCwd`, `gitAnchors`; `scheduled-tasks.json`) | JSON, absolute | Claude | text |
 | Claude app: `local-agent-mode-sessions/**/*.json` | JSON, absolute | Claude | text |

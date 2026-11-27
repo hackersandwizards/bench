@@ -134,7 +134,8 @@ sweep_tmpdir() {
   resolve_tmpdir root || { warn "Temp dir: $root, nothing swept"; return 0; }
 
   # The subshell's cwd must appear in lsof, as in the Claude sweep.
-  listing=$(cd -- "$root" && LC_ALL=C lsof -nP -u "$UID" -Fn 2>/dev/null)
+  listing=$(cd -- "$root" && LC_ALL=C lsof -nP -u "$UID" -Fn 2>/dev/null) ||
+    { warn "Temp dir: lsof failed, nothing swept"; return 0; }
   [[ $'\n'"$listing"$'\n' == *$'\n'"n$root"$'\n'* ]] ||
     { warn "Temp dir: open-file control failed, nothing swept"; return 0; }
 
@@ -436,8 +437,10 @@ report_sizes() {
       folder="$HOME/${label#\~/}"
       [[ -e "$folder" || -L "$folder" ]] || { skip "Size: $label does not exist"; continue; }
     fi
-    size=$(allocated_kb "$folder")
-    [[ -n "$size" ]] || { warn "Size: $label cannot be read"; continue; }
+    if ! size=$(set -o pipefail; allocated_kb "$folder") || [[ -z "$size" ]]; then
+      warn "Size: $label measurement incomplete"
+      continue
+    fi
     gb=$(LC_ALL=C awk -v kb="$size" 'BEGIN { printf "%.1f", kb / 1048576 }')
     if (( size > budget * 1048576 )); then
       warn "Size: $label $gb GB, over its $budget GB budget"
@@ -486,8 +489,7 @@ run "Claude HTTP cache"  rm -rf "$HOME/Library/Application Support/Claude/Cache"
 
 # JetBrains names every config/cache dir after product-info.json's dataDirectoryName,
 # which is major.minor only (2026.2.2 lives in IntelliJIdea2026.2). Patch upgrades
-# therefore reuse their dirs and only major ones strand the predecessor — silently, and
-# for good. Read the live names off the installed apps so no version is pinned here.
+# reuse their dirs and minor upgrades can leave old directories behind.
 sweep_jetbrains() {
   local roots=("$HOME/Library/Caches/JetBrains" "$HOME/Library/Logs/JetBrains" \
                "$HOME/Library/Application Support/JetBrains")
@@ -500,15 +502,13 @@ sweep_jetbrains() {
     [[ -n "$name" ]] || continue
     p=${name%%[0-9]*}; live+="$name|"; installed+="$p ${name#"$p"}"$'\n'; nlive=$((nlive + 1))
   done
-  # Fail closed. An empty set means Toolbox is mid-update with the bundle gone, not that
-  # every version dir is stale — sweeping on it would delete the live config.
+  # Toolbox can temporarily remove an app bundle during an update, so an empty app list cannot establish which versions are stale.
   (( nlive )) || { skip "JetBrains: no IDE found, nothing swept"; return 0; }
   for root in "${roots[@]}"; do
     for d in "$root"/*/; do
       [[ -d "$d" ]] || continue
       name=$(basename "$d")
-      # Only version-stamped names qualify. Toolbox, Daemon, Air and the lowercase infra
-      # dirs never match, so whatever JetBrains adds next is safe by default.
+      # Require a version suffix to spare support directories such as Toolbox, Daemon and Air.
       [[ "$name" =~ ^[A-Za-z]+[0-9]+(\.[0-9]+)+$ ]] || continue
       [[ "$live" == *"|$name|"* ]] && continue
       # Superseded means older than the newest installed version of the product: a

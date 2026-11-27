@@ -29,7 +29,6 @@ assert_ok   "finds an existing binary" have sh
 assert_fail "rejects a missing binary" have zzz-not-a-real-binary
 
 step "warn() ledger"
-# The ledger's reason to exist: warns from piped subshells must reach it.
 WARN_LOG=$(mktemp)
 warn "parent" >/dev/null
 echo x | { while read -r _; do warn "pipeline" >/dev/null; done; }
@@ -134,9 +133,6 @@ assert_eq "a failed host call hands the URL back" \
   "https://github.com/org/y.git" "$(canonical_url https://github.com/org/y.git)"
 unset -f gh
 
-# bench-export repoints a moved or renamed entry instead of asking a human to.
-# The write is what makes a wrong match expensive, so the pair match and the
-# refusal to write on no match are the two things worth pinning down.
 step "repos_repoint()"
 printf '# keep me\ndev/x/y https://github.com/org/y.git\nopt/z https://gitlab.com/org/z.git\n' > "$fix"
 assert_ok "repoints the matching entry" \
@@ -237,7 +233,6 @@ merged=$'a\thttps://a/\nb\thttps://b/'
 assert_eq "prepends only missing URLs (subtree dedupe)" "$merged" "$("$sf" export "$tdir/b.plist")"
 assert_ok "idempotent merge exits ok" "$sf" merge "$tdir/snap.txt" "$tdir/b.plist"
 assert_eq "idempotent — re-run adds nothing" "$merged" "$("$sf" export "$tdir/b.plist")"
-# `missing` must count c (in a folder within the bar) as present: subtree scan.
 assert_eq "missing: empty when all snapshot URLs in bar subtree" \
   "" "$("$sf" missing "$tdir/snap.txt" "$tdir/b.plist")"
 printf 'd\thttps://d/\n' >> "$tdir/snap.txt"
@@ -335,7 +330,7 @@ fixture_jdk_table() {
   <jdk>
     <name value="temurin-88" />
     <type value="JavaSDK" />
-    <homePath value="$tdir/home/.local/share/mise/installs/java/temurin-88" />
+    <homePath value="\$USER_HOME\$/.local/share/mise/installs/java/temurin-88" />
   </jdk>
 </component></application>
 XML
@@ -346,8 +341,20 @@ fixture_jdk_doctor() {
 }
 fixture_jdk_table temurin-99 temurin-99
 out=$(fixture_jdk_doctor)
-assert_ok "doctor confirms the configured JDK" grep -qF 'temurin-99 SDK resolves' <<< "$out"
 assert_fail "doctor ignores an obsolete SDK entry" grep -qF 'temurin-88' <<< "$out"
+mkdir -p "$tdir/home/dev/legacy/.idea"
+cat > "$ide_options/recentProjects.xml" <<'XML'
+<application><component name="RecentProjectsManager"><option name="additionalInfo"><map>
+  <entry key="$USER_HOME$/dev/legacy" />
+</map></option></component></application>
+XML
+cat > "$tdir/home/dev/legacy/.idea/misc.xml" <<'XML'
+<project><component name="ProjectRootManager" project-jdk-name="temurin-88" /></project>
+XML
+out=$(fixture_jdk_doctor)
+assert_ok "doctor warns when a recent project uses a registered SDK with no java" \
+  grep -qE '⚠.*dev/legacy \(temurin-88\).*bin/java' <<< "$out"
+assert_ok "doctor confirms the configured JDK" grep -qF 'temurin-99 SDK resolves' <<< "$out"
 fixture_jdk_table other-name temurin-99
 assert_ok "doctor reports a missing configured SDK registration" \
   grep -qF 'add the temurin-99 SDK' <<< "$(fixture_jdk_doctor)"
@@ -646,7 +653,7 @@ tdir=$(mktemp -d)
 home="$tdir/home" stub="$tdir/stub" tmp="$tdir/tmp"
 mkdir -p "$home" "$stub" "$tmp"
 tmp=$(cd "$tmp" && pwd -P)
-# Load only the sweep functions. A fixture copy of the entry point isolates its log path too.
+# Load the sweep functions directly to bypass maintenance logging.
 clean_fixture() {
   HOME="$home" TMPDIR="$tmp" PATH="$stub:/usr/bin:/bin:/usr/sbin" /bin/bash -uc "
     . '$REPO_ROOT/bin/_lib.sh'
@@ -699,7 +706,7 @@ for setting in unset empty outside symlink missing lsof; do
     missing) reason='cannot enter TMPDIR'; setup='TMPDIR="$TMPDIR-missing"' ;;
     lsof)
       reason='open-file control failed'; setup=:
-      printf '#!/bin/sh\nexit 1\n' > "$stub/lsof"; chmod +x "$stub/lsof"
+      printf '#!/bin/sh\nexit 0\n' > "$stub/lsof"; chmod +x "$stub/lsof"
       ;;
   esac
   out=$(GUARD_OUTSIDE="$outside" clean_fixture eval "$setup;" sweep_tmpdir)
@@ -729,6 +736,20 @@ assert_ok "temp removal reports the summary without a line for each entry" grep 
 assert_eq "temp reports only the five shapes and the summary" 6 "$(grep -c 'Temp dir:' <<<"$out")"
 exec 9<&- 8<&-
 main_tmp=$tmp
+tmp="$tdir/failed-lsof"
+mkdir "$tmp"
+touch -t 202001010000 "$tmp/tmp.old"
+cat > "$stub/lsof" <<'SH'
+#!/bin/sh
+printf 'n%s\n' "$PWD"
+exit 1
+SH
+chmod +x "$stub/lsof"
+out=$(clean_fixture sweep_tmpdir)
+assert_ok "a failed lsof scan warns even with the exact cwd control" grep -q '⚠.*lsof failed' <<<"$out"
+assert_ok "a failed lsof scan preserves the eligible entry" test -f "$tmp/tmp.old"
+unlink "$stub/lsof"
+
 tmp=$(mktemp -d "$tdir/readonly.XXXXXX")
 readonly_entry="$tmp/tmp.readonly"
 readonly_target="$home/readonly-target"
@@ -903,11 +924,12 @@ SH
 chmod +x "$stub/du"
 out=$(clean_fixture report_sizes)
 # shellcheck disable=SC2016  # the first store label is literal
-assert_ok "a partial du result of 1572864 KB still reports 1.5 GB within budget" \
-  grep -qE '✓.* Size: \$TMPDIR 1\.5 GB of 2 GB' <<<"$out"
+assert_ok "a partial du result of 1572864 KB warns that the measurement is incomplete" \
+  grep -qE '⚠.*Size: \$TMPDIR measurement incomplete' <<<"$out"
+assert_fail "a partial du result has no budget verdict" grep -qE "Size: \\\$TMPDIR [0-9]" <<<"$out"
 assert_ok "a store over budget warns" grep -q '⚠.*Size: ~/.codex 16.0 GB, over its 15 GB budget' <<<"$out"
 assert_ok "a missing store skips" grep -q '·.*Size: ~/.claude/projects does not exist' <<<"$out"
-assert_ok "du with no number warns" grep -q '⚠.*Size: ~/Library/Application Support/Claude cannot be read' <<<"$out"
+assert_ok "du with no number warns" grep -q '⚠.*Size: ~/Library/Application Support/Claude measurement incomplete' <<<"$out"
 assert_eq "all six stores are reported" 6 "$(grep -c 'Size:' <<<"$out")"
 rm -f "$stub/du"
 
@@ -954,8 +976,9 @@ rm -rf "$tdir"
 step "bench-doctor checks cache variables without printing config contents"
 tdir=$(mktemp -d)
 mkdir -p "$tdir/.t3" "$tdir/.codex"
+node_dir=$(dirname "$(node -p 'process.execPath')")
 doctor_caches() {
-  HOME="$tdir" bash -c ". '$REPO_ROOT/bin/_lib.sh'
+  HOME="$tdir" PATH="$node_dir:$PATH" bash -c ". '$REPO_ROOT/bin/_lib.sh'
     $(sed -n '/^check_runtime_caches()/,/^}/p' "$REPO_ROOT/bin/bench-doctor")
     check_runtime_caches" 2>&1
 }
@@ -966,6 +989,15 @@ printf '%s\n' 'export NODE_DISABLE_COMPILE_CACHE='"'1'" 'BUN_RUNTIME_TRANSPILER_
 printf '%s\n' 'shell_environment_policy.set = { NODE_DISABLE_COMPILE_CACHE = "1", BUN_RUNTIME_TRANSPILER_CACHE_PATH = "0" }' > "$config"
 out=$(doctor_caches)
 assert_eq "quoted T3 values and inline TOML both pass" 2 "$(grep -c '✓.*sets both runtime cache variables' <<<"$out")"
+printf '%s\n' 'NODE_DISABLE_COMPILE_CACHE = 1 # comment' 'BUN_RUNTIME_TRANSPILER_CACHE_PATH=0' > "$service"
+out=$(doctor_caches)
+assert_ok "T3 accepts a cache setting with spaces and an inline comment" \
+  grep -q '✓.*/service.env sets both runtime cache variables' <<<"$out"
+printf '%s\n' 'UNRELATED="line one' 'NODE_DISABLE_COMPILE_CACHE=1' 'BUN_RUNTIME_TRANSPILER_CACHE_PATH=0' '"' > "$service"
+out=$(doctor_caches)
+assert_eq "T3 warns for both settings embedded in a multiline quoted value" \
+  $'NODE_DISABLE_COMPILE_CACHE=1\nBUN_RUNTIME_TRANSPILER_CACHE_PATH=0' \
+  "$(sed -n 's|.*/service\.env: add ||p' <<<"$out")"
 printf '%s\n' 'NODE_DISABLE_COMPILE_CACHE=1' 'DOCTOR_TEST_SECRET=SENTINEL_VALUE' > "$service"
 printf '%s\n' '[shell_environment_policy.set]' '# NODE_DISABLE_COMPILE_CACHE = "1"' \
   'BUN_RUNTIME_TRANSPILER_CACHE_PATH = "0"' 'DOCTOR_TEST_SECRET = "SENTINEL_VALUE"' > "$config"
@@ -997,7 +1029,6 @@ assert_fail "never removes the bun install cache, which every session's MCP laun
   grep -q 'install/cache' "$REPO_ROOT/bin/bench-clean"
 
 step "pre-commit lints the staged blob"
-# A broken hunk staged with its fix left unstaged must still fail the hook.
 tdir=$(mktemp -d)
 git init -q "$tdir" && mkdir -p "$tdir/.githooks" "$tdir/bin"
 cp "$REPO_ROOT/.githooks/pre-commit" "$tdir/.githooks/" && cp "$REPO_ROOT/bin/_lib.sh" "$tdir/bin/"
@@ -1029,7 +1060,6 @@ rm -rf "$tdir"
 step "init.zsh caches"
 tdir=$(mktemp -d)
 mkdir -p "$tdir/bin" "$tdir/home/.cache/zsh"
-# A failed antidote bundle must leave no plugins.zsh that looks current.
 printf 'antidote() { return 1; }\n' > "$tdir/antidote.zsh"; : > "$tdir/plugins.txt"
 ZSH_SETTINGS_DIR="$tdir" zsh -fc "$(sed -n '/^_antidote_bundle()/,/^}/p' "$REPO_ROOT/init.zsh" \
   | sed "s|source /opt/homebrew/opt/antidote/share/antidote/antidote.zsh|source $tdir/antidote.zsh|"); _antidote_bundle plugins" 2>/dev/null
@@ -1055,13 +1085,16 @@ assert_ok "a full compinit check renews the dump's age" test -n "$(find "$tdir/h
 rm -rf "$tdir"
 
 step "bench-paths"
+assert_ok "the path-store guide lists the Markdown schedules store" \
+  grep -qxF "| \`~/.claude/schedules/*.md\` | Markdown, absolute | none | text |" "$REPO_ROOT/docs/path-stores.md"
 # A temp HOME holding text, sqlite and zoxide stores, with a sibling repo-old
 # whose path starts like the moved one: every rewrite must leave it alone. Shims
 # pin which apps run (RUNNING) and which processes sit where (LSOF_OUT).
 tdir=$(mktemp -d); H="$tdir/home"; bp="$REPO_ROOT/bin/bench-paths"
 export _ZO_DATA_DIR="$H/zoxide"
 mkdir -p "$tdir/bin" "$H/opt/repo/home" "$H/opt/repo-old" "$H/opt/repo/.git" "$H/.codex" "$H/.claude/scheduled-tasks/t" \
-  "$H/Library/Application Support/JetBrains/IntelliJIdea2026.3/options" "$H/Library/Application Support/Zed/db/0-stable"
+  "$H/.claude/schedules" "$H/Library/Application Support/JetBrains/IntelliJIdea2026.3/options" \
+  "$H/Library/Application Support/Zed/db/0-stable"
 # shellcheck disable=SC2016  # literal $ in shim and fixture text
 printf '#!/bin/sh\n/bin/ps -axo pid=,comm= | grep "bash$"\nfor p in $CLAUDE_PIDS; do echo "$p /x/Application Support/bin/claude"; done\nfor n in $RUNNING; do echo "7 /x/$n.app/Contents/MacOS/$n"; done\n' > "$tdir/bin/ps"
 # shellcheck disable=SC2016  # literal $ in shim and fixture text
@@ -1070,6 +1103,7 @@ printf '#!/bin/sh\nexit 1\n' > "$tdir/bin/docker"
 chmod +x "$tdir/bin/"*
 printf '{"projects":{"%s/opt/repo":{},"%s/opt/repo-old":{},"%s/opt/repo/sub":{}}}\n' "$H" "$H" "$H" > "$H/.claude.json"
 printf 'Work in %s/opt/repo.\nKeep %s/opt/repo.bak\n' "$H" "$H" > "$H/.claude/scheduled-tasks/t/SKILL.md"
+printf 'Work in %s/opt/repo/sub\nKeep %s/opt/repo-old\n' "$H" "$H" > "$H/.claude/schedules/review.md"
 # shellcheck disable=SC2016  # literal $ in shim and fixture text
 printf '<option value="$USER_HOME$/opt/repo" />\n' > "$H/Library/Application Support/JetBrains/IntelliJIdea2026.3/options/recentProjects.xml"
 printf 'source ~/opt/repo/init.zsh\n' > "$H/opt/repo/home/.zshrc"
@@ -1133,6 +1167,8 @@ assert_ok "a live session also holds ~/.claude.json" grep -q "\.claude\.json.*qu
 assert_ok "containers left unchecked are a manual step" grep -q "start Docker and rerun" <<< "$out"
 assert_eq "a sentence's dot ends the path, a .bak suffix does not" "Work in $H/opt/new.
 Keep $H/opt/repo.bak" "$(cat "$H/.claude/scheduled-tasks/t/SKILL.md")"
+assert_eq "apply rewrites a Claude schedule and keeps the same-prefix neighbour" "Work in $H/opt/new/sub
+Keep $H/opt/repo-old" "$(cat "$H/.claude/schedules/review.md")"
 # shellcheck disable=SC2016  # literal $ in shim and fixture text
 assert_eq "JetBrains macro spelling rewritten" '<option value="$USER_HOME$/opt/new" />' \
   "$(cat "$H/Library/Application Support/JetBrains/IntelliJIdea2026.3/options/recentProjects.xml")"
@@ -1170,6 +1206,11 @@ assert_ok "with a backup next to it" grep -q "$H/opt/repo\"" "$H/.claude.json.be
 assert_ok "the repo-old project stays" test -d "$H/.claude/projects/$e-old"
 assert_eq "its memory link follows the move" "$H/opt/new/.git" "$(readlink "$H/.claude/projects/$n/memory")"
 rm -rf "$tdir"; unset -f bpx; unset _ZO_DATA_DIR
+
+step "README App Store checklist"
+assert_eq "the README names the Brewfile App Store apps" \
+  "$(awk -F '"' '/^mas "/ { printf "%s%s", sep, $2; sep = " and " }' "$REPO_ROOT/Brewfile")" \
+  "$(sed -n "s/^.*skips the \`mas\` apps (\(.*\))\.$/\1/p" "$REPO_ROOT/README.md")"
 
 step "chrome-devtools launcher hands the server only a build in the cache"
 # Offline: a stub @puppeteer/browsers installs a fake build, a stub `bun x` target prints the

@@ -36,10 +36,8 @@ alias -g T='| tail'
 alias -g CT='--color=always | tail'
 alias -g W='| wc -l'
 
-# --- Search ---
 alias fsearch="rg --no-heading . | fzf"
 
-# --- Git ---
 alias gitlog="git log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
 alias gl=gitlog
 
@@ -53,24 +51,19 @@ alias nproc=gnproc
 alias shuf=gshuf
 alias sha256sum=gsha256sum
 
-# --- Reclaim disk ---
 alias cleanup=bench-clean
 
-# --- Upgrade all ---
 alias ua=bench-update
 
-# --- npm ---
 alias npm-check-update='npm-check --skip-unused --update --save-exact'
 alias ncu=npm-check-update
 
-# --- Claude ---
 alias cld='claude --dangerously-skip-permissions'
 alias cldr='cld --resume'
 alias cldc='cld --continue'
 alias cldp='cld -p'
 alias clda='claude agents --dangerously-skip-permissions'
 
-# --- Codex ---
 alias cdx='codex --yolo'
 alias cdxr='cdx resume'
 alias cdxc='cdx resume --last'

@@ -40,8 +40,6 @@ if [[ $old == "$HOME"/* ]]; then
     i=$((i + 1))
   done
 fi
-# A match ends where the path does: /opt/x must not hit /opt/x-old or
-# /opt/x.bak, while a sentence's closing dot still ends it.
 # shellcheck disable=SC2016  # perl code
 PL='BEGIN { @f = map { my $o = $ENV{"O$_"}; [$o =~ m{/$} ? qr/\Q$o\E/ : qr/\Q$o\E(?![\w-]|\.\w)/, $ENV{"N$_"}] } grep { defined $ENV{"O$_"} } 0..$ENV{NK} }'
 # On stdin: perl -n would run a file name ending in | as a command.
@@ -96,7 +94,6 @@ for d in "$projects/$e" "$projects/$e"-*; do
     cwd=$old
   fi
   inside "$cwd" || continue
-  # enc cannot tell old/sub from old-sub, so a subfolder's spelling comes from its transcript.
   if [[ $d != "$projects/$e" ]]; then
     NK=$((NK + 1)); export "O$NK=/.claude/projects/${d#"$projects"/}/"
     [[ -z $new ]] || export "N$NK=/.claude/projects/$(enc "$(moved "$cwd")")/"
@@ -253,7 +250,6 @@ while IFS='|' read -r kind apps path glob; do
     files=$(rg "${args[@]}" 2>/dev/null)
   fi
   [[ -n $files ]] || continue
-  # One store, one action: the kind and the gating app decide it for every file.
   act=rewrite
   if [[ -z $new ]]; then act=list
   elif [[ $kind == source ]]; then act=manual; why="a copy: change the source it is synced from, then sync"

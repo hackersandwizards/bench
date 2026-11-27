@@ -18,7 +18,7 @@ The machine setup of hackers&wizards for Apple Silicon Macs: an install wizard t
 ## Before you start
 
 - Colleagues at hackers&wizards: set up your company accounts first, as the onboarding in the Company OS handbook lists them.
-- Sign into the App Store, else `brew bundle` skips the `mas` apps (Xcode, Moom).
+- Sign into the App Store, else `brew bundle` skips the `mas` apps (Amphetamine and Moom Classic).
 - Have your GitHub account, and a GitLab account if you use one: the wizard runs `gh auth login` and `glab auth login`.
 - Grant the terminal Full Disk Access (System Settings -> Privacy & Security) before the wizard's Safari-favorites step: it reads `~/Library/Safari/Bookmarks.plist` and can only warn without it.
 

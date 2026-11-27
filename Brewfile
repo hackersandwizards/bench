@@ -79,7 +79,6 @@ brew "jaq"
 brew "jq"
 # Handy way to save and run project-specific commands
 brew "just"
-# Simple terminal UI for git commands
 # Fast and powerful Git hooks manager for any type of projects
 brew "lefthook"
 # Pager program similar to more

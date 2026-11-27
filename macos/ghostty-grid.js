@@ -122,7 +122,7 @@ function run() {
     return;
   }
 
-  // Sort by top then left so each window keeps its cell across runs (idempotent).
+  // Sort windows to keep repeated tiling stable.
   wins.sort(function (a, b) { return (a.y - b.y) || (a.x - b.x); });
 
   var cols = Math.ceil(Math.sqrt(n));

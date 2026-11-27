@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# Health check for the dotfiles setup.
 set -u
 
 # shellcheck source-path=SCRIPTDIR
@@ -21,33 +20,34 @@ check_runtime_caches() {
     [[ -e "$file" ]] || continue
     target=$file
     [[ "$file" == "$codex" ]] && target+=" [shell_environment_policy.set]"
-    if ! [[ -f "$file" ]] || ! missing=$(python3 -B - "$file" "${settings[@]}" 2>/dev/null <<'PYTHON'
-import re
+    if ! [[ -f "$file" ]] || ! missing=$(
+      if [[ "$file" == "$service" ]]; then
+        node - "$file" "${settings[@]}" <<'JS'
+        const { readFileSync } = require("node:fs");
+        const { parseEnv } = require("node:util");
+
+        const [file, ...settings] = process.argv.slice(2);
+        const values = parseEnv(readFileSync(file, "utf8"));
+        for (const setting of settings) {
+          const [key, expected] = setting.split("=");
+          if (values[key] !== expected) console.log(key);
+        }
+JS
+      else
+        python3 -B - "$file" "${settings[@]}" <<'PYTHON'
 import sys
 import tomllib
 from pathlib import Path
 
 file = Path(sys.argv[1])
 expected = dict(setting.split("=") for setting in sys.argv[2:])
-contents = file.read_text(encoding="utf-8")
-if file.name == "config.toml":
-    values = tomllib.loads(contents)
-    for key in ("shell_environment_policy", "set"):
-        values = values.get(key) if isinstance(values, dict) else None
-    values = values if isinstance(values, dict) else {}
-    missing = [key for key, value in expected.items() if values.get(key) != value]
-else:
-    values = {}
-    for line in contents.splitlines():
-        key, sep, value = re.sub(r"^export[ \t]+", "", line.strip()).partition("=")
-        if sep and key in expected:
-            values[key] = value
-    missing = [
-        key for key, value in expected.items()
-        if values.get(key) not in (value, f"'{value}'", f'"{value}"')
-    ]
-print("\n".join(missing))
+values = tomllib.loads(file.read_text(encoding="utf-8"))
+for key in ("shell_environment_policy", "set"):
+    values = values.get(key) if isinstance(values, dict) else None
+values = values if isinstance(values, dict) else {}
+print("\n".join(key for key, value in expected.items() if values.get(key) != value))
 PYTHON
+      fi 2>/dev/null
     ); then
       warn "$target cannot be read or parsed"
     elif [[ -z "$missing" ]]; then
@@ -70,8 +70,7 @@ echo "=== Environment ==="
 if [[ -n "${ZSH_SETTINGS_DIR:-}" ]]; then
   ok "ZSH_SETTINGS_DIR=$ZSH_SETTINGS_DIR"
 else
-  # This script is bash, so the var is unset by construction and warning about it
-  # would fire on every unattended run. Ask the shell that actually sets it.
+  # Check interactive zsh when the caller did not export ZSH_SETTINGS_DIR.
   zdir=$(have zsh && zsh -ic 'print -r -- ${ZSH_SETTINGS_DIR:-}' 2>/dev/null | tail -1)
   if [[ -n "$zdir" ]]; then
     ok "ZSH_SETTINGS_DIR=$zdir (interactive zsh)"
@@ -102,7 +101,6 @@ echo "=== Stow symlinks ==="
 while IFS= read -r rel; do
   if [[ -L "$HOME/$rel" && "$HOME/$rel" -ef "$REPO_ROOT/home/$rel" ]]; then
     ok "$rel -> $(readlink "$HOME/$rel")"
-  # A folded directory links a whole folder into the repo, so tools write there.
   elif [[ "$HOME/$rel" -ef "$REPO_ROOT/home/$rel" ]]; then
     warn "$rel: its folder is a link into the repo — unfold it: stow --dir='$REPO_ROOT' --target='$HOME' --no-folding --restow home"
   elif [[ -L "$HOME/$rel" ]]; then
@@ -113,7 +111,6 @@ while IFS= read -r rel; do
     warn "$rel: missing"
   fi
 done < <(stow_files)
-# .gitignore hides these; a tool writing through a folded folder puts them here.
 untracked=$(git -C "$REPO_ROOT" ls-files -o -- home)
 [[ -z $untracked ]] || { warn "untracked files under home/ — move them out of the public repo:"; printf '%s\n' "$untracked" | indent; }
 
@@ -220,9 +217,7 @@ fi
 
 echo
 echo "=== Default repos (docs/repos.txt) ==="
-# A missing target is more often a moved clone than an uncloned repo, and
-# install.sh would then clone a stale path or a dead URL. So locate the clone by
-# its remote first: the URL is the repo's identity, the path is just where it sat.
+# Look up the clone by remote before recommending an install that could recreate an old path.
 # True only when the host answered and denied the repo. An offline run fails the
 # same call with "could not resolve host", and calling that dead would retire a
 # good entry, so anything but an explicit denial falls through to install.sh.
@@ -239,10 +234,6 @@ if [[ -s "$REPO_ROOT/docs/repos.txt" ]]; then
     if [[ -d "$HOME/$target/.git" ]]; then
       ok "repo: $target"
     elif moved=$(find_clone "$url"); then
-      # The repo is here, so nothing is missing: the entry describes a layout
-      # this machine has left. bench-export owns that, the same way it owns Dock
-      # and sidebar drift — except when several clones answer to the URL, where
-      # there is a choice to make and no export may make it.
       if [[ "$moved" == *$'\n'* ]]; then
         warn "repo: $target — its remote is cloned more than once, so docs/repos.txt needs a hand-picked target:"
         printf '%s\n' "$moved" | indent
@@ -270,61 +261,96 @@ if (( ${#jdk_tables[@]} == 0 )); then
 else
   for t in "${jdk_tables[@]}"; do
     ide=$(basename "$(dirname "$(dirname "$t")")")
-    if jdk_status=$(python3 -B - "$REPO_ROOT/home/.config/mise/config.toml" "$t" 2>&1 <<'PYTHON'
+    jdk_status=$(python3 -B - "$REPO_ROOT/home/.config/mise/config.toml" "$t" 2>&1 <<'PYTHON'
+import os
 import sys
 import tomllib
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
 config, table = map(Path, sys.argv[1:])
+home = Path.home()
+
+def expand_home(value):
+    return value.replace("$USER_HOME$", str(home))
+
 try:
-    versions = tomllib.loads(config.read_text(encoding="utf-8"))["tools"]["java"]
-except (OSError, ValueError, KeyError):
-    sys.exit("cannot read tools.java from the bench mise config — check home/.config/mise/config.toml")
-if isinstance(versions, str):
-    versions = [versions]
-if not isinstance(versions, list) or not versions or not all(isinstance(v, str) and v for v in versions):
-    sys.exit("invalid tools.java in the bench mise config — set the Java version line")
-try:
-    sdks = ET.parse(table).findall(".//jdk")
+    registrations = ET.parse(table).findall(".//jdk")
 except (OSError, ET.ParseError):
     sys.exit("cannot read jdk.table.xml — check the SDKs in IntelliJ Project Structure")
+sdks = {}
+for sdk in registrations:
+    name = sdk.find("./name[@value]")
+    if name is None:
+        continue
+    locations = sdks.setdefault(name.get("value"), [])
+    if sdk.find("./type[@value='JavaSDK']") is None:
+        continue
+    registered = sdk.find("./homePath")
+    location = expand_home(registered.get("value", "")) if registered is not None else ""
+    locations.append(location)
 
-home = Path.home()
-for version in versions:
-    expected = home / ".local/share/mise/installs/java" / version
-    matching = [
-        sdk for sdk in sdks
-        if sdk.find(f"./name[@value='{version}']") is not None
-        and sdk.find("./type[@value='JavaSDK']") is not None
-    ]
-    if not (expected / "bin/java").is_file():
-        sys.exit(f"{expected} is missing its JDK — run mise install from your home directory")
-    if not matching:
-        sys.exit(f"add the {version} SDK in IntelliJ Project Structure at {expected}")
-    for sdk in matching:
-        registered = sdk.find("./homePath")
-        if registered is None or registered.get("value", "").replace("$USER_HOME$", str(home)) != str(expected):
-            sys.exit(f"repoint the {version} SDK in IntelliJ Project Structure to {expected}")
-print(f"{', '.join(versions)} SDK resolves")
+def check_configured_sdk():
+    try:
+        versions = tomllib.loads(config.read_text(encoding="utf-8"))["tools"]["java"]
+    except (OSError, ValueError, KeyError):
+        return "warn\tcannot read tools.java from the bench mise config — check home/.config/mise/config.toml"
+    if isinstance(versions, str):
+        versions = [versions]
+    if not isinstance(versions, list) or not versions or not all(isinstance(v, str) and v for v in versions):
+        return "warn\tinvalid tools.java in the bench mise config — set the Java version line"
+    for version in versions:
+        expected = home / ".local/share/mise/installs/java" / version
+        if not (expected / "bin/java").is_file():
+            return f"warn\t{expected} is missing its JDK — run mise install from your home directory"
+        matching = sdks.get(version)
+        if not matching:
+            return f"warn\tadd the {version} SDK in IntelliJ Project Structure at {expected}"
+        if any(location != str(expected) for location in matching):
+            return f"warn\trepoint the {version} SDK in IntelliJ Project Structure to {expected}"
+    return f"ok\t{', '.join(versions)} SDK resolves"
+
+print(check_configured_sdk())
+try:
+    recent = ET.parse(table.with_name("recentProjects.xml"))
+except (OSError, ET.ParseError):
+    sys.exit(0)
+unknown = []
+for entry in recent.findall(".//entry[@key]"):
+    project = Path(expand_home(entry.get("key")))
+    if not project.is_absolute():
+        continue
+    try:
+        settings = ET.parse(project / ".idea/misc.xml")
+    except (OSError, ET.ParseError):
+        continue
+    for setting in settings.findall(".//*[@project-jdk-name]"):
+        name = setting.get("project-jdk-name")
+        if not name:
+            continue
+        label = f"{str(project).removeprefix(f'{home}/')} ({name})"
+        if name not in sdks:
+            unknown.append(label)
+        else:
+            for location in sdks[name]:
+                sdk_home = Path(location)
+                java = sdk_home / "bin/java"
+                if not sdk_home.is_absolute() or not java.is_file() or not os.access(java, os.X_OK):
+                    print(f"warn\t{label} has no executable bin/java — pick a project SDK in IntelliJ")
+                    break
+if unknown:
+    print(f"warn\tprojects name SDKs it lacks: {' '.join(unknown)} — pick a project SDK in IntelliJ")
 PYTHON
-    ); then
-      ok "$ide: $jdk_status"
-    else
+    ) || {
       warn "$ide: $jdk_status"
-    fi
-    # Projects pick their SDK by name, so a name the table lacks breaks a project
-    # even when every path above resolves.
-    names=$(grep -oE '<name value="[^"]*"' "$t" | sed 's/.*="//;s/"$//')
-    unknown=$(grep -ohE '<entry key="[^"]*"' "$(dirname "$t")/recentProjects.xml" 2>/dev/null \
-      | sed "s/.*key=\"//;s/\"$//;s#\\\$USER_HOME\\\$#$HOME#" \
-      | while read -r p; do
-          n=$(grep -oE 'project-jdk-name="[^"]*"' "$p/.idea/misc.xml" 2>/dev/null | sed 's/.*="//;s/"$//')
-          [[ -n "$n" ]] && ! grep -qxF "$n" <<<"$names" && printf '%s (%s) ' "${p#"$HOME"/}" "$n"
-        done)
-    if [[ -n "$unknown" ]]; then
-      warn "$ide projects name SDKs it lacks: ${unknown% } — pick a project SDK in IntelliJ"
-    fi
+      continue
+    }
+    while IFS=$'\t' read -r level message; do
+      case "$level" in
+        ok) ok "$ide: $message" ;;
+        warn) warn "$ide: $message" ;;
+      esac
+    done <<< "$jdk_status"
   done
 fi
 

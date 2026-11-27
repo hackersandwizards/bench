@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# Update brew, antidote plugins, language toolchains and global packages.
 set -u
 
 # shellcheck source-path=SCRIPTDIR
