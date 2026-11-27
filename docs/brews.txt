@@ -30,7 +30,6 @@ fribidi
 fzf
 gawk
 gettext
-ggml
 gh
 giflib
 git
@@ -75,7 +74,6 @@ libmagic
 libnghttp2
 libnghttp3
 libngtcp2
-libomp
 libpng
 libpsl
 libsodium
@@ -95,7 +93,6 @@ libxext
 libxrender
 libyaml
 little-cms2
-llama.cpp
 llhttp
 lz4
 lzo
