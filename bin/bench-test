@@ -540,18 +540,6 @@ assert_ok "product with no installed app keeps its dir" test -d "$tdir/Library/C
 assert_fail "once it has run, its older settings dir goes too" test -d "$tdir/Library/Application Support/JetBrains/Zzzide2026.1"
 rm -rf "$tdir"
 
-step "t3-import-session imports only a session it can prove ended"
-tdir=$(mktemp -d)
-mkdir -p "$tdir/.claude/projects/p" "$tdir/.claude/sessions"
-: > "$tdir/.claude/projects/p/s1.jsonl"
-printf '{"pid":%s,"sessionId":"s1"}\n' "$$" > "$tdir/.claude/sessions/$$.json"
-assert_eq "a live record without a start time counts as open" "1" \
-  "$(HOME="$tdir" "$REPO_ROOT/bin/t3-import-session" s1 2>&1 | grep -c 'still open')"
-printf '{"pid":%s,"sessionId":"s' "$$" > "$tdir/.claude/sessions/$$.json"
-assert_eq "a record it cannot read stops the import" "1" \
-  "$(HOME="$tdir" "$REPO_ROOT/bin/t3-import-session" s1 2>&1 | grep -c 'Cannot read')"
-rm -rf "$tdir"
-
 step "Claude temp sweep removes only finished sessions"
 tdir=$(mktemp -d)
 home="$tdir/home" root="$home/Library/Caches/claude-code-tmp/claude-$(id -u)" stub="$tdir/stub"

@@ -47,7 +47,6 @@ The Dock, Finder sidebar and Moom steps replace your own layout with the snapsho
 - `bench-prefs-diff snap`, change the setting in System Settings, then `bench-prefs-diff diff`: shows what changed, as `defaults` keys for `macos.sh`.
 - `transcribe <file>` writes a transcript and subtitles using T3 Code's Parakeet Ultra model. [Transcription guide](docs/transcription.md)
 - `safari-favorites`: export or merge the Safari favorites bar.
-- `t3-import-session <session-id>`: import one ended Claude session into its T3 project.
 - `ZSH_PROFILE=1 zsh -i -c exit`: profile shell startup.
 
 In a terminal, `bench-update` and `bench-clean` show each step's result and duration, the tail of failed tool output, and the cleanup reports. They print the path to the full step log at the end, one file per command in `.bench-logs/` that its next run overwrites. With redirected stdout, tool output streams as it runs. Set `BENCH_OUTPUT=stream` or `BENCH_OUTPUT=quiet` to choose the mode explicitly. Use stream mode if an installer writes its prompt to stdout or stderr.
