@@ -52,7 +52,7 @@ The Dock, Finder sidebar and Moom steps replace your own layout with the snapsho
 
 In a terminal, `bench-update` and `bench-clean` show each step's result and duration, the tail of failed tool output, and the cleanup reports. They print the path to the full step log at the end, one file per command in `.bench-logs/` that its next run overwrites. With redirected stdout, tool output streams as it runs. Set `BENCH_OUTPUT=stream` or `BENCH_OUTPUT=quiet` to choose the mode explicitly. Use stream mode if an installer writes its prompt to stdout or stderr.
 
-The `update-bench` skill (`.claude/skills/update-bench/`) runs the daily loop of these commands and commits the refreshed snapshots. The `update-bench-daily` scheduled task fires it at 06:00, which is why `docs/` changes most days.
+The `update-bench` skill (`.claude/skills/update-bench/`) runs the daily loop of these commands and commits the refreshed snapshots. The `update-bench-daily` scheduled task fires it at 05:30, which is why `docs/` changes most days.
 
 ## Documentation
 
